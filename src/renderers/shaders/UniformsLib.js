@@ -171,6 +171,11 @@ var UniformsLib = {
 		map: { value: null },
 		offsetRepeat: { value: new Vector4( 0, 0, 1, 1 ) }
 
+	},
+
+	projection: {
+		enableProjection: { value: false },
+		projectionSharpness: { value: 2.0 }
 	}
 
 };

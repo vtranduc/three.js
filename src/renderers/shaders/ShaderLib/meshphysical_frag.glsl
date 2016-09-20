@@ -42,6 +42,7 @@ varying vec3 vViewPosition;
 #include <metalnessmap_pars_fragment>
 #include <logdepthbuf_pars_fragment>
 #include <clipping_planes_pars_fragment>
+#include <triplanarprojection_pars_fragment>
 
 void main() {
 

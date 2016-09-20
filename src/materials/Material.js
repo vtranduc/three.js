@@ -231,6 +231,12 @@ Material.prototype = {
 		if ( this.wireframeLinecap !== 'round' ) data.wireframeLinecap = this.wireframeLinecap;
 		if ( this.wireframeLinejoin !== 'round' ) data.wireframeLinejoin = this.wireframeLinejoin;
 
+		if ( this.enableProjection !== undefined ) {
+
+			data.enableProjection = this.enableProjection;
+			data.projectionSharpness = this.projectionSharpness;
+		}
+
 		data.skinning = this.skinning;
 		data.morphTargets = this.morphTargets;
 
