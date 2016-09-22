@@ -39,7 +39,7 @@ void main() {
 	vNormal = normalize( transformedNormal );
 
 #endif
-
+    #include <triplanarprojection_vertex>
 	#include <begin_vertex>
 	#include <displacementmap_vertex>
 	#include <morphtarget_vertex>
@@ -47,7 +47,6 @@ void main() {
 	#include <project_vertex>
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
-    #include <triplanarprojection_vertex>
 
 	vViewPosition = - mvPosition.xyz;
 

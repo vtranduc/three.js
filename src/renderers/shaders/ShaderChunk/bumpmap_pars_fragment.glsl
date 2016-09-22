@@ -13,9 +13,9 @@
 		vec2 dSTdx = dFdx( vUv );
 		vec2 dSTdy = dFdy( vUv );
 
-		float Hll = bumpScale * texture2D( bumpMap, vUv ).x;
-		float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;
-		float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;
+		float Hll = bumpScale * (enableProjection ? GetTexelColorFromProjection(bumpMap,vProjectionPosition).x : texture2D( bumpMap, vUv ).x);
+		float dBx = bumpScale * (enableProjection ? GetTexelColorFromProjection(bumpMap,vProjectionPosition + dFdx(vProjectionPosition)).x : texture2D( bumpMap, vUv + dSTdx ).x) - Hll;
+		float dBy = bumpScale * (enableProjection ? GetTexelColorFromProjection(bumpMap,vProjectionPosition + dFdy(vProjectionPosition)).x : texture2D( bumpMap, vUv + dSTdy ).x) - Hll;
 
 		return vec2( dBx, dBy );
 
