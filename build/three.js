@@ -11057,7 +11057,7 @@
 
 		},
 
-		toJSON: function ( meta ) {
+		toJSON: function ( meta, options ) {
 
 			// meta is '' when called from JSON.stringify
 			var isRootObject = ( meta === undefined || meta === '' );
@@ -11106,7 +11106,7 @@
 
 				if ( meta.geometries[ this.geometry.uuid ] === undefined ) {
 
-					meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( meta );
+					meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( options );
 
 				}
 
@@ -11134,7 +11134,7 @@
 
 				for ( var i = 0; i < this.children.length; i ++ ) {
 
-					object.children.push( this.children[ i ].toJSON( meta ).object );
+					object.children.push( this.children[ i ].toJSON( meta, options ).object );
 
 				}
 
@@ -14600,7 +14600,7 @@
 
 		},
 
-		toJSON: function () {
+		toJSON: function ( options ) {
 
 			var data = {
 				metadata: {
@@ -14645,20 +14645,24 @@
 
 			}
 
-			var attributes = this.attributes;
+			if ( options && options.serialiseAttributes ) {
 
-			for ( var key in attributes ) {
+				var attributes = this.attributes;
 
-				var attribute = attributes[ key ];
+				for ( var key in attributes ) {
 
-				var array = Array.prototype.slice.call( attribute.array );
+					var attribute = attributes[ key ];
 
-				data.data.attributes[ key ] = {
-					itemSize: attribute.itemSize,
-					type: attribute.array.constructor.name,
-					array: array,
-					normalized: attribute.normalized
-				};
+					var array = Array.prototype.slice.call( attribute.array );
+
+					data.data.attributes[ key ] = {
+						itemSize: attribute.itemSize,
+						type: attribute.array.constructor.name,
+						array: array,
+						normalized: attribute.normalized
+					};
+
+				}
 
 			}
 
