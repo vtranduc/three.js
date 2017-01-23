@@ -1104,7 +1104,7 @@
 
 			function getDataURL( image ) {
 
-				return '';
+				return ''
 
 				// var canvas;
 				//
@@ -13728,7 +13728,7 @@
 	} );
 
 	var count = 0;
-	function GeometryIdCount() { return count++; }
+	function GeometryIdCount() { return count++; };
 
 	/**
 	 * @author alteredq / http://alteredqualia.com/
@@ -15837,7 +15837,7 @@
 				size = 2;
 
 			} else {
-
+				
 				type = gl.UNSIGNED_BYTE;
 				size = 1;
 			}
@@ -19576,7 +19576,7 @@
 			}
 
 			scope.numPlanes = nPlanes;
-
+			
 			return dstArray;
 
 		}
@@ -33074,7 +33074,6 @@
 			} );
 
 			var textures = this.parseTextures( json.textures, images );
-
 			var materials = this.parseMaterials( json.materials, textures );
 
 			var object = this.parseObject( json.object, geometries, materials );
@@ -35075,7 +35074,7 @@
 			return shapes;
 
 		}
-	};
+	}
 
 	/**
 	 * @author zz85 / http://www.lab4games.net/zz85/blog

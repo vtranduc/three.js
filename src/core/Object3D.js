@@ -558,7 +558,7 @@ Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 	},
 
-	toJSON: function ( meta ) {
+	toJSON: function ( meta, options ) {
 
 		// meta is '' when called from JSON.stringify
 		var isRootObject = ( meta === undefined || meta === '' );
@@ -607,7 +607,7 @@ Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 			if ( meta.geometries[ this.geometry.uuid ] === undefined ) {
 
-				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( meta );
+				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( options );
 
 			}
 
@@ -635,7 +635,7 @@ Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 			for ( var i = 0; i < this.children.length; i ++ ) {
 
-				object.children.push( this.children[ i ].toJSON( meta ).object );
+				object.children.push( this.children[ i ].toJSON( meta, options ).object );
 
 			}
 
