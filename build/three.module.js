@@ -1098,7 +1098,7 @@ var REVISION = '83';
 
 			function getDataURL( image ) {
 
-				return ''
+				return '';
 
 				// var canvas;
 				//
@@ -13722,7 +13722,7 @@ var ShaderChunk = {
 	} );
 
 	var count = 0;
-	function GeometryIdCount() { return count++; };
+	function GeometryIdCount() { return count++; }
 
 /**
 	 * @author alteredq / http://alteredqualia.com/

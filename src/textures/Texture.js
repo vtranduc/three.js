@@ -118,7 +118,7 @@ Texture.prototype = {
 
 		function getDataURL( image ) {
 
-			return ''
+			return '';
 
 			// var canvas;
 			//
