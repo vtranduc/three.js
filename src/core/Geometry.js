@@ -1268,7 +1268,7 @@ Object.assign( Geometry.prototype, EventDispatcher.prototype, {
 } );
 
 var count = 0;
-function GeometryIdCount() { return count++; }
+function GeometryIdCount() { return count++; };
 
 
 export { GeometryIdCount, Geometry };
