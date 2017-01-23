@@ -382,6 +382,8 @@ Object.assign( ObjectLoader.prototype, {
 
 				scope.manager.itemError( url );
 
+				onLoad()
+
 			} );
 
 		}

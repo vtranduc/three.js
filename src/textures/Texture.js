@@ -118,31 +118,33 @@ Texture.prototype = {
 
 		function getDataURL( image ) {
 
-			var canvas;
+			return '';
 
-			if ( image.toDataURL !== undefined ) {
-
-				canvas = image;
-
-			} else {
-
-				canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
-				canvas.width = image.width;
-				canvas.height = image.height;
-
-				canvas.getContext( '2d' ).drawImage( image, 0, 0, image.width, image.height );
-
-			}
-
-			if ( canvas.width > 2048 || canvas.height > 2048 ) {
-
-				return canvas.toDataURL( 'image/jpeg', 0.6 );
-
-			} else {
-
-				return canvas.toDataURL( 'image/png' );
-
-			}
+			// var canvas;
+			//
+			// if ( image.toDataURL !== undefined ) {
+			//
+			// 	canvas = image;
+			//
+			// } else {
+			//
+			// 	canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+			// 	canvas.width = image.width;
+			// 	canvas.height = image.height;
+			//
+			// 	canvas.getContext( '2d' ).drawImage( image, 0, 0, image.width, image.height );
+			//
+			// }
+			//
+			// if ( canvas.width > 2048 || canvas.height > 2048 ) {
+			//
+			// 	return canvas.toDataURL( 'image/jpeg', 0.6 );
+			//
+			// } else {
+			//
+			// 	return canvas.toDataURL( 'image/png' );
+			//
+			// }
 
 		}
 
