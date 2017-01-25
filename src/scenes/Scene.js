@@ -39,6 +39,23 @@ Scene.prototype.copy = function ( source, recursive ) {
 
 Scene.prototype.toJSON = function ( meta ) {
 
+	if ( meta === undefined || meta === '' ) {
+
+		meta = {
+			geometries: {},
+			materials: {},
+			textures: {},
+			images: {}
+		};
+
+		output.metadata = {
+			version: 4.4,
+			type: 'Object',
+			generator: 'Object3D.toJSON'
+		};
+
+	}
+
 	var data = Object3D.prototype.toJSON.call( this, meta );
 
 	if ( this.background !== null ) data.object.background = this.background.toJSON( meta );
