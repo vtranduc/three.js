@@ -5778,7 +5778,7 @@ Scene.prototype.toJSON = function ( meta ) {
 
 	meta = {
 		geometries: data.geometries,
-		material: data.materials,
+		materials: data.materials,
 		textures: data.textures,
 		images: data.images
 	};

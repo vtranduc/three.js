@@ -5784,7 +5784,7 @@
 
 		meta = {
 			geometries: data.geometries,
-			material: data.materials,
+			materials: data.materials,
 			textures: data.textures,
 			images: data.images
 		};
