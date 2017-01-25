@@ -5780,6 +5780,23 @@
 
 	Scene.prototype.toJSON = function ( meta ) {
 
+		if ( meta === undefined || meta === '' ) {
+
+			meta = {
+				geometries: {},
+				materials: {},
+				textures: {},
+				images: {}
+			};
+
+			output.metadata = {
+				version: 4.4,
+				type: 'Object',
+				generator: 'Object3D.toJSON'
+			};
+
+		}
+
 		var data = Object3D.prototype.toJSON.call( this, meta );
 
 		if ( this.background !== null ) data.object.background = this.background.toJSON( meta );
@@ -10953,7 +10970,7 @@
 	} );
 
 	var count = 0;
-	function GeometryIdCount() { return count++; };
+	function GeometryIdCount() { return count++; }
 
 	/**
 	 * @author alteredq / http://alteredqualia.com/
@@ -12471,7 +12488,7 @@
 		var scene = new Scene();
 
 		var gl = renderer.getContext();
-		var maxSize = gl.getParameter( gl.MAX_CUBE_MAP_TEXTURE_SIZE )
+		var maxSize = gl.getParameter( gl.MAX_CUBE_MAP_TEXTURE_SIZE );
 
 		var camera = new CubeCamera( 1, 100000, Math.min( size, maxSize ) );
 
@@ -12494,7 +12511,7 @@
 
 		return camera.renderTarget.texture;
 
-	}
+	};
 
 	/**
 	 * @author tschw
@@ -33466,7 +33483,7 @@
 
 					scope.manager.itemError( url );
 
-					onLoad()
+					onLoad();
 
 				} );
 
@@ -35191,7 +35208,7 @@
 			return shapes;
 
 		}
-	}
+	};
 
 	/**
 	 * @author zz85 / http://www.lab4games.net/zz85/blog
