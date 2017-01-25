@@ -5783,12 +5783,6 @@ Scene.prototype.toJSON = function ( meta ) {
 			images: {}
 		};
 
-		output.metadata = {
-			version: 4.4,
-			type: 'Object',
-			generator: 'Object3D.toJSON'
-		};
-
 	}
 
 	var data = Object3D.prototype.toJSON.call( this, meta );
