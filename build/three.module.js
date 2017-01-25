@@ -5774,18 +5774,14 @@ Scene.prototype.copy = function ( source, recursive ) {
 
 Scene.prototype.toJSON = function ( meta ) {
 
-	if ( meta === undefined || meta === '' ) {
-
-		meta = {
-			geometries: {},
-			materials: {},
-			textures: {},
-			images: {}
-		};
-
-	}
-
 	var data = Object3D.prototype.toJSON.call( this, meta );
+
+	meta = {
+		geometries: data.geometries,
+		material: data.materials,
+		textures: data.textures,
+		images: data.images
+	};
 
 	if ( this.background !== null ) data.object.background = this.background.toJSON( meta );
 	if ( this.fog !== null ) data.object.fog = this.fog.toJSON();
