@@ -170,7 +170,6 @@ Material.prototype = {
 		if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
 		if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
 		if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
-		if ( this.lightMapIntensity !== undefined ) data.lightMapIntensity = this.lightMapIntensity;
 		if ( this.bumpMap && this.bumpMap.isTexture ) {
 
 			data.bumpMap = this.bumpMap.toJSON( meta ).uuid;
