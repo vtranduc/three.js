@@ -880,7 +880,7 @@ Object.assign( BufferGeometry.prototype, EventDispatcher.prototype, {
 
 	},
 
-	toJSON: function ( options ) {
+	toJSON: function () {
 
 		var data = {
 			metadata: {
@@ -925,24 +925,20 @@ Object.assign( BufferGeometry.prototype, EventDispatcher.prototype, {
 
 		}
 
-		if ( options && options.serialiseAttributes ) {
+		var attributes = this.attributes;
 
-			var attributes = this.attributes;
+		for ( var key in attributes ) {
 
-			for ( var key in attributes ) {
+			var attribute = attributes[ key ];
 
-				var attribute = attributes[ key ];
+			var array = Array.prototype.slice.call( attribute.array );
 
-				var array = Array.prototype.slice.call( attribute.array );
-
-				data.data.attributes[ key ] = {
-					itemSize: attribute.itemSize,
-					type: attribute.array.constructor.name,
-					array: array,
-					normalized: attribute.normalized
-				};
-
-			}
+			data.data.attributes[ key ] = {
+				itemSize: attribute.itemSize,
+				type: attribute.array.constructor.name,
+				array: array,
+				normalized: attribute.normalized
+			};
 
 		}
 
