@@ -560,7 +560,7 @@ Object3D.prototype = {
 
 	},
 
-	toJSON: function ( meta ) {
+	toJSON: function ( meta, options ) {
 
 		// meta is '' when called from JSON.stringify
 		var isRootObject = ( meta === undefined || meta === '' );
@@ -609,7 +609,7 @@ Object3D.prototype = {
 
 			if ( meta.geometries[ this.geometry.uuid ] === undefined ) {
 
-				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( meta );
+				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( options );
 
 			}
 
@@ -637,7 +637,7 @@ Object3D.prototype = {
 
 			for ( var i = 0; i < this.children.length; i ++ ) {
 
-				object.children.push( this.children[ i ].toJSON( meta ).object );
+				object.children.push( this.children[ i ].toJSON( meta, options ).object );
 
 			}
 
