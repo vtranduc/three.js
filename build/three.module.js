@@ -4916,6 +4916,1761 @@ Matrix3.prototype = {
 };
 
 /**
+ * @author tschw
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ */
+
+var AnimationUtils = {
+
+	// same as Array.prototype.slice, but also works on typed arrays
+	arraySlice: function( array, from, to ) {
+
+		if ( AnimationUtils.isTypedArray( array ) ) {
+
+			return new array.constructor( array.subarray( from, to ) );
+
+		}
+
+		return array.slice( from, to );
+
+	},
+
+	// converts an array to a specific type
+	convertArray: function( array, type, forceClone ) {
+
+		if ( ! array || // let 'undefined' and 'null' pass
+				! forceClone && array.constructor === type ) return array;
+
+		if ( typeof type.BYTES_PER_ELEMENT === 'number' ) {
+
+			return new type( array ); // create typed array
+
+		}
+
+		return Array.prototype.slice.call( array ); // create Array
+
+	},
+
+	isTypedArray: function( object ) {
+
+		return ArrayBuffer.isView( object ) &&
+				! ( object instanceof DataView );
+
+	},
+
+	// returns an array by which times and values can be sorted
+	getKeyframeOrder: function( times ) {
+
+		function compareTime( i, j ) {
+
+			return times[ i ] - times[ j ];
+
+		}
+
+		var n = times.length;
+		var result = new Array( n );
+		for ( var i = 0; i !== n; ++ i ) result[ i ] = i;
+
+		result.sort( compareTime );
+
+		return result;
+
+	},
+
+	// uses the array previously returned by 'getKeyframeOrder' to sort data
+	sortedArray: function( values, stride, order ) {
+
+		var nValues = values.length;
+		var result = new values.constructor( nValues );
+
+		for ( var i = 0, dstOffset = 0; dstOffset !== nValues; ++ i ) {
+
+			var srcOffset = order[ i ] * stride;
+
+			for ( var j = 0; j !== stride; ++ j ) {
+
+				result[ dstOffset ++ ] = values[ srcOffset + j ];
+
+			}
+
+		}
+
+		return result;
+
+	},
+
+	// function for parsing AOS keyframe formats
+	flattenJSON: function( jsonKeys, times, values, valuePropertyName ) {
+
+		var i = 1, key = jsonKeys[ 0 ];
+
+		while ( key !== undefined && key[ valuePropertyName ] === undefined ) {
+
+			key = jsonKeys[ i ++ ];
+
+		}
+
+		if ( key === undefined ) return; // no data
+
+		var value = key[ valuePropertyName ];
+		if ( value === undefined ) return; // no data
+
+		if ( Array.isArray( value ) ) {
+
+			do {
+
+				value = key[ valuePropertyName ];
+
+				if ( value !== undefined ) {
+
+					times.push( key.time );
+					values.push.apply( values, value ); // push all elements
+
+				}
+
+				key = jsonKeys[ i ++ ];
+
+			} while ( key !== undefined );
+
+		} else if ( value.toArray !== undefined ) {
+			// ...assume THREE.Math-ish
+
+			do {
+
+				value = key[ valuePropertyName ];
+
+				if ( value !== undefined ) {
+
+					times.push( key.time );
+					value.toArray( values, values.length );
+
+				}
+
+				key = jsonKeys[ i ++ ];
+
+			} while ( key !== undefined );
+
+		} else {
+			// otherwise push as-is
+
+			do {
+
+				value = key[ valuePropertyName ];
+
+				if ( value !== undefined ) {
+
+					times.push( key.time );
+					values.push( value );
+
+				}
+
+				key = jsonKeys[ i ++ ];
+
+			} while ( key !== undefined );
+
+		}
+
+	}
+
+};
+
+/**
+ * Abstract base class of interpolants over parametric samples.
+ *
+ * The parameter domain is one dimensional, typically the time or a path
+ * along a curve defined by the data.
+ *
+ * The sample values can have any dimensionality and derived classes may
+ * apply special interpretations to the data.
+ *
+ * This class provides the interval seek in a Template Method, deferring
+ * the actual interpolation to derived classes.
+ *
+ * Time complexity is O(1) for linear access crossing at most two points
+ * and O(log N) for random access, where N is the number of positions.
+ *
+ * References:
+ *
+ * 		http://www.oodesign.com/template-method-pattern.html
+ *
+ * @author tschw
+ */
+
+function Interpolant(
+		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+	this.parameterPositions = parameterPositions;
+	this._cachedIndex = 0;
+
+	this.resultBuffer = resultBuffer !== undefined ?
+			resultBuffer : new sampleValues.constructor( sampleSize );
+	this.sampleValues = sampleValues;
+	this.valueSize = sampleSize;
+
+}
+
+Interpolant.prototype = {
+
+	constructor: Interpolant,
+
+	evaluate: function( t ) {
+
+		var pp = this.parameterPositions,
+			i1 = this._cachedIndex,
+
+			t1 = pp[   i1   ],
+			t0 = pp[ i1 - 1 ];
+
+		validate_interval: {
+
+			seek: {
+
+				var right;
+
+				linear_scan: {
+//- See http://jsperf.com/comparison-to-undefined/3
+//- slower code:
+//-
+//- 				if ( t >= t1 || t1 === undefined ) {
+					forward_scan: if ( ! ( t < t1 ) ) {
+
+						for ( var giveUpAt = i1 + 2; ;) {
+
+							if ( t1 === undefined ) {
+
+								if ( t < t0 ) break forward_scan;
+
+								// after end
+
+								i1 = pp.length;
+								this._cachedIndex = i1;
+								return this.afterEnd_( i1 - 1, t, t0 );
+
+							}
+
+							if ( i1 === giveUpAt ) break; // this loop
+
+							t0 = t1;
+							t1 = pp[ ++ i1 ];
+
+							if ( t < t1 ) {
+
+								// we have arrived at the sought interval
+								break seek;
+
+							}
+
+						}
+
+						// prepare binary search on the right side of the index
+						right = pp.length;
+						break linear_scan;
+
+					}
+
+//- slower code:
+//-					if ( t < t0 || t0 === undefined ) {
+					if ( ! ( t >= t0 ) ) {
+
+						// looping?
+
+						var t1global = pp[ 1 ];
+
+						if ( t < t1global ) {
+
+							i1 = 2; // + 1, using the scan for the details
+							t0 = t1global;
+
+						}
+
+						// linear reverse scan
+
+						for ( var giveUpAt = i1 - 2; ;) {
+
+							if ( t0 === undefined ) {
+
+								// before start
+
+								this._cachedIndex = 0;
+								return this.beforeStart_( 0, t, t1 );
+
+							}
+
+							if ( i1 === giveUpAt ) break; // this loop
+
+							t1 = t0;
+							t0 = pp[ -- i1 - 1 ];
+
+							if ( t >= t0 ) {
+
+								// we have arrived at the sought interval
+								break seek;
+
+							}
+
+						}
+
+						// prepare binary search on the left side of the index
+						right = i1;
+						i1 = 0;
+						break linear_scan;
+
+					}
+
+					// the interval is valid
+
+					break validate_interval;
+
+				} // linear scan
+
+				// binary search
+
+				while ( i1 < right ) {
+
+					var mid = ( i1 + right ) >>> 1;
+
+					if ( t < pp[ mid ] ) {
+
+						right = mid;
+
+					} else {
+
+						i1 = mid + 1;
+
+					}
+
+				}
+
+				t1 = pp[   i1   ];
+				t0 = pp[ i1 - 1 ];
+
+				// check boundary cases, again
+
+				if ( t0 === undefined ) {
+
+					this._cachedIndex = 0;
+					return this.beforeStart_( 0, t, t1 );
+
+				}
+
+				if ( t1 === undefined ) {
+
+					i1 = pp.length;
+					this._cachedIndex = i1;
+					return this.afterEnd_( i1 - 1, t0, t );
+
+				}
+
+			} // seek
+
+			this._cachedIndex = i1;
+
+			this.intervalChanged_( i1, t0, t1 );
+
+		} // validate_interval
+
+		return this.interpolate_( i1, t0, t, t1 );
+
+	},
+
+	settings: null, // optional, subclass-specific settings structure
+	// Note: The indirection allows central control of many interpolants.
+
+	// --- Protected interface
+
+	DefaultSettings_: {},
+
+	getSettings_: function() {
+
+		return this.settings || this.DefaultSettings_;
+
+	},
+
+	copySampleValue_: function( index ) {
+
+		// copies a sample value to the result buffer
+
+		var result = this.resultBuffer,
+			values = this.sampleValues,
+			stride = this.valueSize,
+			offset = index * stride;
+
+		for ( var i = 0; i !== stride; ++ i ) {
+
+			result[ i ] = values[ offset + i ];
+
+		}
+
+		return result;
+
+	},
+
+	// Template methods for derived classes:
+
+	interpolate_: function( i1, t0, t, t1 ) {
+
+		throw new Error( "call to abstract method" );
+		// implementations shall return this.resultBuffer
+
+	},
+
+	intervalChanged_: function( i1, t0, t1 ) {
+
+		// empty
+
+	}
+
+};
+
+Object.assign( Interpolant.prototype, {
+
+	beforeStart_: //( 0, t, t0 ), returns this.resultBuffer
+		Interpolant.prototype.copySampleValue_,
+
+	afterEnd_: //( N-1, tN-1, t ), returns this.resultBuffer
+		Interpolant.prototype.copySampleValue_
+
+} );
+
+/**
+ * Fast and simple cubic spline interpolant.
+ *
+ * It was derived from a Hermitian construction setting the first derivative
+ * at each sample position to the linear slope between neighboring positions
+ * over their parameter interval.
+ *
+ * @author tschw
+ */
+
+function CubicInterpolant(
+		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+	Interpolant.call(
+			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+	this._weightPrev = -0;
+	this._offsetPrev = -0;
+	this._weightNext = -0;
+	this._offsetNext = -0;
+
+}
+
+CubicInterpolant.prototype =
+		Object.assign( Object.create( Interpolant.prototype ), {
+
+	constructor: CubicInterpolant,
+
+	DefaultSettings_: {
+
+		endingStart: 	ZeroCurvatureEnding,
+		endingEnd:		ZeroCurvatureEnding
+
+	},
+
+	intervalChanged_: function( i1, t0, t1 ) {
+
+		var pp = this.parameterPositions,
+			iPrev = i1 - 2,
+			iNext = i1 + 1,
+
+			tPrev = pp[ iPrev ],
+			tNext = pp[ iNext ];
+
+		if ( tPrev === undefined ) {
+
+			switch ( this.getSettings_().endingStart ) {
+
+				case ZeroSlopeEnding:
+
+					// f'(t0) = 0
+					iPrev = i1;
+					tPrev = 2 * t0 - t1;
+
+					break;
+
+				case WrapAroundEnding:
+
+					// use the other end of the curve
+					iPrev = pp.length - 2;
+					tPrev = t0 + pp[ iPrev ] - pp[ iPrev + 1 ];
+
+					break;
+
+				default: // ZeroCurvatureEnding
+
+					// f''(t0) = 0 a.k.a. Natural Spline
+					iPrev = i1;
+					tPrev = t1;
+
+			}
+
+		}
+
+		if ( tNext === undefined ) {
+
+			switch ( this.getSettings_().endingEnd ) {
+
+				case ZeroSlopeEnding:
+
+					// f'(tN) = 0
+					iNext = i1;
+					tNext = 2 * t1 - t0;
+
+					break;
+
+				case WrapAroundEnding:
+
+					// use the other end of the curve
+					iNext = 1;
+					tNext = t1 + pp[ 1 ] - pp[ 0 ];
+
+					break;
+
+				default: // ZeroCurvatureEnding
+
+					// f''(tN) = 0, a.k.a. Natural Spline
+					iNext = i1 - 1;
+					tNext = t0;
+
+			}
+
+		}
+
+		var halfDt = ( t1 - t0 ) * 0.5,
+			stride = this.valueSize;
+
+		this._weightPrev = halfDt / ( t0 - tPrev );
+		this._weightNext = halfDt / ( tNext - t1 );
+		this._offsetPrev = iPrev * stride;
+		this._offsetNext = iNext * stride;
+
+	},
+
+	interpolate_: function( i1, t0, t, t1 ) {
+
+		var result = this.resultBuffer,
+			values = this.sampleValues,
+			stride = this.valueSize,
+
+			o1 = i1 * stride,		o0 = o1 - stride,
+			oP = this._offsetPrev, 	oN = this._offsetNext,
+			wP = this._weightPrev,	wN = this._weightNext,
+
+			p = ( t - t0 ) / ( t1 - t0 ),
+			pp = p * p,
+			ppp = pp * p;
+
+		// evaluate polynomials
+
+		var sP =     - wP   * ppp   +         2 * wP    * pp    -          wP   * p;
+		var s0 = ( 1 + wP ) * ppp   + (-1.5 - 2 * wP )  * pp    + ( -0.5 + wP ) * p     + 1;
+		var s1 = (-1 - wN ) * ppp   + ( 1.5 +   wN   )  * pp    +    0.5        * p;
+		var sN =       wN   * ppp   -           wN      * pp;
+
+		// combine data linearly
+
+		for ( var i = 0; i !== stride; ++ i ) {
+
+			result[ i ] =
+					sP * values[ oP + i ] +
+					s0 * values[ o0 + i ] +
+					s1 * values[ o1 + i ] +
+					sN * values[ oN + i ];
+
+		}
+
+		return result;
+
+	}
+
+} );
+
+/**
+ * @author tschw
+ */
+
+function LinearInterpolant(
+		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+	Interpolant.call(
+			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+}
+
+LinearInterpolant.prototype =
+		Object.assign( Object.create( Interpolant.prototype ), {
+
+	constructor: LinearInterpolant,
+
+	interpolate_: function( i1, t0, t, t1 ) {
+
+		var result = this.resultBuffer,
+			values = this.sampleValues,
+			stride = this.valueSize,
+
+			offset1 = i1 * stride,
+			offset0 = offset1 - stride,
+
+			weight1 = ( t - t0 ) / ( t1 - t0 ),
+			weight0 = 1 - weight1;
+
+		for ( var i = 0; i !== stride; ++ i ) {
+
+			result[ i ] =
+					values[ offset0 + i ] * weight0 +
+					values[ offset1 + i ] * weight1;
+
+		}
+
+		return result;
+
+	}
+
+} );
+
+/**
+ *
+ * Interpolant that evaluates to the sample value at the position preceeding
+ * the parameter.
+ *
+ * @author tschw
+ */
+
+function DiscreteInterpolant(
+		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+	Interpolant.call(
+			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+}
+
+DiscreteInterpolant.prototype =
+		Object.assign( Object.create( Interpolant.prototype ), {
+
+	constructor: DiscreteInterpolant,
+
+	interpolate_: function( i1, t0, t, t1 ) {
+
+		return this.copySampleValue_( i1 - 1 );
+
+	}
+
+} );
+
+var KeyframeTrackPrototype;
+
+KeyframeTrackPrototype = {
+
+	TimeBufferType: Float32Array,
+	ValueBufferType: Float32Array,
+
+	DefaultInterpolation: InterpolateLinear,
+
+	InterpolantFactoryMethodDiscrete: function ( result ) {
+
+		return new DiscreteInterpolant(
+				this.times, this.values, this.getValueSize(), result );
+
+	},
+
+	InterpolantFactoryMethodLinear: function ( result ) {
+
+		return new LinearInterpolant(
+				this.times, this.values, this.getValueSize(), result );
+
+	},
+
+	InterpolantFactoryMethodSmooth: function ( result ) {
+
+		return new CubicInterpolant(
+				this.times, this.values, this.getValueSize(), result );
+
+	},
+
+	setInterpolation: function ( interpolation ) {
+
+		var factoryMethod;
+
+		switch ( interpolation ) {
+
+			case InterpolateDiscrete:
+
+				factoryMethod = this.InterpolantFactoryMethodDiscrete;
+
+				break;
+
+			case InterpolateLinear:
+
+				factoryMethod = this.InterpolantFactoryMethodLinear;
+
+				break;
+
+			case InterpolateSmooth:
+
+				factoryMethod = this.InterpolantFactoryMethodSmooth;
+
+				break;
+
+		}
+
+		if ( factoryMethod === undefined ) {
+
+			var message = "unsupported interpolation for " +
+					this.ValueTypeName + " keyframe track named " + this.name;
+
+			if ( this.createInterpolant === undefined ) {
+
+				// fall back to default, unless the default itself is messed up
+				if ( interpolation !== this.DefaultInterpolation ) {
+
+					this.setInterpolation( this.DefaultInterpolation );
+
+				} else {
+
+					throw new Error( message ); // fatal, in this case
+
+				}
+
+			}
+
+			console.warn( message );
+			return;
+
+		}
+
+		this.createInterpolant = factoryMethod;
+
+	},
+
+	getInterpolation: function () {
+
+		switch ( this.createInterpolant ) {
+
+			case this.InterpolantFactoryMethodDiscrete:
+
+				return InterpolateDiscrete;
+
+			case this.InterpolantFactoryMethodLinear:
+
+				return InterpolateLinear;
+
+			case this.InterpolantFactoryMethodSmooth:
+
+				return InterpolateSmooth;
+
+		}
+
+	},
+
+	getValueSize: function () {
+
+		return this.values.length / this.times.length;
+
+	},
+
+	// move all keyframes either forwards or backwards in time
+	shift: function ( timeOffset ) {
+
+		if ( timeOffset !== 0.0 ) {
+
+			var times = this.times;
+
+			for ( var i = 0, n = times.length; i !== n; ++ i ) {
+
+				times[ i ] += timeOffset;
+
+			}
+
+		}
+
+		return this;
+
+	},
+
+	// scale all keyframe times by a factor (useful for frame <-> seconds conversions)
+	scale: function ( timeScale ) {
+
+		if ( timeScale !== 1.0 ) {
+
+			var times = this.times;
+
+			for ( var i = 0, n = times.length; i !== n; ++ i ) {
+
+				times[ i ] *= timeScale;
+
+			}
+
+		}
+
+		return this;
+
+	},
+
+	// removes keyframes before and after animation without changing any values within the range [startTime, endTime].
+	// IMPORTANT: We do not shift around keys to the start of the track time, because for interpolated keys this will change their values
+	trim: function ( startTime, endTime ) {
+
+		var times = this.times,
+			nKeys = times.length,
+			from = 0,
+			to = nKeys - 1;
+
+		while ( from !== nKeys && times[ from ] < startTime ) ++ from;
+		while ( to !== - 1 && times[ to ] > endTime ) -- to;
+
+		++ to; // inclusive -> exclusive bound
+
+		if ( from !== 0 || to !== nKeys ) {
+
+			// empty tracks are forbidden, so keep at least one keyframe
+			if ( from >= to ) to = Math.max( to, 1 ), from = to - 1;
+
+			var stride = this.getValueSize();
+			this.times = AnimationUtils.arraySlice( times, from, to );
+			this.values = AnimationUtils.
+					arraySlice( this.values, from * stride, to * stride );
+
+		}
+
+		return this;
+
+	},
+
+	// ensure we do not get a GarbageInGarbageOut situation, make sure tracks are at least minimally viable
+	validate: function () {
+
+		var valid = true;
+
+		var valueSize = this.getValueSize();
+		if ( valueSize - Math.floor( valueSize ) !== 0 ) {
+
+			console.error( "invalid value size in track", this );
+			valid = false;
+
+		}
+
+		var times = this.times,
+			values = this.values,
+
+			nKeys = times.length;
+
+		if ( nKeys === 0 ) {
+
+			console.error( "track is empty", this );
+			valid = false;
+
+		}
+
+		var prevTime = null;
+
+		for ( var i = 0; i !== nKeys; i ++ ) {
+
+			var currTime = times[ i ];
+
+			if ( typeof currTime === 'number' && isNaN( currTime ) ) {
+
+				console.error( "time is not a valid number", this, i, currTime );
+				valid = false;
+				break;
+
+			}
+
+			if ( prevTime !== null && prevTime > currTime ) {
+
+				console.error( "out of order keys", this, i, currTime, prevTime );
+				valid = false;
+				break;
+
+			}
+
+			prevTime = currTime;
+
+		}
+
+		if ( values !== undefined ) {
+
+			if ( AnimationUtils.isTypedArray( values ) ) {
+
+				for ( var i = 0, n = values.length; i !== n; ++ i ) {
+
+					var value = values[ i ];
+
+					if ( isNaN( value ) ) {
+
+						console.error( "value is not a valid number", this, i, value );
+						valid = false;
+						break;
+
+					}
+
+				}
+
+			}
+
+		}
+
+		return valid;
+
+	},
+
+	// removes equivalent sequential keys as common in morph target sequences
+	// (0,0,0,0,1,1,1,0,0,0,0,0,0,0) --> (0,0,1,1,0,0)
+	optimize: function () {
+
+		var times = this.times,
+			values = this.values,
+			stride = this.getValueSize(),
+
+			smoothInterpolation = this.getInterpolation() === InterpolateSmooth,
+
+			writeIndex = 1,
+			lastIndex = times.length - 1;
+
+		for ( var i = 1; i < lastIndex; ++ i ) {
+
+			var keep = false;
+
+			var time = times[ i ];
+			var timeNext = times[ i + 1 ];
+
+			// remove adjacent keyframes scheduled at the same time
+
+			if ( time !== timeNext && ( i !== 1 || time !== time[ 0 ] ) ) {
+
+				if ( ! smoothInterpolation ) {
+
+					// remove unnecessary keyframes same as their neighbors
+
+					var offset = i * stride,
+						offsetP = offset - stride,
+						offsetN = offset + stride;
+
+					for ( var j = 0; j !== stride; ++ j ) {
+
+						var value = values[ offset + j ];
+
+						if ( value !== values[ offsetP + j ] ||
+								value !== values[ offsetN + j ] ) {
+
+							keep = true;
+							break;
+
+						}
+
+					}
+
+				} else keep = true;
+
+			}
+
+			// in-place compaction
+
+			if ( keep ) {
+
+				if ( i !== writeIndex ) {
+
+					times[ writeIndex ] = times[ i ];
+
+					var readOffset = i * stride,
+						writeOffset = writeIndex * stride;
+
+					for ( var j = 0; j !== stride; ++ j )
+
+						values[ writeOffset + j ] = values[ readOffset + j ];
+
+				}
+
+				++ writeIndex;
+
+			}
+
+		}
+
+		// flush last keyframe (compaction looks ahead)
+
+		if ( lastIndex > 0 ) {
+
+			times[ writeIndex ] = times[ lastIndex ];
+
+			for ( var readOffset = lastIndex * stride, writeOffset = writeIndex * stride, j = 0; j !== stride; ++ j )
+
+				values[ writeOffset + j ] = values[ readOffset + j ];
+
+			++ writeIndex;
+
+		}
+
+		if ( writeIndex !== times.length ) {
+
+			this.times = AnimationUtils.arraySlice( times, 0, writeIndex );
+			this.values = AnimationUtils.arraySlice( values, 0, writeIndex * stride );
+
+		}
+
+		return this;
+
+	}
+
+};
+
+function KeyframeTrackConstructor( name, times, values, interpolation ) {
+
+	if( name === undefined ) throw new Error( "track name is undefined" );
+
+	if( times === undefined || times.length === 0 ) {
+
+		throw new Error( "no keyframes in track named " + name );
+
+	}
+
+	this.name = name;
+
+	this.times = AnimationUtils.convertArray( times, this.TimeBufferType );
+	this.values = AnimationUtils.convertArray( values, this.ValueBufferType );
+
+	this.setInterpolation( interpolation || this.DefaultInterpolation );
+
+	this.validate();
+	this.optimize();
+
+}
+
+/**
+ *
+ * A Track of vectored keyframe values.
+ *
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function VectorKeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
+
+}
+
+VectorKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: VectorKeyframeTrack,
+
+	ValueTypeName: 'vector'
+
+	// ValueBufferType is inherited
+
+	// DefaultInterpolation is inherited
+
+} );
+
+/**
+ * Spherical linear unit quaternion interpolant.
+ *
+ * @author tschw
+ */
+
+function QuaternionLinearInterpolant(
+		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+	Interpolant.call(
+			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+}
+
+QuaternionLinearInterpolant.prototype =
+		Object.assign( Object.create( Interpolant.prototype ), {
+
+	constructor: QuaternionLinearInterpolant,
+
+	interpolate_: function( i1, t0, t, t1 ) {
+
+		var result = this.resultBuffer,
+			values = this.sampleValues,
+			stride = this.valueSize,
+
+			offset = i1 * stride,
+
+			alpha = ( t - t0 ) / ( t1 - t0 );
+
+		for ( var end = offset + stride; offset !== end; offset += 4 ) {
+
+			Quaternion.slerpFlat( result, 0,
+					values, offset - stride, values, offset, alpha );
+
+		}
+
+		return result;
+
+	}
+
+} );
+
+/**
+ *
+ * A Track of quaternion keyframe values.
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function QuaternionKeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
+
+}
+
+QuaternionKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: QuaternionKeyframeTrack,
+
+	ValueTypeName: 'quaternion',
+
+	// ValueBufferType is inherited
+
+	DefaultInterpolation: InterpolateLinear,
+
+	InterpolantFactoryMethodLinear: function( result ) {
+
+		return new QuaternionLinearInterpolant(
+				this.times, this.values, this.getValueSize(), result );
+
+	},
+
+	InterpolantFactoryMethodSmooth: undefined // not yet implemented
+
+} );
+
+/**
+ *
+ * A Track of numeric keyframe values.
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function NumberKeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
+
+}
+
+NumberKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: NumberKeyframeTrack,
+
+	ValueTypeName: 'number'
+
+	// ValueBufferType is inherited
+
+	// DefaultInterpolation is inherited
+
+} );
+
+/**
+ *
+ * A Track that interpolates Strings
+ *
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function StringKeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
+
+}
+
+StringKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: StringKeyframeTrack,
+
+	ValueTypeName: 'string',
+	ValueBufferType: Array,
+
+	DefaultInterpolation: InterpolateDiscrete,
+
+	InterpolantFactoryMethodLinear: undefined,
+
+	InterpolantFactoryMethodSmooth: undefined
+
+} );
+
+/**
+ *
+ * A Track of Boolean keyframe values.
+ *
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function BooleanKeyframeTrack( name, times, values ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values );
+
+}
+
+BooleanKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: BooleanKeyframeTrack,
+
+	ValueTypeName: 'bool',
+	ValueBufferType: Array,
+
+	DefaultInterpolation: InterpolateDiscrete,
+
+	InterpolantFactoryMethodLinear: undefined,
+	InterpolantFactoryMethodSmooth: undefined
+
+	// Note: Actually this track could have a optimized / compressed
+	// representation of a single value and a custom interpolant that
+	// computes "firstValue ^ isOdd( index )".
+
+} );
+
+/**
+ *
+ * A Track of keyframe values that represent color.
+ *
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function ColorKeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
+
+}
+
+ColorKeyframeTrack.prototype =
+		Object.assign( Object.create( KeyframeTrackPrototype ), {
+
+	constructor: ColorKeyframeTrack,
+
+	ValueTypeName: 'color'
+
+	// ValueBufferType is inherited
+
+	// DefaultInterpolation is inherited
+
+
+	// Note: Very basic implementation and nothing special yet.
+	// However, this is the place for color space parameterization.
+
+} );
+
+/**
+ *
+ * A timed sequence of keyframes for a specific property.
+ *
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ * @author tschw
+ */
+
+function KeyframeTrack( name, times, values, interpolation ) {
+
+	KeyframeTrackConstructor.apply( this, arguments );
+
+}
+
+KeyframeTrack.prototype = KeyframeTrackPrototype;
+KeyframeTrackPrototype.constructor = KeyframeTrack;
+
+// Static methods:
+
+Object.assign( KeyframeTrack, {
+
+	// Serialization (in static context, because of constructor invocation
+	// and automatic invocation of .toJSON):
+
+	parse: function( json ) {
+
+		if( json.type === undefined ) {
+
+			throw new Error( "track type undefined, can not parse" );
+
+		}
+
+		var trackType = KeyframeTrack._getTrackTypeForValueTypeName( json.type );
+
+		if ( json.times === undefined ) {
+
+			var times = [], values = [];
+
+			AnimationUtils.flattenJSON( json.keys, times, values, 'value' );
+
+			json.times = times;
+			json.values = values;
+
+		}
+
+		// derived classes can define a static parse method
+		if ( trackType.parse !== undefined ) {
+
+			return trackType.parse( json );
+
+		} else {
+
+			// by default, we asssume a constructor compatible with the base
+			return new trackType(
+					json.name, json.times, json.values, json.interpolation );
+
+		}
+
+	},
+
+	toJSON: function( track ) {
+
+		var trackType = track.constructor;
+
+		var json;
+
+		// derived classes can define a static toJSON method
+		if ( trackType.toJSON !== undefined ) {
+
+			json = trackType.toJSON( track );
+
+		} else {
+
+			// by default, we assume the data can be serialized as-is
+			json = {
+
+				'name': track.name,
+				'times': AnimationUtils.convertArray( track.times, Array ),
+				'values': AnimationUtils.convertArray( track.values, Array )
+
+			};
+
+			var interpolation = track.getInterpolation();
+
+			if ( interpolation !== track.DefaultInterpolation ) {
+
+				json.interpolation = interpolation;
+
+			}
+
+		}
+
+		json.type = track.ValueTypeName; // mandatory
+
+		return json;
+
+	},
+
+	_getTrackTypeForValueTypeName: function( typeName ) {
+
+		switch( typeName.toLowerCase() ) {
+
+			case "scalar":
+			case "double":
+			case "float":
+			case "number":
+			case "integer":
+
+				return NumberKeyframeTrack;
+
+			case "vector":
+			case "vector2":
+			case "vector3":
+			case "vector4":
+
+				return VectorKeyframeTrack;
+
+			case "color":
+
+				return ColorKeyframeTrack;
+
+			case "quaternion":
+
+				return QuaternionKeyframeTrack;
+
+			case "bool":
+			case "boolean":
+
+				return BooleanKeyframeTrack;
+
+			case "string":
+
+				return StringKeyframeTrack;
+
+		}
+
+		throw new Error( "Unsupported typeName: " + typeName );
+
+	}
+
+} );
+
+/**
+ *
+ * Reusable set of Tracks that represent an animation.
+ *
+ * @author Ben Houston / http://clara.io/
+ * @author David Sarno / http://lighthaus.us/
+ */
+
+function AnimationClip( name, duration, tracks ) {
+
+	this.name = name;
+	this.tracks = tracks;
+	this.duration = ( duration !== undefined ) ? duration : -1;
+
+	this.uuid = _Math.generateUUID();
+
+	// this means it should figure out its duration by scanning the tracks
+	if ( this.duration < 0 ) {
+
+		this.resetDuration();
+
+	}
+
+	this.optimize();
+
+}
+
+AnimationClip.prototype = {
+
+	constructor: AnimationClip,
+
+	resetDuration: function() {
+
+		var tracks = this.tracks,
+			duration = 0;
+
+		for ( var i = 0, n = tracks.length; i !== n; ++ i ) {
+
+			var track = this.tracks[ i ];
+
+			duration = Math.max( duration, track.times[ track.times.length - 1 ] );
+
+		}
+
+		this.duration = duration;
+
+	},
+
+	trim: function() {
+
+		for ( var i = 0; i < this.tracks.length; i ++ ) {
+
+			this.tracks[ i ].trim( 0, this.duration );
+
+		}
+
+		return this;
+
+	},
+
+	optimize: function() {
+
+		for ( var i = 0; i < this.tracks.length; i ++ ) {
+
+			this.tracks[ i ].optimize();
+
+		}
+
+		return this;
+
+	}
+
+};
+
+// Static methods:
+
+Object.assign( AnimationClip, {
+
+	parse: function( json ) {
+
+		var tracks = [],
+			jsonTracks = json.tracks,
+			frameTime = 1.0 / ( json.fps || 1.0 );
+
+		for ( var i = 0, n = jsonTracks.length; i !== n; ++ i ) {
+
+			tracks.push( KeyframeTrack.parse( jsonTracks[ i ] ).scale( frameTime ) );
+
+		}
+
+		return new AnimationClip( json.name, json.duration, tracks );
+
+	},
+
+
+	toJSON: function( clip ) {
+
+		var tracks = [],
+			clipTracks = clip.tracks;
+
+		var json = {
+
+			'name': clip.name,
+			'duration': clip.duration,
+			'tracks': tracks
+
+		};
+
+		for ( var i = 0, n = clipTracks.length; i !== n; ++ i ) {
+
+			tracks.push( KeyframeTrack.toJSON( clipTracks[ i ] ) );
+
+		}
+
+		return json;
+
+	},
+
+
+	CreateFromMorphTargetSequence: function( name, morphTargetSequence, fps, noLoop ) {
+
+		var numMorphTargets = morphTargetSequence.length;
+		var tracks = [];
+
+		for ( var i = 0; i < numMorphTargets; i ++ ) {
+
+			var times = [];
+			var values = [];
+
+			times.push(
+					( i + numMorphTargets - 1 ) % numMorphTargets,
+					i,
+					( i + 1 ) % numMorphTargets );
+
+			values.push( 0, 1, 0 );
+
+			var order = AnimationUtils.getKeyframeOrder( times );
+			times = AnimationUtils.sortedArray( times, 1, order );
+			values = AnimationUtils.sortedArray( values, 1, order );
+
+			// if there is a key at the first frame, duplicate it as the
+			// last frame as well for perfect loop.
+			if ( ! noLoop && times[ 0 ] === 0 ) {
+
+				times.push( numMorphTargets );
+				values.push( values[ 0 ] );
+
+			}
+
+			tracks.push(
+					new NumberKeyframeTrack(
+						'.morphTargetInfluences[' + morphTargetSequence[ i ].name + ']',
+						times, values
+					).scale( 1.0 / fps ) );
+		}
+
+		return new AnimationClip( name, -1, tracks );
+
+	},
+
+	findByName: function( objectOrClipArray, name ) {
+
+		var clipArray = objectOrClipArray;
+
+		if ( ! Array.isArray( objectOrClipArray ) ) {
+
+			var o = objectOrClipArray;
+			clipArray = o.geometry && o.geometry.animations || o.animations;
+
+		}
+
+		for ( var i = 0; i < clipArray.length; i ++ ) {
+
+			if ( clipArray[ i ].name === name ) {
+
+				return clipArray[ i ];
+
+			}
+		}
+
+		return null;
+
+	},
+
+	CreateClipsFromMorphTargetSequences: function( morphTargets, fps, noLoop ) {
+
+		var animationToMorphTargets = {};
+
+		// tested with https://regex101.com/ on trick sequences
+		// such flamingo_flyA_003, flamingo_run1_003, crdeath0059
+		var pattern = /^([\w-]*?)([\d]+)$/;
+
+		// sort morph target names into animation groups based
+		// patterns like Walk_001, Walk_002, Run_001, Run_002
+		for ( var i = 0, il = morphTargets.length; i < il; i ++ ) {
+
+			var morphTarget = morphTargets[ i ];
+			var parts = morphTarget.name.match( pattern );
+
+			if ( parts && parts.length > 1 ) {
+
+				var name = parts[ 1 ];
+
+				var animationMorphTargets = animationToMorphTargets[ name ];
+				if ( ! animationMorphTargets ) {
+
+					animationToMorphTargets[ name ] = animationMorphTargets = [];
+
+				}
+
+				animationMorphTargets.push( morphTarget );
+
+			}
+
+		}
+
+		var clips = [];
+
+		for ( var name in animationToMorphTargets ) {
+
+			clips.push( AnimationClip.CreateFromMorphTargetSequence( name, animationToMorphTargets[ name ], fps, noLoop ) );
+
+		}
+
+		return clips;
+
+	},
+
+	// parse the animation.hierarchy format
+	parseAnimation: function( animation, bones ) {
+
+		if ( ! animation ) {
+
+			console.error( "  no animation in JSONLoader data" );
+			return null;
+
+		}
+
+		var addNonemptyTrack = function(
+				trackType, trackName, animationKeys, propertyName, destTracks ) {
+
+			// only return track if there are actually keys.
+			if ( animationKeys.length !== 0 ) {
+
+				var times = [];
+				var values = [];
+
+				AnimationUtils.flattenJSON(
+						animationKeys, times, values, propertyName );
+
+				// empty keys are filtered out, so check again
+				if ( times.length !== 0 ) {
+
+					destTracks.push( new trackType( trackName, times, values ) );
+
+				}
+
+			}
+
+		};
+
+		var tracks = [];
+
+		var clipName = animation.name || 'default';
+		// automatic length determination in AnimationClip.
+		var duration = animation.length || -1;
+		var fps = animation.fps || 30;
+
+		var hierarchyTracks = animation.hierarchy || [];
+
+		for ( var h = 0; h < hierarchyTracks.length; h ++ ) {
+
+			var animationKeys = hierarchyTracks[ h ].keys;
+
+			// skip empty tracks
+			if ( ! animationKeys || animationKeys.length === 0 ) continue;
+
+			// process morph targets in a way exactly compatible
+			// with AnimationHandler.init( animation )
+			if ( animationKeys[0].morphTargets ) {
+
+				// figure out all morph targets used in this track
+				var morphTargetNames = {};
+				for ( var k = 0; k < animationKeys.length; k ++ ) {
+
+					if ( animationKeys[k].morphTargets ) {
+
+						for ( var m = 0; m < animationKeys[k].morphTargets.length; m ++ ) {
+
+							morphTargetNames[ animationKeys[k].morphTargets[m] ] = -1;
+						}
+
+					}
+
+				}
+
+				// create a track for each morph target with all zero
+				// morphTargetInfluences except for the keys in which
+				// the morphTarget is named.
+				for ( var morphTargetName in morphTargetNames ) {
+
+					var times = [];
+					var values = [];
+
+					for ( var m = 0; m !== animationKeys[k].morphTargets.length; ++ m ) {
+
+						var animationKey = animationKeys[k];
+
+						times.push( animationKey.time );
+						values.push( ( animationKey.morphTarget === morphTargetName ) ? 1 : 0 );
+
+					}
+
+					tracks.push( new NumberKeyframeTrack('.morphTargetInfluence[' + morphTargetName + ']', times, values ) );
+
+				}
+
+				duration = morphTargetNames.length * ( fps || 1.0 );
+
+			} else {
+				// ...assume skeletal animation
+
+				var boneName = '.bones[' + bones[ h ].name + ']';
+
+				addNonemptyTrack(
+						VectorKeyframeTrack, boneName + '.position',
+						animationKeys, 'pos', tracks );
+
+				addNonemptyTrack(
+						QuaternionKeyframeTrack, boneName + '.quaternion',
+						animationKeys, 'rot', tracks );
+
+				addNonemptyTrack(
+						VectorKeyframeTrack, boneName + '.scale',
+						animationKeys, 'scl', tracks );
+
+			}
+
+		}
+
+		if ( tracks.length === 0 ) {
+
+			return null;
+
+		}
+
+		var clip = new AnimationClip( clipName, duration, tracks );
+
+		return clip;
+
+	}
+
+} );
+
+/**
  * @author mrdoob / http://mrdoob.com/
  * @author mikael emtinger / http://gomo.se/
  * @author alteredq / http://alteredqualia.com/
@@ -5553,6 +7308,20 @@ Object3D.prototype = {
 
 		if ( isRootObject ) {
 
+			var animations = [];
+
+			if ( this.animations !== undefined ) {
+
+				for ( var i = 0; i < this.animations.length; i ++ ) {
+
+						var animation = AnimationClip.toJSON( this.animations[i] );
+
+						animations.push( animation );
+
+				}
+
+			}
+
 			var geometries = extractFromCache( meta.geometries );
 			var materials = extractFromCache( meta.materials );
 			var textures = extractFromCache( meta.textures );
@@ -5562,6 +7331,7 @@ Object3D.prototype = {
 			if ( materials.length > 0 ) output.materials = materials;
 			if ( textures.length > 0 ) output.textures = textures;
 			if ( images.length > 0 ) output.images = images;
+			if ( animations.length > 0 ) output.animations = animations;
 
 		}
 
@@ -30287,1761 +32057,6 @@ AmbientLight.prototype = Object.assign( Object.create( Light.prototype ), {
 	constructor: AmbientLight,
 
 	isAmbientLight: true
-
-} );
-
-/**
- * @author tschw
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- */
-
-var AnimationUtils = {
-
-	// same as Array.prototype.slice, but also works on typed arrays
-	arraySlice: function( array, from, to ) {
-
-		if ( AnimationUtils.isTypedArray( array ) ) {
-
-			return new array.constructor( array.subarray( from, to ) );
-
-		}
-
-		return array.slice( from, to );
-
-	},
-
-	// converts an array to a specific type
-	convertArray: function( array, type, forceClone ) {
-
-		if ( ! array || // let 'undefined' and 'null' pass
-				! forceClone && array.constructor === type ) return array;
-
-		if ( typeof type.BYTES_PER_ELEMENT === 'number' ) {
-
-			return new type( array ); // create typed array
-
-		}
-
-		return Array.prototype.slice.call( array ); // create Array
-
-	},
-
-	isTypedArray: function( object ) {
-
-		return ArrayBuffer.isView( object ) &&
-				! ( object instanceof DataView );
-
-	},
-
-	// returns an array by which times and values can be sorted
-	getKeyframeOrder: function( times ) {
-
-		function compareTime( i, j ) {
-
-			return times[ i ] - times[ j ];
-
-		}
-
-		var n = times.length;
-		var result = new Array( n );
-		for ( var i = 0; i !== n; ++ i ) result[ i ] = i;
-
-		result.sort( compareTime );
-
-		return result;
-
-	},
-
-	// uses the array previously returned by 'getKeyframeOrder' to sort data
-	sortedArray: function( values, stride, order ) {
-
-		var nValues = values.length;
-		var result = new values.constructor( nValues );
-
-		for ( var i = 0, dstOffset = 0; dstOffset !== nValues; ++ i ) {
-
-			var srcOffset = order[ i ] * stride;
-
-			for ( var j = 0; j !== stride; ++ j ) {
-
-				result[ dstOffset ++ ] = values[ srcOffset + j ];
-
-			}
-
-		}
-
-		return result;
-
-	},
-
-	// function for parsing AOS keyframe formats
-	flattenJSON: function( jsonKeys, times, values, valuePropertyName ) {
-
-		var i = 1, key = jsonKeys[ 0 ];
-
-		while ( key !== undefined && key[ valuePropertyName ] === undefined ) {
-
-			key = jsonKeys[ i ++ ];
-
-		}
-
-		if ( key === undefined ) return; // no data
-
-		var value = key[ valuePropertyName ];
-		if ( value === undefined ) return; // no data
-
-		if ( Array.isArray( value ) ) {
-
-			do {
-
-				value = key[ valuePropertyName ];
-
-				if ( value !== undefined ) {
-
-					times.push( key.time );
-					values.push.apply( values, value ); // push all elements
-
-				}
-
-				key = jsonKeys[ i ++ ];
-
-			} while ( key !== undefined );
-
-		} else if ( value.toArray !== undefined ) {
-			// ...assume THREE.Math-ish
-
-			do {
-
-				value = key[ valuePropertyName ];
-
-				if ( value !== undefined ) {
-
-					times.push( key.time );
-					value.toArray( values, values.length );
-
-				}
-
-				key = jsonKeys[ i ++ ];
-
-			} while ( key !== undefined );
-
-		} else {
-			// otherwise push as-is
-
-			do {
-
-				value = key[ valuePropertyName ];
-
-				if ( value !== undefined ) {
-
-					times.push( key.time );
-					values.push( value );
-
-				}
-
-				key = jsonKeys[ i ++ ];
-
-			} while ( key !== undefined );
-
-		}
-
-	}
-
-};
-
-/**
- * Abstract base class of interpolants over parametric samples.
- *
- * The parameter domain is one dimensional, typically the time or a path
- * along a curve defined by the data.
- *
- * The sample values can have any dimensionality and derived classes may
- * apply special interpretations to the data.
- *
- * This class provides the interval seek in a Template Method, deferring
- * the actual interpolation to derived classes.
- *
- * Time complexity is O(1) for linear access crossing at most two points
- * and O(log N) for random access, where N is the number of positions.
- *
- * References:
- *
- * 		http://www.oodesign.com/template-method-pattern.html
- *
- * @author tschw
- */
-
-function Interpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
-
-	this.parameterPositions = parameterPositions;
-	this._cachedIndex = 0;
-
-	this.resultBuffer = resultBuffer !== undefined ?
-			resultBuffer : new sampleValues.constructor( sampleSize );
-	this.sampleValues = sampleValues;
-	this.valueSize = sampleSize;
-
-}
-
-Interpolant.prototype = {
-
-	constructor: Interpolant,
-
-	evaluate: function( t ) {
-
-		var pp = this.parameterPositions,
-			i1 = this._cachedIndex,
-
-			t1 = pp[   i1   ],
-			t0 = pp[ i1 - 1 ];
-
-		validate_interval: {
-
-			seek: {
-
-				var right;
-
-				linear_scan: {
-//- See http://jsperf.com/comparison-to-undefined/3
-//- slower code:
-//-
-//- 				if ( t >= t1 || t1 === undefined ) {
-					forward_scan: if ( ! ( t < t1 ) ) {
-
-						for ( var giveUpAt = i1 + 2; ;) {
-
-							if ( t1 === undefined ) {
-
-								if ( t < t0 ) break forward_scan;
-
-								// after end
-
-								i1 = pp.length;
-								this._cachedIndex = i1;
-								return this.afterEnd_( i1 - 1, t, t0 );
-
-							}
-
-							if ( i1 === giveUpAt ) break; // this loop
-
-							t0 = t1;
-							t1 = pp[ ++ i1 ];
-
-							if ( t < t1 ) {
-
-								// we have arrived at the sought interval
-								break seek;
-
-							}
-
-						}
-
-						// prepare binary search on the right side of the index
-						right = pp.length;
-						break linear_scan;
-
-					}
-
-//- slower code:
-//-					if ( t < t0 || t0 === undefined ) {
-					if ( ! ( t >= t0 ) ) {
-
-						// looping?
-
-						var t1global = pp[ 1 ];
-
-						if ( t < t1global ) {
-
-							i1 = 2; // + 1, using the scan for the details
-							t0 = t1global;
-
-						}
-
-						// linear reverse scan
-
-						for ( var giveUpAt = i1 - 2; ;) {
-
-							if ( t0 === undefined ) {
-
-								// before start
-
-								this._cachedIndex = 0;
-								return this.beforeStart_( 0, t, t1 );
-
-							}
-
-							if ( i1 === giveUpAt ) break; // this loop
-
-							t1 = t0;
-							t0 = pp[ -- i1 - 1 ];
-
-							if ( t >= t0 ) {
-
-								// we have arrived at the sought interval
-								break seek;
-
-							}
-
-						}
-
-						// prepare binary search on the left side of the index
-						right = i1;
-						i1 = 0;
-						break linear_scan;
-
-					}
-
-					// the interval is valid
-
-					break validate_interval;
-
-				} // linear scan
-
-				// binary search
-
-				while ( i1 < right ) {
-
-					var mid = ( i1 + right ) >>> 1;
-
-					if ( t < pp[ mid ] ) {
-
-						right = mid;
-
-					} else {
-
-						i1 = mid + 1;
-
-					}
-
-				}
-
-				t1 = pp[   i1   ];
-				t0 = pp[ i1 - 1 ];
-
-				// check boundary cases, again
-
-				if ( t0 === undefined ) {
-
-					this._cachedIndex = 0;
-					return this.beforeStart_( 0, t, t1 );
-
-				}
-
-				if ( t1 === undefined ) {
-
-					i1 = pp.length;
-					this._cachedIndex = i1;
-					return this.afterEnd_( i1 - 1, t0, t );
-
-				}
-
-			} // seek
-
-			this._cachedIndex = i1;
-
-			this.intervalChanged_( i1, t0, t1 );
-
-		} // validate_interval
-
-		return this.interpolate_( i1, t0, t, t1 );
-
-	},
-
-	settings: null, // optional, subclass-specific settings structure
-	// Note: The indirection allows central control of many interpolants.
-
-	// --- Protected interface
-
-	DefaultSettings_: {},
-
-	getSettings_: function() {
-
-		return this.settings || this.DefaultSettings_;
-
-	},
-
-	copySampleValue_: function( index ) {
-
-		// copies a sample value to the result buffer
-
-		var result = this.resultBuffer,
-			values = this.sampleValues,
-			stride = this.valueSize,
-			offset = index * stride;
-
-		for ( var i = 0; i !== stride; ++ i ) {
-
-			result[ i ] = values[ offset + i ];
-
-		}
-
-		return result;
-
-	},
-
-	// Template methods for derived classes:
-
-	interpolate_: function( i1, t0, t, t1 ) {
-
-		throw new Error( "call to abstract method" );
-		// implementations shall return this.resultBuffer
-
-	},
-
-	intervalChanged_: function( i1, t0, t1 ) {
-
-		// empty
-
-	}
-
-};
-
-Object.assign( Interpolant.prototype, {
-
-	beforeStart_: //( 0, t, t0 ), returns this.resultBuffer
-		Interpolant.prototype.copySampleValue_,
-
-	afterEnd_: //( N-1, tN-1, t ), returns this.resultBuffer
-		Interpolant.prototype.copySampleValue_
-
-} );
-
-/**
- * Fast and simple cubic spline interpolant.
- *
- * It was derived from a Hermitian construction setting the first derivative
- * at each sample position to the linear slope between neighboring positions
- * over their parameter interval.
- *
- * @author tschw
- */
-
-function CubicInterpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
-
-	Interpolant.call(
-			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
-
-	this._weightPrev = -0;
-	this._offsetPrev = -0;
-	this._weightNext = -0;
-	this._offsetNext = -0;
-
-}
-
-CubicInterpolant.prototype =
-		Object.assign( Object.create( Interpolant.prototype ), {
-
-	constructor: CubicInterpolant,
-
-	DefaultSettings_: {
-
-		endingStart: 	ZeroCurvatureEnding,
-		endingEnd:		ZeroCurvatureEnding
-
-	},
-
-	intervalChanged_: function( i1, t0, t1 ) {
-
-		var pp = this.parameterPositions,
-			iPrev = i1 - 2,
-			iNext = i1 + 1,
-
-			tPrev = pp[ iPrev ],
-			tNext = pp[ iNext ];
-
-		if ( tPrev === undefined ) {
-
-			switch ( this.getSettings_().endingStart ) {
-
-				case ZeroSlopeEnding:
-
-					// f'(t0) = 0
-					iPrev = i1;
-					tPrev = 2 * t0 - t1;
-
-					break;
-
-				case WrapAroundEnding:
-
-					// use the other end of the curve
-					iPrev = pp.length - 2;
-					tPrev = t0 + pp[ iPrev ] - pp[ iPrev + 1 ];
-
-					break;
-
-				default: // ZeroCurvatureEnding
-
-					// f''(t0) = 0 a.k.a. Natural Spline
-					iPrev = i1;
-					tPrev = t1;
-
-			}
-
-		}
-
-		if ( tNext === undefined ) {
-
-			switch ( this.getSettings_().endingEnd ) {
-
-				case ZeroSlopeEnding:
-
-					// f'(tN) = 0
-					iNext = i1;
-					tNext = 2 * t1 - t0;
-
-					break;
-
-				case WrapAroundEnding:
-
-					// use the other end of the curve
-					iNext = 1;
-					tNext = t1 + pp[ 1 ] - pp[ 0 ];
-
-					break;
-
-				default: // ZeroCurvatureEnding
-
-					// f''(tN) = 0, a.k.a. Natural Spline
-					iNext = i1 - 1;
-					tNext = t0;
-
-			}
-
-		}
-
-		var halfDt = ( t1 - t0 ) * 0.5,
-			stride = this.valueSize;
-
-		this._weightPrev = halfDt / ( t0 - tPrev );
-		this._weightNext = halfDt / ( tNext - t1 );
-		this._offsetPrev = iPrev * stride;
-		this._offsetNext = iNext * stride;
-
-	},
-
-	interpolate_: function( i1, t0, t, t1 ) {
-
-		var result = this.resultBuffer,
-			values = this.sampleValues,
-			stride = this.valueSize,
-
-			o1 = i1 * stride,		o0 = o1 - stride,
-			oP = this._offsetPrev, 	oN = this._offsetNext,
-			wP = this._weightPrev,	wN = this._weightNext,
-
-			p = ( t - t0 ) / ( t1 - t0 ),
-			pp = p * p,
-			ppp = pp * p;
-
-		// evaluate polynomials
-
-		var sP =     - wP   * ppp   +         2 * wP    * pp    -          wP   * p;
-		var s0 = ( 1 + wP ) * ppp   + (-1.5 - 2 * wP )  * pp    + ( -0.5 + wP ) * p     + 1;
-		var s1 = (-1 - wN ) * ppp   + ( 1.5 +   wN   )  * pp    +    0.5        * p;
-		var sN =       wN   * ppp   -           wN      * pp;
-
-		// combine data linearly
-
-		for ( var i = 0; i !== stride; ++ i ) {
-
-			result[ i ] =
-					sP * values[ oP + i ] +
-					s0 * values[ o0 + i ] +
-					s1 * values[ o1 + i ] +
-					sN * values[ oN + i ];
-
-		}
-
-		return result;
-
-	}
-
-} );
-
-/**
- * @author tschw
- */
-
-function LinearInterpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
-
-	Interpolant.call(
-			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
-
-}
-
-LinearInterpolant.prototype =
-		Object.assign( Object.create( Interpolant.prototype ), {
-
-	constructor: LinearInterpolant,
-
-	interpolate_: function( i1, t0, t, t1 ) {
-
-		var result = this.resultBuffer,
-			values = this.sampleValues,
-			stride = this.valueSize,
-
-			offset1 = i1 * stride,
-			offset0 = offset1 - stride,
-
-			weight1 = ( t - t0 ) / ( t1 - t0 ),
-			weight0 = 1 - weight1;
-
-		for ( var i = 0; i !== stride; ++ i ) {
-
-			result[ i ] =
-					values[ offset0 + i ] * weight0 +
-					values[ offset1 + i ] * weight1;
-
-		}
-
-		return result;
-
-	}
-
-} );
-
-/**
- *
- * Interpolant that evaluates to the sample value at the position preceeding
- * the parameter.
- *
- * @author tschw
- */
-
-function DiscreteInterpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
-
-	Interpolant.call(
-			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
-
-}
-
-DiscreteInterpolant.prototype =
-		Object.assign( Object.create( Interpolant.prototype ), {
-
-	constructor: DiscreteInterpolant,
-
-	interpolate_: function( i1, t0, t, t1 ) {
-
-		return this.copySampleValue_( i1 - 1 );
-
-	}
-
-} );
-
-var KeyframeTrackPrototype;
-
-KeyframeTrackPrototype = {
-
-	TimeBufferType: Float32Array,
-	ValueBufferType: Float32Array,
-
-	DefaultInterpolation: InterpolateLinear,
-
-	InterpolantFactoryMethodDiscrete: function ( result ) {
-
-		return new DiscreteInterpolant(
-				this.times, this.values, this.getValueSize(), result );
-
-	},
-
-	InterpolantFactoryMethodLinear: function ( result ) {
-
-		return new LinearInterpolant(
-				this.times, this.values, this.getValueSize(), result );
-
-	},
-
-	InterpolantFactoryMethodSmooth: function ( result ) {
-
-		return new CubicInterpolant(
-				this.times, this.values, this.getValueSize(), result );
-
-	},
-
-	setInterpolation: function ( interpolation ) {
-
-		var factoryMethod;
-
-		switch ( interpolation ) {
-
-			case InterpolateDiscrete:
-
-				factoryMethod = this.InterpolantFactoryMethodDiscrete;
-
-				break;
-
-			case InterpolateLinear:
-
-				factoryMethod = this.InterpolantFactoryMethodLinear;
-
-				break;
-
-			case InterpolateSmooth:
-
-				factoryMethod = this.InterpolantFactoryMethodSmooth;
-
-				break;
-
-		}
-
-		if ( factoryMethod === undefined ) {
-
-			var message = "unsupported interpolation for " +
-					this.ValueTypeName + " keyframe track named " + this.name;
-
-			if ( this.createInterpolant === undefined ) {
-
-				// fall back to default, unless the default itself is messed up
-				if ( interpolation !== this.DefaultInterpolation ) {
-
-					this.setInterpolation( this.DefaultInterpolation );
-
-				} else {
-
-					throw new Error( message ); // fatal, in this case
-
-				}
-
-			}
-
-			console.warn( message );
-			return;
-
-		}
-
-		this.createInterpolant = factoryMethod;
-
-	},
-
-	getInterpolation: function () {
-
-		switch ( this.createInterpolant ) {
-
-			case this.InterpolantFactoryMethodDiscrete:
-
-				return InterpolateDiscrete;
-
-			case this.InterpolantFactoryMethodLinear:
-
-				return InterpolateLinear;
-
-			case this.InterpolantFactoryMethodSmooth:
-
-				return InterpolateSmooth;
-
-		}
-
-	},
-
-	getValueSize: function () {
-
-		return this.values.length / this.times.length;
-
-	},
-
-	// move all keyframes either forwards or backwards in time
-	shift: function ( timeOffset ) {
-
-		if ( timeOffset !== 0.0 ) {
-
-			var times = this.times;
-
-			for ( var i = 0, n = times.length; i !== n; ++ i ) {
-
-				times[ i ] += timeOffset;
-
-			}
-
-		}
-
-		return this;
-
-	},
-
-	// scale all keyframe times by a factor (useful for frame <-> seconds conversions)
-	scale: function ( timeScale ) {
-
-		if ( timeScale !== 1.0 ) {
-
-			var times = this.times;
-
-			for ( var i = 0, n = times.length; i !== n; ++ i ) {
-
-				times[ i ] *= timeScale;
-
-			}
-
-		}
-
-		return this;
-
-	},
-
-	// removes keyframes before and after animation without changing any values within the range [startTime, endTime].
-	// IMPORTANT: We do not shift around keys to the start of the track time, because for interpolated keys this will change their values
-	trim: function ( startTime, endTime ) {
-
-		var times = this.times,
-			nKeys = times.length,
-			from = 0,
-			to = nKeys - 1;
-
-		while ( from !== nKeys && times[ from ] < startTime ) ++ from;
-		while ( to !== - 1 && times[ to ] > endTime ) -- to;
-
-		++ to; // inclusive -> exclusive bound
-
-		if ( from !== 0 || to !== nKeys ) {
-
-			// empty tracks are forbidden, so keep at least one keyframe
-			if ( from >= to ) to = Math.max( to, 1 ), from = to - 1;
-
-			var stride = this.getValueSize();
-			this.times = AnimationUtils.arraySlice( times, from, to );
-			this.values = AnimationUtils.
-					arraySlice( this.values, from * stride, to * stride );
-
-		}
-
-		return this;
-
-	},
-
-	// ensure we do not get a GarbageInGarbageOut situation, make sure tracks are at least minimally viable
-	validate: function () {
-
-		var valid = true;
-
-		var valueSize = this.getValueSize();
-		if ( valueSize - Math.floor( valueSize ) !== 0 ) {
-
-			console.error( "invalid value size in track", this );
-			valid = false;
-
-		}
-
-		var times = this.times,
-			values = this.values,
-
-			nKeys = times.length;
-
-		if ( nKeys === 0 ) {
-
-			console.error( "track is empty", this );
-			valid = false;
-
-		}
-
-		var prevTime = null;
-
-		for ( var i = 0; i !== nKeys; i ++ ) {
-
-			var currTime = times[ i ];
-
-			if ( typeof currTime === 'number' && isNaN( currTime ) ) {
-
-				console.error( "time is not a valid number", this, i, currTime );
-				valid = false;
-				break;
-
-			}
-
-			if ( prevTime !== null && prevTime > currTime ) {
-
-				console.error( "out of order keys", this, i, currTime, prevTime );
-				valid = false;
-				break;
-
-			}
-
-			prevTime = currTime;
-
-		}
-
-		if ( values !== undefined ) {
-
-			if ( AnimationUtils.isTypedArray( values ) ) {
-
-				for ( var i = 0, n = values.length; i !== n; ++ i ) {
-
-					var value = values[ i ];
-
-					if ( isNaN( value ) ) {
-
-						console.error( "value is not a valid number", this, i, value );
-						valid = false;
-						break;
-
-					}
-
-				}
-
-			}
-
-		}
-
-		return valid;
-
-	},
-
-	// removes equivalent sequential keys as common in morph target sequences
-	// (0,0,0,0,1,1,1,0,0,0,0,0,0,0) --> (0,0,1,1,0,0)
-	optimize: function () {
-
-		var times = this.times,
-			values = this.values,
-			stride = this.getValueSize(),
-
-			smoothInterpolation = this.getInterpolation() === InterpolateSmooth,
-
-			writeIndex = 1,
-			lastIndex = times.length - 1;
-
-		for ( var i = 1; i < lastIndex; ++ i ) {
-
-			var keep = false;
-
-			var time = times[ i ];
-			var timeNext = times[ i + 1 ];
-
-			// remove adjacent keyframes scheduled at the same time
-
-			if ( time !== timeNext && ( i !== 1 || time !== time[ 0 ] ) ) {
-
-				if ( ! smoothInterpolation ) {
-
-					// remove unnecessary keyframes same as their neighbors
-
-					var offset = i * stride,
-						offsetP = offset - stride,
-						offsetN = offset + stride;
-
-					for ( var j = 0; j !== stride; ++ j ) {
-
-						var value = values[ offset + j ];
-
-						if ( value !== values[ offsetP + j ] ||
-								value !== values[ offsetN + j ] ) {
-
-							keep = true;
-							break;
-
-						}
-
-					}
-
-				} else keep = true;
-
-			}
-
-			// in-place compaction
-
-			if ( keep ) {
-
-				if ( i !== writeIndex ) {
-
-					times[ writeIndex ] = times[ i ];
-
-					var readOffset = i * stride,
-						writeOffset = writeIndex * stride;
-
-					for ( var j = 0; j !== stride; ++ j )
-
-						values[ writeOffset + j ] = values[ readOffset + j ];
-
-				}
-
-				++ writeIndex;
-
-			}
-
-		}
-
-		// flush last keyframe (compaction looks ahead)
-
-		if ( lastIndex > 0 ) {
-
-			times[ writeIndex ] = times[ lastIndex ];
-
-			for ( var readOffset = lastIndex * stride, writeOffset = writeIndex * stride, j = 0; j !== stride; ++ j )
-
-				values[ writeOffset + j ] = values[ readOffset + j ];
-
-			++ writeIndex;
-
-		}
-
-		if ( writeIndex !== times.length ) {
-
-			this.times = AnimationUtils.arraySlice( times, 0, writeIndex );
-			this.values = AnimationUtils.arraySlice( values, 0, writeIndex * stride );
-
-		}
-
-		return this;
-
-	}
-
-};
-
-function KeyframeTrackConstructor( name, times, values, interpolation ) {
-
-	if( name === undefined ) throw new Error( "track name is undefined" );
-
-	if( times === undefined || times.length === 0 ) {
-
-		throw new Error( "no keyframes in track named " + name );
-
-	}
-
-	this.name = name;
-
-	this.times = AnimationUtils.convertArray( times, this.TimeBufferType );
-	this.values = AnimationUtils.convertArray( values, this.ValueBufferType );
-
-	this.setInterpolation( interpolation || this.DefaultInterpolation );
-
-	this.validate();
-	this.optimize();
-
-}
-
-/**
- *
- * A Track of vectored keyframe values.
- *
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function VectorKeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
-
-}
-
-VectorKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: VectorKeyframeTrack,
-
-	ValueTypeName: 'vector'
-
-	// ValueBufferType is inherited
-
-	// DefaultInterpolation is inherited
-
-} );
-
-/**
- * Spherical linear unit quaternion interpolant.
- *
- * @author tschw
- */
-
-function QuaternionLinearInterpolant(
-		parameterPositions, sampleValues, sampleSize, resultBuffer ) {
-
-	Interpolant.call(
-			this, parameterPositions, sampleValues, sampleSize, resultBuffer );
-
-}
-
-QuaternionLinearInterpolant.prototype =
-		Object.assign( Object.create( Interpolant.prototype ), {
-
-	constructor: QuaternionLinearInterpolant,
-
-	interpolate_: function( i1, t0, t, t1 ) {
-
-		var result = this.resultBuffer,
-			values = this.sampleValues,
-			stride = this.valueSize,
-
-			offset = i1 * stride,
-
-			alpha = ( t - t0 ) / ( t1 - t0 );
-
-		for ( var end = offset + stride; offset !== end; offset += 4 ) {
-
-			Quaternion.slerpFlat( result, 0,
-					values, offset - stride, values, offset, alpha );
-
-		}
-
-		return result;
-
-	}
-
-} );
-
-/**
- *
- * A Track of quaternion keyframe values.
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function QuaternionKeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
-
-}
-
-QuaternionKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: QuaternionKeyframeTrack,
-
-	ValueTypeName: 'quaternion',
-
-	// ValueBufferType is inherited
-
-	DefaultInterpolation: InterpolateLinear,
-
-	InterpolantFactoryMethodLinear: function( result ) {
-
-		return new QuaternionLinearInterpolant(
-				this.times, this.values, this.getValueSize(), result );
-
-	},
-
-	InterpolantFactoryMethodSmooth: undefined // not yet implemented
-
-} );
-
-/**
- *
- * A Track of numeric keyframe values.
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function NumberKeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
-
-}
-
-NumberKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: NumberKeyframeTrack,
-
-	ValueTypeName: 'number'
-
-	// ValueBufferType is inherited
-
-	// DefaultInterpolation is inherited
-
-} );
-
-/**
- *
- * A Track that interpolates Strings
- *
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function StringKeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
-
-}
-
-StringKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: StringKeyframeTrack,
-
-	ValueTypeName: 'string',
-	ValueBufferType: Array,
-
-	DefaultInterpolation: InterpolateDiscrete,
-
-	InterpolantFactoryMethodLinear: undefined,
-
-	InterpolantFactoryMethodSmooth: undefined
-
-} );
-
-/**
- *
- * A Track of Boolean keyframe values.
- *
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function BooleanKeyframeTrack( name, times, values ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values );
-
-}
-
-BooleanKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: BooleanKeyframeTrack,
-
-	ValueTypeName: 'bool',
-	ValueBufferType: Array,
-
-	DefaultInterpolation: InterpolateDiscrete,
-
-	InterpolantFactoryMethodLinear: undefined,
-	InterpolantFactoryMethodSmooth: undefined
-
-	// Note: Actually this track could have a optimized / compressed
-	// representation of a single value and a custom interpolant that
-	// computes "firstValue ^ isOdd( index )".
-
-} );
-
-/**
- *
- * A Track of keyframe values that represent color.
- *
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function ColorKeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.call( this, name, times, values, interpolation );
-
-}
-
-ColorKeyframeTrack.prototype =
-		Object.assign( Object.create( KeyframeTrackPrototype ), {
-
-	constructor: ColorKeyframeTrack,
-
-	ValueTypeName: 'color'
-
-	// ValueBufferType is inherited
-
-	// DefaultInterpolation is inherited
-
-
-	// Note: Very basic implementation and nothing special yet.
-	// However, this is the place for color space parameterization.
-
-} );
-
-/**
- *
- * A timed sequence of keyframes for a specific property.
- *
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- * @author tschw
- */
-
-function KeyframeTrack( name, times, values, interpolation ) {
-
-	KeyframeTrackConstructor.apply( this, arguments );
-
-}
-
-KeyframeTrack.prototype = KeyframeTrackPrototype;
-KeyframeTrackPrototype.constructor = KeyframeTrack;
-
-// Static methods:
-
-Object.assign( KeyframeTrack, {
-
-	// Serialization (in static context, because of constructor invocation
-	// and automatic invocation of .toJSON):
-
-	parse: function( json ) {
-
-		if( json.type === undefined ) {
-
-			throw new Error( "track type undefined, can not parse" );
-
-		}
-
-		var trackType = KeyframeTrack._getTrackTypeForValueTypeName( json.type );
-
-		if ( json.times === undefined ) {
-
-			var times = [], values = [];
-
-			AnimationUtils.flattenJSON( json.keys, times, values, 'value' );
-
-			json.times = times;
-			json.values = values;
-
-		}
-
-		// derived classes can define a static parse method
-		if ( trackType.parse !== undefined ) {
-
-			return trackType.parse( json );
-
-		} else {
-
-			// by default, we asssume a constructor compatible with the base
-			return new trackType(
-					json.name, json.times, json.values, json.interpolation );
-
-		}
-
-	},
-
-	toJSON: function( track ) {
-
-		var trackType = track.constructor;
-
-		var json;
-
-		// derived classes can define a static toJSON method
-		if ( trackType.toJSON !== undefined ) {
-
-			json = trackType.toJSON( track );
-
-		} else {
-
-			// by default, we assume the data can be serialized as-is
-			json = {
-
-				'name': track.name,
-				'times': AnimationUtils.convertArray( track.times, Array ),
-				'values': AnimationUtils.convertArray( track.values, Array )
-
-			};
-
-			var interpolation = track.getInterpolation();
-
-			if ( interpolation !== track.DefaultInterpolation ) {
-
-				json.interpolation = interpolation;
-
-			}
-
-		}
-
-		json.type = track.ValueTypeName; // mandatory
-
-		return json;
-
-	},
-
-	_getTrackTypeForValueTypeName: function( typeName ) {
-
-		switch( typeName.toLowerCase() ) {
-
-			case "scalar":
-			case "double":
-			case "float":
-			case "number":
-			case "integer":
-
-				return NumberKeyframeTrack;
-
-			case "vector":
-			case "vector2":
-			case "vector3":
-			case "vector4":
-
-				return VectorKeyframeTrack;
-
-			case "color":
-
-				return ColorKeyframeTrack;
-
-			case "quaternion":
-
-				return QuaternionKeyframeTrack;
-
-			case "bool":
-			case "boolean":
-
-				return BooleanKeyframeTrack;
-
-			case "string":
-
-				return StringKeyframeTrack;
-
-		}
-
-		throw new Error( "Unsupported typeName: " + typeName );
-
-	}
-
-} );
-
-/**
- *
- * Reusable set of Tracks that represent an animation.
- *
- * @author Ben Houston / http://clara.io/
- * @author David Sarno / http://lighthaus.us/
- */
-
-function AnimationClip( name, duration, tracks ) {
-
-	this.name = name;
-	this.tracks = tracks;
-	this.duration = ( duration !== undefined ) ? duration : -1;
-
-	this.uuid = _Math.generateUUID();
-
-	// this means it should figure out its duration by scanning the tracks
-	if ( this.duration < 0 ) {
-
-		this.resetDuration();
-
-	}
-
-	this.optimize();
-
-}
-
-AnimationClip.prototype = {
-
-	constructor: AnimationClip,
-
-	resetDuration: function() {
-
-		var tracks = this.tracks,
-			duration = 0;
-
-		for ( var i = 0, n = tracks.length; i !== n; ++ i ) {
-
-			var track = this.tracks[ i ];
-
-			duration = Math.max( duration, track.times[ track.times.length - 1 ] );
-
-		}
-
-		this.duration = duration;
-
-	},
-
-	trim: function() {
-
-		for ( var i = 0; i < this.tracks.length; i ++ ) {
-
-			this.tracks[ i ].trim( 0, this.duration );
-
-		}
-
-		return this;
-
-	},
-
-	optimize: function() {
-
-		for ( var i = 0; i < this.tracks.length; i ++ ) {
-
-			this.tracks[ i ].optimize();
-
-		}
-
-		return this;
-
-	}
-
-};
-
-// Static methods:
-
-Object.assign( AnimationClip, {
-
-	parse: function( json ) {
-
-		var tracks = [],
-			jsonTracks = json.tracks,
-			frameTime = 1.0 / ( json.fps || 1.0 );
-
-		for ( var i = 0, n = jsonTracks.length; i !== n; ++ i ) {
-
-			tracks.push( KeyframeTrack.parse( jsonTracks[ i ] ).scale( frameTime ) );
-
-		}
-
-		return new AnimationClip( json.name, json.duration, tracks );
-
-	},
-
-
-	toJSON: function( clip ) {
-
-		var tracks = [],
-			clipTracks = clip.tracks;
-
-		var json = {
-
-			'name': clip.name,
-			'duration': clip.duration,
-			'tracks': tracks
-
-		};
-
-		for ( var i = 0, n = clipTracks.length; i !== n; ++ i ) {
-
-			tracks.push( KeyframeTrack.toJSON( clipTracks[ i ] ) );
-
-		}
-
-		return json;
-
-	},
-
-
-	CreateFromMorphTargetSequence: function( name, morphTargetSequence, fps, noLoop ) {
-
-		var numMorphTargets = morphTargetSequence.length;
-		var tracks = [];
-
-		for ( var i = 0; i < numMorphTargets; i ++ ) {
-
-			var times = [];
-			var values = [];
-
-			times.push(
-					( i + numMorphTargets - 1 ) % numMorphTargets,
-					i,
-					( i + 1 ) % numMorphTargets );
-
-			values.push( 0, 1, 0 );
-
-			var order = AnimationUtils.getKeyframeOrder( times );
-			times = AnimationUtils.sortedArray( times, 1, order );
-			values = AnimationUtils.sortedArray( values, 1, order );
-
-			// if there is a key at the first frame, duplicate it as the
-			// last frame as well for perfect loop.
-			if ( ! noLoop && times[ 0 ] === 0 ) {
-
-				times.push( numMorphTargets );
-				values.push( values[ 0 ] );
-
-			}
-
-			tracks.push(
-					new NumberKeyframeTrack(
-						'.morphTargetInfluences[' + morphTargetSequence[ i ].name + ']',
-						times, values
-					).scale( 1.0 / fps ) );
-		}
-
-		return new AnimationClip( name, -1, tracks );
-
-	},
-
-	findByName: function( objectOrClipArray, name ) {
-
-		var clipArray = objectOrClipArray;
-
-		if ( ! Array.isArray( objectOrClipArray ) ) {
-
-			var o = objectOrClipArray;
-			clipArray = o.geometry && o.geometry.animations || o.animations;
-
-		}
-
-		for ( var i = 0; i < clipArray.length; i ++ ) {
-
-			if ( clipArray[ i ].name === name ) {
-
-				return clipArray[ i ];
-
-			}
-		}
-
-		return null;
-
-	},
-
-	CreateClipsFromMorphTargetSequences: function( morphTargets, fps, noLoop ) {
-
-		var animationToMorphTargets = {};
-
-		// tested with https://regex101.com/ on trick sequences
-		// such flamingo_flyA_003, flamingo_run1_003, crdeath0059
-		var pattern = /^([\w-]*?)([\d]+)$/;
-
-		// sort morph target names into animation groups based
-		// patterns like Walk_001, Walk_002, Run_001, Run_002
-		for ( var i = 0, il = morphTargets.length; i < il; i ++ ) {
-
-			var morphTarget = morphTargets[ i ];
-			var parts = morphTarget.name.match( pattern );
-
-			if ( parts && parts.length > 1 ) {
-
-				var name = parts[ 1 ];
-
-				var animationMorphTargets = animationToMorphTargets[ name ];
-				if ( ! animationMorphTargets ) {
-
-					animationToMorphTargets[ name ] = animationMorphTargets = [];
-
-				}
-
-				animationMorphTargets.push( morphTarget );
-
-			}
-
-		}
-
-		var clips = [];
-
-		for ( var name in animationToMorphTargets ) {
-
-			clips.push( AnimationClip.CreateFromMorphTargetSequence( name, animationToMorphTargets[ name ], fps, noLoop ) );
-
-		}
-
-		return clips;
-
-	},
-
-	// parse the animation.hierarchy format
-	parseAnimation: function( animation, bones ) {
-
-		if ( ! animation ) {
-
-			console.error( "  no animation in JSONLoader data" );
-			return null;
-
-		}
-
-		var addNonemptyTrack = function(
-				trackType, trackName, animationKeys, propertyName, destTracks ) {
-
-			// only return track if there are actually keys.
-			if ( animationKeys.length !== 0 ) {
-
-				var times = [];
-				var values = [];
-
-				AnimationUtils.flattenJSON(
-						animationKeys, times, values, propertyName );
-
-				// empty keys are filtered out, so check again
-				if ( times.length !== 0 ) {
-
-					destTracks.push( new trackType( trackName, times, values ) );
-
-				}
-
-			}
-
-		};
-
-		var tracks = [];
-
-		var clipName = animation.name || 'default';
-		// automatic length determination in AnimationClip.
-		var duration = animation.length || -1;
-		var fps = animation.fps || 30;
-
-		var hierarchyTracks = animation.hierarchy || [];
-
-		for ( var h = 0; h < hierarchyTracks.length; h ++ ) {
-
-			var animationKeys = hierarchyTracks[ h ].keys;
-
-			// skip empty tracks
-			if ( ! animationKeys || animationKeys.length === 0 ) continue;
-
-			// process morph targets in a way exactly compatible
-			// with AnimationHandler.init( animation )
-			if ( animationKeys[0].morphTargets ) {
-
-				// figure out all morph targets used in this track
-				var morphTargetNames = {};
-				for ( var k = 0; k < animationKeys.length; k ++ ) {
-
-					if ( animationKeys[k].morphTargets ) {
-
-						for ( var m = 0; m < animationKeys[k].morphTargets.length; m ++ ) {
-
-							morphTargetNames[ animationKeys[k].morphTargets[m] ] = -1;
-						}
-
-					}
-
-				}
-
-				// create a track for each morph target with all zero
-				// morphTargetInfluences except for the keys in which
-				// the morphTarget is named.
-				for ( var morphTargetName in morphTargetNames ) {
-
-					var times = [];
-					var values = [];
-
-					for ( var m = 0; m !== animationKeys[k].morphTargets.length; ++ m ) {
-
-						var animationKey = animationKeys[k];
-
-						times.push( animationKey.time );
-						values.push( ( animationKey.morphTarget === morphTargetName ) ? 1 : 0 );
-
-					}
-
-					tracks.push( new NumberKeyframeTrack('.morphTargetInfluence[' + morphTargetName + ']', times, values ) );
-
-				}
-
-				duration = morphTargetNames.length * ( fps || 1.0 );
-
-			} else {
-				// ...assume skeletal animation
-
-				var boneName = '.bones[' + bones[ h ].name + ']';
-
-				addNonemptyTrack(
-						VectorKeyframeTrack, boneName + '.position',
-						animationKeys, 'pos', tracks );
-
-				addNonemptyTrack(
-						QuaternionKeyframeTrack, boneName + '.quaternion',
-						animationKeys, 'rot', tracks );
-
-				addNonemptyTrack(
-						VectorKeyframeTrack, boneName + '.scale',
-						animationKeys, 'scl', tracks );
-
-			}
-
-		}
-
-		if ( tracks.length === 0 ) {
-
-			return null;
-
-		}
-
-		var clip = new AnimationClip( clipName, duration, tracks );
-
-		return clip;
-
-	}
 
 } );
 
