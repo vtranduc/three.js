@@ -6,6 +6,7 @@ import { Euler } from '../math/Euler';
 import { Layers } from './Layers';
 import { Matrix3 } from '../math/Matrix3';
 import { _Math } from '../math/Math';
+import { AnimationClip } from '../animation/AnimationClip';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -645,6 +646,20 @@ Object3D.prototype = {
 
 		if ( isRootObject ) {
 
+			var animations = [];
+
+			if ( this.animations !== undefined ) {
+
+				for ( var i = 0; i < this.animations.length; i ++ ) {
+
+						var animation = AnimationClip.toJSON( this.animations[i] );
+
+						animations.push( animation );
+
+				}
+
+			}
+
 			var geometries = extractFromCache( meta.geometries );
 			var materials = extractFromCache( meta.materials );
 			var textures = extractFromCache( meta.textures );
@@ -654,6 +669,7 @@ Object3D.prototype = {
 			if ( materials.length > 0 ) output.materials = materials;
 			if ( textures.length > 0 ) output.textures = textures;
 			if ( images.length > 0 ) output.images = images;
+			if ( animations.length > 0 ) output.animations = animations;
 
 		}
 
