@@ -7237,10 +7237,12 @@ Object3D.prototype = {
 
 			// initialize meta obj
 			meta = {
+				animations: {},
 				geometries: {},
 				materials: {},
 				textures: {},
-				images: {}
+				images: {},
+				skeletons: {}
 			};
 
 			output.metadata = {
@@ -7326,12 +7328,14 @@ Object3D.prototype = {
 			var materials = extractFromCache( meta.materials );
 			var textures = extractFromCache( meta.textures );
 			var images = extractFromCache( meta.images );
+			var skeletons = extractFromCache( meta.skeletons );
 
 			if ( geometries.length > 0 ) output.geometries = geometries;
 			if ( materials.length > 0 ) output.materials = materials;
 			if ( textures.length > 0 ) output.textures = textures;
 			if ( images.length > 0 ) output.images = images;
 			if ( animations.length > 0 ) output.animations = animations;
+			if ( skeletons.length > 0 ) output.skeletons = skeletons;
 
 		}
 
@@ -25166,11 +25170,47 @@ LOD.prototype = Object.assign( Object.create( Object3D.prototype ), {
 /**
  * @author mikael emtinger / http://gomo.se/
  * @author alteredq / http://alteredqualia.com/
+ * @author ikerr / http://verold.com
+ */
+
+function Bone( skin ) {
+
+	Object3D.call( this );
+
+	this.type = 'Bone';
+
+	this.skin = skin;
+
+}
+
+Bone.prototype = Object.assign( Object.create( Object3D.prototype ), {
+
+	constructor: Bone,
+
+	isBone: true,
+
+	copy: function ( source ) {
+
+		Object3D.prototype.copy.call( this, source );
+
+		this.skin = source.skin;
+
+		return this;
+
+	}
+
+} );
+
+/**
+ * @author mikael emtinger / http://gomo.se/
+ * @author alteredq / http://alteredqualia.com/
  * @author michael guerrero / http://realitymeltdown.com
  * @author ikerr / http://verold.com
  */
 
 function Skeleton( bones, boneInverses, useVertexTexture ) {
+
+	this.uuid = _Math.generateUUID();
 
 	this.useVertexTexture = useVertexTexture !== undefined ? useVertexTexture : true;
 
@@ -25340,29 +25380,79 @@ Object.assign( Skeleton.prototype, {
 
 		return new Skeleton( this.bones, this.boneInverses, this.useVertexTexture );
 
+	},
+
+	toJSON: function ( meta ) {
+
+		var data = {};
+
+		var scope = this;
+
+		function getParentIndex ( bone ) {
+
+			if ( ! bone.parent instanceof Bone ) return -1;
+
+			for ( var i = 0, il = scope.bones.length; i < il; i ++ ) {
+
+				if ( scope.bones[ i ] === bone.parent ) return i;
+
+			}
+
+			return -1;
+
+		}
+
+		var bones = [];
+		var sockets = [];
+
+		for ( var i = 0, il = this.bones.length; i < il; i ++ ) {
+
+			var bone = this.bones[ i ];
+
+			bones.push( {
+
+				name: bone.name,
+				parent: getParentIndex( bone ),
+				pos: bone.position.toArray(),
+				rotq: bone.quaternion.toArray(),
+				scl: bone.scale.toArray(),
+				uuid: bone.uuid
+
+			} );
+
+			for ( var j = 0, jl = bone.children.length; j < jl; j ++ ) {
+
+				var child = bone.children[ j ];
+
+				if ( ! ( child instanceof Bone ) /* || bone.skin !== child.skin */ ) {
+
+					var object = child.toJSON( meta ).object;
+					object.parent = bone.uuid;
+					sockets.push( object );
+
+				}
+
+			}
+
+		}
+
+		var boneInverses = [];
+
+		for ( var i = 0, il = this.boneInverses.length; i < il; i ++ ) {
+
+			boneInverses.push( this.boneInverses[ i ].toArray() );
+
+		}
+
+		data.uuid = this.uuid;
+		data.bones = bones;
+		data.boneInverses = boneInverses;
+		data.useVertexTexture = this.useVertexTexture;
+		if ( sockets.length > 0 ) data.sockets = sockets;
+
+		return data;
+
 	}
-
-} );
-
-/**
- * @author mikael emtinger / http://gomo.se/
- * @author alteredq / http://alteredqualia.com/
- * @author ikerr / http://verold.com
- */
-
-function Bone() {
-
-	Object3D.call( this );
-
-	this.type = 'Bone';
-
-}
-
-Bone.prototype = Object.assign( Object.create( Object3D.prototype ), {
-
-	constructor: Bone,
-
-	isBone: true
 
 } );
 
@@ -25388,6 +25478,7 @@ function SkinnedMesh( geometry, material, useVertexTexture ) {
 	// convenience) for THREE.SkinnedMesh to do this.
 
 	var bones = [];
+	var boneInverses;
 
 	if ( this.geometry && this.geometry.bones !== undefined ) {
 
@@ -25397,13 +25488,14 @@ function SkinnedMesh( geometry, material, useVertexTexture ) {
 
 			gbone = this.geometry.bones[ b ];
 
-			bone = new Bone();
+			bone = new Bone( this );
 			bones.push( bone );
 
 			bone.name = gbone.name;
 			bone.position.fromArray( gbone.pos );
 			bone.quaternion.fromArray( gbone.rotq );
 			if ( gbone.scl !== undefined ) bone.scale.fromArray( gbone.scl );
+			if ( gbone.uuid !== undefined ) bone.uuid = gbone.uuid;
 
 		}
 
@@ -25424,12 +25516,24 @@ function SkinnedMesh( geometry, material, useVertexTexture ) {
 
 		}
 
+		if ( this.geometry.boneInverses !== undefined ) {
+
+			boneInverses = [];
+
+			for ( var i = 0, il = this.geometry.boneInverses.length; i < il; i ++ ) {
+
+				boneInverses.push( new Matrix4().fromArray( this.geometry.boneInverses[ i ] ) );
+
+			}
+
+		}
+
 	}
 
 	this.normalizeSkinWeights();
 
 	this.updateMatrixWorld( true );
-	this.bind( new Skeleton( bones, undefined, useVertexTexture ), this.matrixWorld );
+	this.bind( new Skeleton( bones, boneInverses, useVertexTexture ), this.matrixWorld );
 
 }
 
@@ -25543,6 +25647,149 @@ SkinnedMesh.prototype = Object.assign( Object.create( Mesh.prototype ), {
 	clone: function() {
 
 		return new this.constructor( this.geometry, this.material, this.skeleton.useVertexTexture ).copy( this );
+
+	},
+
+	// copied from Object3D.toJSON()
+	toJSON: function ( meta, options ) {
+
+		// meta is '' when called from JSON.stringify
+		var isRootObject = ( meta === undefined || meta === '' );
+
+		var output = {};
+
+		// meta is a hash used to collect geometries, materials.
+		// not providing it implies that this is the root object
+		// being serialized.
+		if ( isRootObject ) {
+
+			// initialize meta obj
+			meta = {
+				geometries: {},
+				materials: {},
+				textures: {},
+				images: {},
+				skeletons: {}
+			};
+
+			output.metadata = {
+				version: 4.4,
+				type: 'SkinnedMesh',
+				generator: 'SkinnedMesh.toJSON'
+			};
+
+		}
+
+		// standard Object3D serialization
+
+		var object = {};
+
+		object.uuid = this.uuid;
+		object.type = this.type;
+
+		if ( this.name !== '' ) object.name = this.name;
+		if ( JSON.stringify( this.userData ) !== '{}' ) object.userData = this.userData;
+		if ( this.castShadow === true ) object.castShadow = true;
+		if ( this.receiveShadow === true ) object.receiveShadow = true;
+		if ( this.visible === false ) object.visible = false;
+
+		object.matrix = this.matrix.toArray();
+
+		// SkinnedMesh specific
+
+		if ( this.bindMode !== undefined ) object.bindMode = this.bindMode;
+		if ( this.bindMatrix !== undefined ) object.bindMatrix = this.bindMatrix.toArray();
+
+		//
+
+		if ( this.geometry !== undefined ) {
+
+			if ( meta.geometries[ this.geometry.uuid ] === undefined ) {
+
+				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( options );
+
+			}
+
+			object.geometry = this.geometry.uuid;
+
+		}
+
+		if ( this.material !== undefined ) {
+
+			if ( meta.materials[ this.material.uuid ] === undefined ) {
+
+				meta.materials[ this.material.uuid ] = this.material.toJSON( meta );
+
+			}
+
+			object.material = this.material.uuid;
+
+		}
+
+		if ( this.skeleton !== undefined ) {
+
+			if ( meta.skeletons[ this.skeleton.uuid ] === undefined ) {
+
+				meta.skeletons[ this.skeleton.uuid ] = this.skeleton.toJSON( meta );
+
+			}
+
+			object.skeleton = this.skeleton.uuid;
+
+		}
+
+		//
+
+		object.children = [];
+
+		for ( var i = 0; i < this.children.length; i ++ ) {
+
+			var child = this.children[ i ];
+
+			if ( ! ( child instanceof Bone ) /* || child.skin !== this */ ) {
+
+				object.children.push( child.toJSON( meta ).object );
+
+			}
+
+		}
+
+		if ( isRootObject ) {
+
+			var geometries = extractFromCache( meta.geometries );
+			var materials = extractFromCache( meta.materials );
+			var textures = extractFromCache( meta.textures );
+			var images = extractFromCache( meta.images );
+			var skeletons = extractFromCache( meta.skeletons );
+
+			if ( geometries.length > 0 ) output.geometries = geometries;
+			if ( materials.length > 0 ) output.materials = materials;
+			if ( textures.length > 0 ) output.textures = textures;
+			if ( images.length > 0 ) output.images = images;
+			if ( skeletons.length > 0 ) output.skeletons = skeletons;
+
+		}
+
+		output.object = object;
+
+		return output;
+
+		// extract data from the cache hash
+		// remove metadata on each item
+		// and return as array
+		function extractFromCache( cache ) {
+
+			var values = [];
+			for ( var key in cache ) {
+
+				var data = cache[ key ];
+				delete data.metadata;
+				values.push( data );
+
+			}
+			return values;
+
+		}
 
 	}
 
@@ -33272,11 +33519,58 @@ Object.assign( ObjectLoader.prototype, {
 		var textures = this.parseTextures( json.textures, images );
 		var materials = this.parseMaterials( json.materials, textures );
 
-		var object = this.parseObject( json.object, geometries, materials );
+		var skeletons = this.parseSkeletons( json.skeletons );
+
+		var object = this.parseObject( json.object, geometries, materials, skeletons );
+
+		/*
+		* Additions for loading animated models
+		*/
 
 		if ( json.animations ) {
 
 			object.animations = this.parseAnimations( json.animations );
+
+			var bonesRef = [];
+			var skinnedMesh;
+
+			object.traverse(function (child) {
+				if (child.type === 'SkinnedMesh') skinnedMesh = child;
+				if (child.uuid !== object.uuid  && child.type !== 'Bone')  bonesRef.push( child );
+			});
+
+			if (!skinnedMesh) return
+
+			// fix for bones that do not have the correct parent
+			if (skinnedMesh.children) {
+				skinnedMesh.children.forEach(function (bone) {
+					// for each bone, find the parent it should be attached to
+					if (bone.type !== 'Bone') return
+					object.traverse(function (c) {
+						if (c.name === bone.name) bone.parent = c.parent;
+					});
+				});
+			}
+
+			/*
+			* Overwrite skeleton
+			* 1. Get copy of bones array from SkinnedMesh skeleton
+			* 2. Add to top-level reference array
+			* 3. Create new Skeleton from copy and bind to SkinnedMesh
+			*/
+			if (skinnedMesh.skeleton) {
+				var bones = skinnedMesh.skeleton.bones;
+				var boneInverses = skinnedMesh.skeleton.boneInverses;
+				bonesRef = bonesRef.concat(bones);
+				var skeleton = new Skeleton(bones, boneInverses);
+				skinnedMesh.bind(skeleton, skinnedMesh.matrixWorld);
+				skinnedMesh.pose();
+			}
+
+			// create top-level skeleton reference for animations to bind to
+			object.skeleton = { bones: bonesRef };
+
+			object.updateMatrixWorld(true);
 
 		}
 
@@ -33665,11 +33959,27 @@ Object.assign( ObjectLoader.prototype, {
 
 	},
 
+	parseSkeletons: function ( json ) {
+
+		var skeletons = {};
+
+		if ( json === undefined ) return skeletons;
+
+		for ( var i = 0; i < json.length; i ++ ) {
+
+			skeletons[ json[ i ].uuid ] = json[ i ];
+
+		}
+
+		return skeletons;
+
+	},
+
 	parseObject: function () {
 
 		var matrix = new Matrix4();
 
-		return function parseObject( data, geometries, materials ) {
+		return function parseObject( data, geometries, materials, skeletons, parent ) {
 
 			var object;
 
@@ -33696,6 +34006,20 @@ Object.assign( ObjectLoader.prototype, {
 				}
 
 				return materials[ name ];
+
+			}
+
+			function getSkeleton( name ) {
+
+				if ( name === undefined ) return undefined;
+
+				if ( skeletons[ name ] === undefined ) {
+
+					console.warn( 'THREE.ObjectLoader: Undefined skeleton', name );
+
+				}
+
+				return skeletons[ name ];
 
 			}
 
@@ -33835,7 +34159,53 @@ Object.assign( ObjectLoader.prototype, {
 
 				case 'SkinnedMesh':
 
-					console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh type. Instantiates Object3D instead.' );
+					var geometry = getGeometry( data.geometry );
+					var material = getMaterial( data.material );
+					var skeleton = getSkeleton( data.skeleton );
+
+					var tmpBones, tmpBoneInverses;
+
+					if ( skeleton !== undefined ) {
+
+						if ( geometry.bones !== undefined ) tmpBones = geometry.bones;
+						if ( geometry.boneInverses !== undefined ) tmpBoneInverses = geometry.boneInverses;
+
+						geometry.bones = skeleton.bones;
+						geometry.boneInverses = skeleton.boneInverses;
+
+					}
+
+					var useVertexTexture = ( skeleton !== undefined ) ? skeleton.useVertexTexture : undefined;
+
+					object = new SkinnedMesh( geometry, material, useVertexTexture );
+
+					if ( skeleton !== undefined ) object.skeleton.uuid = skeleton.uuid;
+					if ( data.bindMode !== undefined ) object.bindMode = data.bindMode;
+					if ( data.bindMatrix !== undefined ) object.bindMatrix.fromArray( data.bindMatrix );
+					object.updateMatrixWorld( true );
+
+					if ( tmpBones !== undefined ) geometry.bones = tmpBones;
+					if ( tmpBoneInverses !== undefined ) geometry.boneInverses = tmpBoneInverses;
+
+					break;
+
+				case 'Bone':
+
+					var arg;
+
+					if ( parent instanceof SkinnedMesh ) {
+
+						arg = parent;
+
+					} else if ( parent instanceof Bone ) {
+
+						arg = parent.skin;
+
+					}
+
+					object = new Bone( arg );
+
+					break;
 
 				default:
 
@@ -33879,7 +34249,46 @@ Object.assign( ObjectLoader.prototype, {
 
 				for ( var child in data.children ) {
 
-					object.add( this.parseObject( data.children[ child ], geometries, materials ) );
+					object.add( this.parseObject( data.children[ child ], geometries, materials, skeletons, object ) );
+
+				}
+
+			}
+
+			if ( data.type === 'SkinnedMesh' ) {
+
+				var skeleton = getSkeleton( data.skeleton );
+
+				if ( skeleton !== undefined && skeleton.sockets !== undefined ) {
+
+					for ( var i = 0, il = skeleton.sockets.length; i < il; i ++ ) {
+
+						var socket = skeleton.sockets[ i ];
+
+						var found = false;
+
+						for ( var j = 0, jl = object.skeleton.bones.length; j < jl; j ++ ) {
+
+							var bone = object.skeleton.bones[ j ];
+
+							if ( bone.uuid === socket.parent ) {
+
+								bone.add( this.parseObject( socket, geometries, materials, skeletons, bone ) );
+								found = true;
+
+								break;
+
+							}
+
+						}
+
+						if ( ! found ) {
+
+							console.warn( 'THREE.ObjectLoader: not found bone uuid ' + socket.parent + ' in skeleton' );
+
+						}
+
+					}
 
 				}
 
