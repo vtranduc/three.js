@@ -49,6 +49,8 @@ import { BufferGeometryLoader } from './BufferGeometryLoader';
 import { JSONLoader } from './JSONLoader';
 import { FileLoader } from './FileLoader';
 import * as Geometries from '../geometries/Geometries';
+import { Bone } from '../objects/Bone';
+import { Skeleton } from '../objects/Skeleton';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -132,11 +134,58 @@ Object.assign( ObjectLoader.prototype, {
 		var textures = this.parseTextures( json.textures, images );
 		var materials = this.parseMaterials( json.materials, textures );
 
-		var object = this.parseObject( json.object, geometries, materials );
+		var skeletons = this.parseSkeletons( json.skeletons );
+
+		var object = this.parseObject( json.object, geometries, materials, skeletons );
+
+		/*
+		* Additions for loading animated models
+		*/
 
 		if ( json.animations ) {
 
 			object.animations = this.parseAnimations( json.animations );
+
+			var bonesRef = [];
+			var skinnedMesh;
+
+			object.traverse(function (child) {
+				if (child.type === 'SkinnedMesh') skinnedMesh = child
+				if (child.uuid !== object.uuid  && child.type !== 'Bone')  bonesRef.push( child );
+			})
+
+			if (!skinnedMesh) return
+
+			// fix for bones that do not have the correct parent
+			if (skinnedMesh.children) {
+				skinnedMesh.children.forEach(function (bone) {
+					// for each bone, find the parent it should be attached to
+					if (bone.type !== 'Bone') return
+					object.traverse(function (c) {
+						if (c.name === bone.name) bone.parent = c.parent
+					})
+				})
+			}
+
+			/*
+			* Overwrite skeleton
+			* 1. Get copy of bones array from SkinnedMesh skeleton
+			* 2. Add to top-level reference array
+			* 3. Create new Skeleton from copy and bind to SkinnedMesh
+			*/
+			if (skinnedMesh.skeleton) {
+				var bones = skinnedMesh.skeleton.bones
+				var boneInverses = skinnedMesh.skeleton.boneInverses
+				bonesRef = bonesRef.concat(bones)
+				var skeleton = new Skeleton(bones, boneInverses)
+				skinnedMesh.bind(skeleton, skinnedMesh.matrixWorld)
+				skinnedMesh.pose()
+			}
+
+			// create top-level skeleton reference for animations to bind to
+			object.skeleton = { bones: bonesRef };
+
+			object.updateMatrixWorld(true)
 
 		}
 
@@ -525,11 +574,27 @@ Object.assign( ObjectLoader.prototype, {
 
 	},
 
+	parseSkeletons: function ( json ) {
+
+		var skeletons = {};
+
+		if ( json === undefined ) return skeletons;
+
+		for ( var i = 0; i < json.length; i ++ ) {
+
+			skeletons[ json[ i ].uuid ] = json[ i ];
+
+		}
+
+		return skeletons;
+
+	},
+
 	parseObject: function () {
 
 		var matrix = new Matrix4();
 
-		return function parseObject( data, geometries, materials ) {
+		return function parseObject( data, geometries, materials, skeletons, parent ) {
 
 			var object;
 
@@ -556,6 +621,20 @@ Object.assign( ObjectLoader.prototype, {
 				}
 
 				return materials[ name ];
+
+			}
+
+			function getSkeleton( name ) {
+
+				if ( name === undefined ) return undefined;
+
+				if ( skeletons[ name ] === undefined ) {
+
+					console.warn( 'THREE.ObjectLoader: Undefined skeleton', name );
+
+				}
+
+				return skeletons[ name ];
 
 			}
 
@@ -695,7 +774,53 @@ Object.assign( ObjectLoader.prototype, {
 
 				case 'SkinnedMesh':
 
-					console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh type. Instantiates Object3D instead.' );
+					var geometry = getGeometry( data.geometry );
+					var material = getMaterial( data.material );
+					var skeleton = getSkeleton( data.skeleton );
+
+					var tmpBones, tmpBoneInverses;
+
+					if ( skeleton !== undefined ) {
+
+						if ( geometry.bones !== undefined ) tmpBones = geometry.bones;
+						if ( geometry.boneInverses !== undefined ) tmpBoneInverses = geometry.boneInverses;
+
+						geometry.bones = skeleton.bones;
+						geometry.boneInverses = skeleton.boneInverses;
+
+					}
+
+					var useVertexTexture = ( skeleton !== undefined ) ? skeleton.useVertexTexture : undefined;
+
+					object = new SkinnedMesh( geometry, material, useVertexTexture );
+
+					if ( skeleton !== undefined ) object.skeleton.uuid = skeleton.uuid;
+					if ( data.bindMode !== undefined ) object.bindMode = data.bindMode;
+					if ( data.bindMatrix !== undefined ) object.bindMatrix.fromArray( data.bindMatrix );
+					object.updateMatrixWorld( true );
+
+					if ( tmpBones !== undefined ) geometry.bones = tmpBones;
+					if ( tmpBoneInverses !== undefined ) geometry.boneInverses = tmpBoneInverses;
+
+					break;
+
+				case 'Bone':
+
+					var arg;
+
+					if ( parent instanceof SkinnedMesh ) {
+
+						arg = parent;
+
+					} else if ( parent instanceof Bone ) {
+
+						arg = parent.skin;
+
+					}
+
+					object = new Bone( arg );
+
+					break;
 
 				default:
 
@@ -739,7 +864,46 @@ Object.assign( ObjectLoader.prototype, {
 
 				for ( var child in data.children ) {
 
-					object.add( this.parseObject( data.children[ child ], geometries, materials ) );
+					object.add( this.parseObject( data.children[ child ], geometries, materials, skeletons, object ) );
+
+				}
+
+			}
+
+			if ( data.type === 'SkinnedMesh' ) {
+
+				var skeleton = getSkeleton( data.skeleton );
+
+				if ( skeleton !== undefined && skeleton.sockets !== undefined ) {
+
+					for ( var i = 0, il = skeleton.sockets.length; i < il; i ++ ) {
+
+						var socket = skeleton.sockets[ i ];
+
+						var found = false;
+
+						for ( var j = 0, jl = object.skeleton.bones.length; j < jl; j ++ ) {
+
+							var bone = object.skeleton.bones[ j ];
+
+							if ( bone.uuid === socket.parent ) {
+
+								bone.add( this.parseObject( socket, geometries, materials, skeletons, bone ) );
+								found = true;
+
+								break;
+
+							}
+
+						}
+
+						if ( ! found ) {
+
+							console.warn( 'THREE.ObjectLoader: not found bone uuid ' + socket.parent + ' in skeleton' );
+
+						}
+
+					}
 
 				}
 
