@@ -174,7 +174,7 @@ THREE.PMREMGenerator.prototype = {
 				}\n\
 				vec3 ImportanceSampleGGX( vec2 uv, mat3 vecSpace, float Roughness )\n\
 				{\n\
-					float a = Roughness;//making it linear here so that roughness curve has full control \n\ 
+					float a = Roughness;//making it linear here so that roughness curve has full control\n\
 					float Phi = 2.0 * PI * uv.x;\n\
 					float CosTheta = sqrt( (1.0 - uv.y) / ( 1.0 + (a*a - 1.0) * uv.y ) );\n\
 					float SinTheta = sqrt( 1.0 - CosTheta * CosTheta );\n\
