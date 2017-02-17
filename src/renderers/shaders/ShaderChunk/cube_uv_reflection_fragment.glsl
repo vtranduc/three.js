@@ -1,6 +1,6 @@
 #ifdef ENVMAP_TYPE_CUBE_UV
 
-#define cubeUV_textureSize (1024.0)
+#define cubeUV_textureSize (4096.0) // actually 1024, codes below are hard coded to do a resolution 4 times smmaller
 
 int getFaceFromDirection(vec3 direction) {
 	vec3 absDirection = abs(direction);
@@ -20,7 +20,7 @@ int getFaceFromDirection(vec3 direction) {
 	return face;
 }
 #define cubeUV_maxLods1  (log2(cubeUV_textureSize*0.25) - 1.0)
-#define cubeUV_rangeClamp (exp2((6.0 - 1.0) * 2.0))
+#define cubeUV_rangeClamp (exp2((8.0 - 1.0) * 2.0))
 
 vec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {
 	float scale = exp2(cubeUV_maxLods1 - roughnessLevel);
@@ -108,10 +108,10 @@ vec4 textureCubeUV(vec3 reflectedDirection, float roughness ) {
 	float s = mipInfo.y;
 	float level0 = mipInfo.x;
 	float level1 = level0 + 1.0;
-	level1 = level1 > 5.0 ? 5.0 : level1;
+	level1 = level1 > 9.0 ? 9.0 : level1;
 
 	// round to nearest mipmap if we are not interpolating.
-	level0 += min( floor( s + 0.5 ), 5.0 );
+	level0 += min( floor( s + 0.5 ), 9.0 );
 
 	// Tri linear interpolation.
 	vec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);
