@@ -14,8 +14,11 @@
 THREE.PMREMGenerator = function( sourceTexture, samplesPerLevel, resolution ) {
 
 	this.sourceTexture = sourceTexture;
-	this.resolution = ( resolution !== undefined ) ? resolution : 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
-	this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 16;
+	this.resolution = ( resolution !== undefined ) ? resolution : 1024; // NODE: 1024 is currently hard coded in the glsl code for performance reasons
+	this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 256;
+	
+	this.roughnessCurve = [0.0, 0.0025, 0.04, 0.08, 0.16, 1.0, 1.0, 1.0 ]; //custom curve for easier tweaking to match looks, hard coded to 8 items, to match resolution
+	this.roughnessMultiplier = 2.0;
 
 	var monotonicEncoding = ( sourceTexture.encoding === THREE.LinearEncoding ) ||
 		( sourceTexture.encoding === THREE.GammaEncoding ) || ( sourceTexture.encoding === THREE.sRGBEncoding );
@@ -97,15 +100,13 @@ THREE.PMREMGenerator.prototype = {
 		renderer.gammaOutput = false;
 
 		for ( var i = 0; i < this.numLods; i ++ ) {
-
-			var r = i / ( this.numLods - 1 );
-			this.shader.uniforms[ 'roughness' ].value = r * 0.9; // see comment above, pragmatic choice
 			this.shader.uniforms[ 'queryScale' ].value.x = ( i == 0 ) ? -1 : 1;
+			this.shader.uniforms[ 'roughness' ].value = this.roughnessMultiplier * this.roughnessCurve[i]; // using custom curve for more control
 			var size = this.cubeLods[ i ].width;
 			this.shader.uniforms[ 'mapSize' ].value = size;
 			this.renderToCubeMapTarget( renderer, this.cubeLods[ i ] );
 
-			if ( i < 5 ) this.shader.uniforms[ 'envMap' ].value = this.cubeLods[ i ].texture;
+			if ( i < 7 ) this.shader.uniforms[ 'envMap' ].value = this.cubeLods[ i ].texture;
 
 		}
 
@@ -137,7 +138,6 @@ THREE.PMREMGenerator.prototype = {
 	getShader: function() {
 
 		return new THREE.ShaderMaterial( {
-
 			defines: {
 				"SAMPLES_PER_LEVEL": 20,
 			},
@@ -148,7 +148,7 @@ THREE.PMREMGenerator.prototype = {
 				"mapSize": { value: 0.5 },
 				"envMap": { value: null },
 				"queryScale": { value: new THREE.Vector3( 1, 1, 1 ) },
-				"testColor": { value: new THREE.Vector3( 1, 1, 1 ) },
+				"testColor": { value: new THREE.Vector3( 1, 1, 1 ) }
 			},
 
 			vertexShader:
@@ -182,7 +182,7 @@ THREE.PMREMGenerator.prototype = {
 				}\n\
 				vec3 ImportanceSampleGGX( vec2 uv, mat3 vecSpace, float Roughness )\n\
 				{\n\
-					float a = Roughness * Roughness;\n\
+					float a = Roughness;//making it linear here so that roughness curve has full control\n\
 					float Phi = 2.0 * PI * uv.x;\n\
 					float CosTheta = sqrt( (1.0 - uv.y) / ( 1.0 + (a*a - 1.0) * uv.y ) );\n\
 					float SinTheta = sqrt( 1.0 - CosTheta * CosTheta );\n\
@@ -242,7 +242,7 @@ THREE.PMREMGenerator.prototype = {
 					const int NumSamples = SAMPLES_PER_LEVEL;\n\
 					vec3 vect;\n\
 					float weight = 0.0;\n\
-					for( int i = 0; i < NumSamples; i ++ ) {\n\
+					for(int i = 0; i < NumSamples; i ++) {\n\
 						float sini = sin(float(i));\n\
 						float cosi = cos(float(i));\n\
 						float r = rand(vec2(sini, cosi));\n\
