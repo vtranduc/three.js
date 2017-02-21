@@ -14,10 +14,7 @@
 THREE.PMREMGenerator = function( sourceTexture ) {
 
 	this.sourceTexture = sourceTexture;
-	this.resolution = 1024; // NODE: 1024 is currently hard coded in the glsl code
-	
-	this.roughnessCurve = [0.0, 0.0025, 0.04, 0.08, 0.16, 1.0, 1.0, 1.0 ]; //custom curve for easier tweaking to match looks, hard coded to 8 items, to match resolution
-	this.roughnessMultiplier = 2.0;
+	this.resolution = 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
 
 	var monotonicEncoding = ( sourceTexture.encoding === THREE.LinearEncoding ) ||
 		( sourceTexture.encoding === THREE.GammaEncoding ) || ( sourceTexture.encoding === THREE.sRGBEncoding );
@@ -46,7 +43,7 @@ THREE.PMREMGenerator = function( sourceTexture ) {
 
 		var renderTarget = new THREE.WebGLRenderTargetCube( size, size, params );
 		this.cubeLods.push( renderTarget );
-		size = Math.max(  16, size / 2 );
+		size = Math.max( 16, size / 2 );
 
 	}
 
@@ -98,12 +95,13 @@ THREE.PMREMGenerator.prototype = {
 
 		for ( var i = 0; i < this.numLods; i ++ ) {
 
-			this.shader.uniforms[ 'roughness' ].value = this.roughnessMultiplier * this.roughnessCurve[i]; // see comment above, pragmatic choice
+			var r = i / ( this.numLods - 1 );
+			this.shader.uniforms[ 'roughness' ].value = r * 0.9; // see comment above, pragmatic choice
 			var size = this.cubeLods[ i ].width;
 			this.shader.uniforms[ 'mapSize' ].value = size;
 			this.renderToCubeMapTarget( renderer, this.cubeLods[ i ] );
 
-			if ( i < 7 ) this.shader.uniforms[ 'envMap' ].value = this.cubeLods[ i ].texture;
+			if ( i < 5 ) this.shader.uniforms[ 'envMap' ].value = this.cubeLods[ i ].texture;
 
 		}
 
@@ -174,7 +172,7 @@ THREE.PMREMGenerator.prototype = {
 				}\n\
 				vec3 ImportanceSampleGGX( vec2 uv, mat3 vecSpace, float Roughness )\n\
 				{\n\
-					float a = Roughness;//making it linear here so that roughness curve has full control\n\
+					float a = Roughness * Roughness;\n\
 					float Phi = 2.0 * PI * uv.x;\n\
 					float CosTheta = sqrt( (1.0 - uv.y) / ( 1.0 + (a*a - 1.0) * uv.y ) );\n\
 					float SinTheta = sqrt( 1.0 - CosTheta * CosTheta );\n\
