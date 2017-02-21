@@ -15,7 +15,7 @@ THREE.PMREMGenerator = function( sourceTexture, samplesPerLevel, resolution ) {
 
 	this.sourceTexture = sourceTexture;
 	this.resolution = ( resolution !== undefined ) ? resolution : 1024; // NODE: 1024 is currently hard coded in the glsl code for performance reasons
-	this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 256;
+	this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 1024;
 	
 	this.roughnessCurve = [0.0, 0.0025, 0.04, 0.08, 0.16, 1.0, 1.0, 1.0 ]; //custom curve for easier tweaking to match looks, hard coded to 8 items, to match resolution
 	this.roughnessMultiplier = 2.0;
