@@ -1,6 +1,6 @@
 #ifdef USE_AOMAP
 
-	float ambientOcclusion = ( texture2D( aoMap, vUv2 ).r - 1.0 ) * aoMapIntensity + 1.0;
+	float ambientOcclusion = ( (enableProjection ? GetTexelColorFromProjection(aoMap, vProjectionPosition) : texture2D( aoMap, vUv2 )).r - 1.0 ) * aoMapIntensity + 1.0;
 
 	reflectedLight.indirectDiffuse *= ambientOcclusion;
 

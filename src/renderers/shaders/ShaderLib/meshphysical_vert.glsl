@@ -20,6 +20,7 @@ varying vec3 vViewPosition;
 #include <specularmap_pars_fragment>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+#include <triplanarprojection_pars_vertex>
 
 void main() {
 
@@ -38,7 +39,7 @@ void main() {
 	vNormal = normalize( transformedNormal );
 
 #endif
-
+    #include <triplanarprojection_vertex>
 	#include <begin_vertex>
 	#include <displacementmap_vertex>
 	#include <morphtarget_vertex>
