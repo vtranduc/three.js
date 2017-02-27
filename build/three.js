@@ -8047,10 +8047,11 @@
 			if ( this.envMap && this.envMap.isTexture ) {
 
 				data.envMap = this.envMap.toJSON( meta ).uuid;
-				data.envMapIntensity = this.envMapIntensity;
 				data.reflectivity = this.reflectivity; // Scale behind envMap
 
 			}
+
+			if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
 
 			if ( this.gradientMap && this.gradientMap.isTexture ) {
 
