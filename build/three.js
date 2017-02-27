@@ -32478,6 +32478,7 @@
 			if ( json.specularMap !== undefined ) material.specularMap = getTexture( json.specularMap );
 
 			if ( json.envMap !== undefined ) material.envMap = getTexture( json.envMap );
+			if ( json.envMapIntensity !== undefined ) material.envMapIntensity = json.envMapIntensity;
 
 			if ( json.reflectivity !== undefined ) material.reflectivity = json.reflectivity;
 
@@ -32488,7 +32489,7 @@
 			if ( json.aoMapIntensity !== undefined ) material.aoMapIntensity = json.aoMapIntensity;
 
 			if ( json.gradientMap !== undefined ) material.gradientMap = getTexture( json.gradientMap );
-			
+
 			if ( json.enableProjection !== undefined ) material.enableProjection = json.enableProjection;
 			if ( json.projectionSharpness !== undefined) material.projectionSharpness = json.projectionSharpness;
 			// MultiMaterial
