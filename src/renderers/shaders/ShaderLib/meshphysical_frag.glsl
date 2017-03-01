@@ -1,4 +1,5 @@
 #define PHYSICAL
+#define USE_TRIPLANAR
 
 uniform vec3 diffuse;
 uniform vec3 emissive;

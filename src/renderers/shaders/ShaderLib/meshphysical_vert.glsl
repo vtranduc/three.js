@@ -1,4 +1,5 @@
 #define PHYSICAL
+#define USE_TRIPLANAR
 
 varying vec3 vViewPosition;
 
@@ -39,7 +40,7 @@ void main() {
 	vNormal = normalize( transformedNormal );
 
 #endif
-    #include <triplanarprojection_vertex>
+	#include <triplanarprojection_vertex>
 	#include <begin_vertex>
 	#include <displacementmap_vertex>
 	#include <morphtarget_vertex>
