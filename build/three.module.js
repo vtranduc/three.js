@@ -479,6 +479,2091 @@ function Vector2( x, y ) {
 	this.x = x || 0;
 	this.y = y || 0;
 
+}
+
+Vector2.prototype = {
+
+	constructor: Vector2,
+
+	isVector2: true,
+
+	get width() {
+
+		return this.x;
+
+	},
+
+	set width( value ) {
+
+		this.x = value;
+
+	},
+
+	get height() {
+
+		return this.y;
+
+	},
+
+	set height( value ) {
+
+		this.y = value;
+
+	},
+
+	//
+
+	set: function ( x, y ) {
+
+		this.x = x;
+		this.y = y;
+
+		return this;
+
+	},
+
+	setScalar: function ( scalar ) {
+
+		this.x = scalar;
+		this.y = scalar;
+
+		return this;
+
+	},
+
+	setX: function ( x ) {
+
+		this.x = x;
+
+		return this;
+
+	},
+
+	setY: function ( y ) {
+
+		this.y = y;
+
+		return this;
+
+	},
+
+	setComponent: function ( index, value ) {
+
+		switch ( index ) {
+
+			case 0: this.x = value; break;
+			case 1: this.y = value; break;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+		return this;
+
+	},
+
+	getComponent: function ( index ) {
+
+		switch ( index ) {
+
+			case 0: return this.x;
+			case 1: return this.y;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+	},
+
+	clone: function () {
+
+		return new this.constructor( this.x, this.y );
+
+	},
+
+	copy: function ( v ) {
+
+		this.x = v.x;
+		this.y = v.y;
+
+		return this;
+
+	},
+
+	add: function ( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			return this.addVectors( v, w );
+
+		}
+
+		this.x += v.x;
+		this.y += v.y;
+
+		return this;
+
+	},
+
+	addScalar: function ( s ) {
+
+		this.x += s;
+		this.y += s;
+
+		return this;
+
+	},
+
+	addVectors: function ( a, b ) {
+
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+
+		return this;
+
+	},
+
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+
+		return this;
+
+	},
+
+	sub: function ( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			return this.subVectors( v, w );
+
+		}
+
+		this.x -= v.x;
+		this.y -= v.y;
+
+		return this;
+
+	},
+
+	subScalar: function ( s ) {
+
+		this.x -= s;
+		this.y -= s;
+
+		return this;
+
+	},
+
+	subVectors: function ( a, b ) {
+
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
+
+		return this;
+
+	},
+
+	multiply: function ( v ) {
+
+		this.x *= v.x;
+		this.y *= v.y;
+
+		return this;
+
+	},
+
+	multiplyScalar: function ( scalar ) {
+
+		if ( isFinite( scalar ) ) {
+
+			this.x *= scalar;
+			this.y *= scalar;
+
+		} else {
+
+			this.x = 0;
+			this.y = 0;
+
+		}
+
+		return this;
+
+	},
+
+	divide: function ( v ) {
+
+		this.x /= v.x;
+		this.y /= v.y;
+
+		return this;
+
+	},
+
+	divideScalar: function ( scalar ) {
+
+		return this.multiplyScalar( 1 / scalar );
+
+	},
+
+	min: function ( v ) {
+
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+
+		return this;
+
+	},
+
+	max: function ( v ) {
+
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+
+		return this;
+
+	},
+
+	clamp: function ( min, max ) {
+
+		// This function assumes min < max, if this assumption isn't true it will not operate correctly
+
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+
+		return this;
+
+	},
+
+	clampScalar: function () {
+
+		var min, max;
+
+		return function clampScalar( minVal, maxVal ) {
+
+			if ( min === undefined ) {
+
+				min = new Vector2();
+				max = new Vector2();
+
+			}
+
+			min.set( minVal, minVal );
+			max.set( maxVal, maxVal );
+
+			return this.clamp( min, max );
+
+		};
+
+	}(),
+
+	clampLength: function ( min, max ) {
+
+		var length = this.length();
+
+		return this.multiplyScalar( Math.max( min, Math.min( max, length ) ) / length );
+
+	},
+
+	floor: function () {
+
+		this.x = Math.floor( this.x );
+		this.y = Math.floor( this.y );
+
+		return this;
+
+	},
+
+	ceil: function () {
+
+		this.x = Math.ceil( this.x );
+		this.y = Math.ceil( this.y );
+
+		return this;
+
+	},
+
+	round: function () {
+
+		this.x = Math.round( this.x );
+		this.y = Math.round( this.y );
+
+		return this;
+
+	},
+
+	roundToZero: function () {
+
+		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
+		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
+
+		return this;
+
+	},
+
+	negate: function () {
+
+		this.x = - this.x;
+		this.y = - this.y;
+
+		return this;
+
+	},
+
+	dot: function ( v ) {
+
+		return this.x * v.x + this.y * v.y;
+
+	},
+
+	lengthSq: function () {
+
+		return this.x * this.x + this.y * this.y;
+
+	},
+
+	length: function () {
+
+		return Math.sqrt( this.x * this.x + this.y * this.y );
+
+	},
+
+	lengthManhattan: function() {
+
+		return Math.abs( this.x ) + Math.abs( this.y );
+
+	},
+
+	normalize: function () {
+
+		return this.divideScalar( this.length() );
+
+	},
+
+	angle: function () {
+
+		// computes the angle in radians with respect to the positive x-axis
+
+		var angle = Math.atan2( this.y, this.x );
+
+		if ( angle < 0 ) angle += 2 * Math.PI;
+
+		return angle;
+
+	},
+
+	distanceTo: function ( v ) {
+
+		return Math.sqrt( this.distanceToSquared( v ) );
+
+	},
+
+	distanceToSquared: function ( v ) {
+
+		var dx = this.x - v.x, dy = this.y - v.y;
+		return dx * dx + dy * dy;
+
+	},
+
+	distanceToManhattan: function ( v ) {
+
+		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y );
+
+	},
+
+	setLength: function ( length ) {
+
+		return this.multiplyScalar( length / this.length() );
+
+	},
+
+	lerp: function ( v, alpha ) {
+
+		this.x += ( v.x - this.x ) * alpha;
+		this.y += ( v.y - this.y ) * alpha;
+
+		return this;
+
+	},
+
+	lerpVectors: function ( v1, v2, alpha ) {
+
+		return this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
+
+	},
+
+	equals: function ( v ) {
+
+		return ( ( v.x === this.x ) && ( v.y === this.y ) );
+
+	},
+
+	fromArray: function ( array, offset ) {
+
+		if ( offset === undefined ) offset = 0;
+
+		this.x = array[ offset ];
+		this.y = array[ offset + 1 ];
+
+		return this;
+
+	},
+
+	toArray: function ( array, offset ) {
+
+		if ( array === undefined ) array = [];
+		if ( offset === undefined ) offset = 0;
+
+		array[ offset ] = this.x;
+		array[ offset + 1 ] = this.y;
+
+		return array;
+
+	},
+
+	fromBufferAttribute: function ( attribute, index, offset ) {
+
+		if ( offset !== undefined ) {
+
+			console.warn( 'THREE.Vector2: offset has been removed from .fromBufferAttribute().' );
+
+		}
+
+		this.x = attribute.getX( index );
+		this.y = attribute.getY( index );
+
+		return this;
+
+	},
+
+	rotateAround: function ( center, angle ) {
+
+		var c = Math.cos( angle ), s = Math.sin( angle );
+
+		var x = this.x - center.x;
+		var y = this.y - center.y;
+
+		this.x = x * c - y * s + center.x;
+		this.y = x * s + y * c + center.y;
+
+		return this;
+
+	}
+
+};
+
+/**
+ * @author mrdoob / http://mrdoob.com/
+ * @author alteredq / http://alteredqualia.com/
+ * @author szimek / https://github.com/szimek/
+ */
+
+var textureId = 0;
+
+function Texture( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding ) {
+
+	Object.defineProperty( this, 'id', { value: textureId ++ } );
+
+	this.uuid = _Math.generateUUID();
+
+	this.name = '';
+
+	this.image = image !== undefined ? image : Texture.DEFAULT_IMAGE;
+	this.mipmaps = [];
+
+	this.mapping = mapping !== undefined ? mapping : Texture.DEFAULT_MAPPING;
+
+	this.wrapS = wrapS !== undefined ? wrapS : ClampToEdgeWrapping;
+	this.wrapT = wrapT !== undefined ? wrapT : ClampToEdgeWrapping;
+
+	this.magFilter = magFilter !== undefined ? magFilter : LinearFilter;
+	this.minFilter = minFilter !== undefined ? minFilter : LinearMipMapLinearFilter;
+
+	this.anisotropy = anisotropy !== undefined ? anisotropy : 1;
+
+	this.format = format !== undefined ? format : RGBAFormat;
+	this.type = type !== undefined ? type : UnsignedByteType;
+
+	this.offset = new Vector2( 0, 0 );
+	this.repeat = new Vector2( 1, 1 );
+
+	this.generateMipmaps = true;
+	this.premultiplyAlpha = false;
+	this.flipY = true;
+	this.unpackAlignment = 4;	// valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
+
+
+	// Values of encoding !== THREE.LinearEncoding only supported on map, envMap and emissiveMap.
+	//
+	// Also changing the encoding after already used by a Material will not automatically make the Material
+	// update.  You need to explicitly call Material.needsUpdate to trigger it to recompile.
+	this.encoding = encoding !== undefined ? encoding : LinearEncoding;
+
+	this.version = 0;
+	this.onUpdate = null;
+
+}
+
+Texture.DEFAULT_IMAGE = undefined;
+Texture.DEFAULT_MAPPING = UVMapping;
+
+Texture.prototype = {
+
+	constructor: Texture,
+
+	isTexture: true,
+
+	set needsUpdate( value ) {
+
+		if ( value === true ) this.version ++;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	copy: function ( source ) {
+
+		this.image = source.image;
+		this.mipmaps = source.mipmaps.slice( 0 );
+
+		this.mapping = source.mapping;
+
+		this.wrapS = source.wrapS;
+		this.wrapT = source.wrapT;
+
+		this.magFilter = source.magFilter;
+		this.minFilter = source.minFilter;
+
+		this.anisotropy = source.anisotropy;
+
+		this.format = source.format;
+		this.type = source.type;
+
+		this.offset.copy( source.offset );
+		this.repeat.copy( source.repeat );
+
+		this.generateMipmaps = source.generateMipmaps;
+		this.premultiplyAlpha = source.premultiplyAlpha;
+		this.flipY = source.flipY;
+		this.unpackAlignment = source.unpackAlignment;
+		this.encoding = source.encoding;
+
+		return this;
+
+	},
+
+	toJSON: function ( meta ) {
+
+		if ( meta.textures[ this.uuid ] !== undefined ) {
+
+			return meta.textures[ this.uuid ];
+
+		}
+
+		function getDataURL( image ) {
+
+			return '';
+
+			// var canvas;
+			//
+			// if ( image.toDataURL !== undefined ) {
+			//
+			// 	canvas = image;
+			//
+			// } else {
+			//
+			// 	canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+			// 	canvas.width = image.width;
+			// 	canvas.height = image.height;
+			//
+			// 	canvas.getContext( '2d' ).drawImage( image, 0, 0, image.width, image.height );
+			//
+			// }
+			//
+			// if ( canvas.width > 2048 || canvas.height > 2048 ) {
+			//
+			// 	return canvas.toDataURL( 'image/jpeg', 0.6 );
+			//
+			// } else {
+			//
+			// 	return canvas.toDataURL( 'image/png' );
+			//
+			// }
+
+		}
+
+		var output = {
+			metadata: {
+				version: 4.4,
+				type: 'Texture',
+				generator: 'Texture.toJSON'
+			},
+
+			uuid: this.uuid,
+			name: this.name,
+
+			mapping: this.mapping,
+
+			repeat: [ this.repeat.x, this.repeat.y ],
+			offset: [ this.offset.x, this.offset.y ],
+			wrap: [ this.wrapS, this.wrapT ],
+
+			minFilter: this.minFilter,
+			magFilter: this.magFilter,
+			anisotropy: this.anisotropy,
+
+			flipY: this.flipY
+		};
+
+		if ( this.image !== undefined ) {
+
+			// TODO: Move to THREE.Image
+
+			var image = this.image;
+
+			if ( image.uuid === undefined ) {
+
+				image.uuid = _Math.generateUUID(); // UGH
+
+			}
+
+			if ( meta.images[ image.uuid ] === undefined ) {
+
+				meta.images[ image.uuid ] = {
+					uuid: image.uuid,
+					url: getDataURL( image )
+				};
+
+			}
+
+			output.image = image.uuid;
+
+		}
+
+		meta.textures[ this.uuid ] = output;
+
+		return output;
+
+	},
+
+	dispose: function () {
+
+		this.dispatchEvent( { type: 'dispose' } );
+
+	},
+
+	transformUv: function ( uv ) {
+
+		if ( this.mapping !== UVMapping ) return;
+
+		uv.multiply( this.repeat );
+		uv.add( this.offset );
+
+		if ( uv.x < 0 || uv.x > 1 ) {
+
+			switch ( this.wrapS ) {
+
+				case RepeatWrapping:
+
+					uv.x = uv.x - Math.floor( uv.x );
+					break;
+
+				case ClampToEdgeWrapping:
+
+					uv.x = uv.x < 0 ? 0 : 1;
+					break;
+
+				case MirroredRepeatWrapping:
+
+					if ( Math.abs( Math.floor( uv.x ) % 2 ) === 1 ) {
+
+						uv.x = Math.ceil( uv.x ) - uv.x;
+
+					} else {
+
+						uv.x = uv.x - Math.floor( uv.x );
+
+					}
+					break;
+
+			}
+
+		}
+
+		if ( uv.y < 0 || uv.y > 1 ) {
+
+			switch ( this.wrapT ) {
+
+				case RepeatWrapping:
+
+					uv.y = uv.y - Math.floor( uv.y );
+					break;
+
+				case ClampToEdgeWrapping:
+
+					uv.y = uv.y < 0 ? 0 : 1;
+					break;
+
+				case MirroredRepeatWrapping:
+
+					if ( Math.abs( Math.floor( uv.y ) % 2 ) === 1 ) {
+
+						uv.y = Math.ceil( uv.y ) - uv.y;
+
+					} else {
+
+						uv.y = uv.y - Math.floor( uv.y );
+
+					}
+					break;
+
+			}
+
+		}
+
+		if ( this.flipY ) {
+
+			uv.y = 1 - uv.y;
+
+		}
+
+	}
+
+};
+
+Object.assign( Texture.prototype, EventDispatcher.prototype );
+
+/**
+ * @author supereggbert / http://www.paulbrunt.co.uk/
+ * @author philogb / http://blog.thejit.org/
+ * @author mikael emtinger / http://gomo.se/
+ * @author egraether / http://egraether.com/
+ * @author WestLangley / http://github.com/WestLangley
+ */
+
+function Vector4( x, y, z, w ) {
+
+	this.x = x || 0;
+	this.y = y || 0;
+	this.z = z || 0;
+	this.w = ( w !== undefined ) ? w : 1;
+
+}
+
+Vector4.prototype = {
+
+	constructor: Vector4,
+
+	isVector4: true,
+
+	set: function ( x, y, z, w ) {
+
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+
+		return this;
+
+	},
+
+	setScalar: function ( scalar ) {
+
+		this.x = scalar;
+		this.y = scalar;
+		this.z = scalar;
+		this.w = scalar;
+
+		return this;
+
+	},
+
+	setX: function ( x ) {
+
+		this.x = x;
+
+		return this;
+
+	},
+
+	setY: function ( y ) {
+
+		this.y = y;
+
+		return this;
+
+	},
+
+	setZ: function ( z ) {
+
+		this.z = z;
+
+		return this;
+
+	},
+
+	setW: function ( w ) {
+
+		this.w = w;
+
+		return this;
+
+	},
+
+	setComponent: function ( index, value ) {
+
+		switch ( index ) {
+
+			case 0: this.x = value; break;
+			case 1: this.y = value; break;
+			case 2: this.z = value; break;
+			case 3: this.w = value; break;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+		return this;
+
+	},
+
+	getComponent: function ( index ) {
+
+		switch ( index ) {
+
+			case 0: return this.x;
+			case 1: return this.y;
+			case 2: return this.z;
+			case 3: return this.w;
+			default: throw new Error( 'index is out of range: ' + index );
+
+		}
+
+	},
+
+	clone: function () {
+
+		return new this.constructor( this.x, this.y, this.z, this.w );
+
+	},
+
+	copy: function ( v ) {
+
+		this.x = v.x;
+		this.y = v.y;
+		this.z = v.z;
+		this.w = ( v.w !== undefined ) ? v.w : 1;
+
+		return this;
+
+	},
+
+	add: function ( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			return this.addVectors( v, w );
+
+		}
+
+		this.x += v.x;
+		this.y += v.y;
+		this.z += v.z;
+		this.w += v.w;
+
+		return this;
+
+	},
+
+	addScalar: function ( s ) {
+
+		this.x += s;
+		this.y += s;
+		this.z += s;
+		this.w += s;
+
+		return this;
+
+	},
+
+	addVectors: function ( a, b ) {
+
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+		this.z = a.z + b.z;
+		this.w = a.w + b.w;
+
+		return this;
+
+	},
+
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+		this.z += v.z * s;
+		this.w += v.w * s;
+
+		return this;
+
+	},
+
+	sub: function ( v, w ) {
+
+		if ( w !== undefined ) {
+
+			console.warn( 'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			return this.subVectors( v, w );
+
+		}
+
+		this.x -= v.x;
+		this.y -= v.y;
+		this.z -= v.z;
+		this.w -= v.w;
+
+		return this;
+
+	},
+
+	subScalar: function ( s ) {
+
+		this.x -= s;
+		this.y -= s;
+		this.z -= s;
+		this.w -= s;
+
+		return this;
+
+	},
+
+	subVectors: function ( a, b ) {
+
+		this.x = a.x - b.x;
+		this.y = a.y - b.y;
+		this.z = a.z - b.z;
+		this.w = a.w - b.w;
+
+		return this;
+
+	},
+
+	multiplyScalar: function ( scalar ) {
+
+		if ( isFinite( scalar ) ) {
+
+			this.x *= scalar;
+			this.y *= scalar;
+			this.z *= scalar;
+			this.w *= scalar;
+
+		} else {
+
+			this.x = 0;
+			this.y = 0;
+			this.z = 0;
+			this.w = 0;
+
+		}
+
+		return this;
+
+	},
+
+	applyMatrix4: function ( m ) {
+
+		var x = this.x, y = this.y, z = this.z, w = this.w;
+		var e = m.elements;
+
+		this.x = e[ 0 ] * x + e[ 4 ] * y + e[ 8 ] * z + e[ 12 ] * w;
+		this.y = e[ 1 ] * x + e[ 5 ] * y + e[ 9 ] * z + e[ 13 ] * w;
+		this.z = e[ 2 ] * x + e[ 6 ] * y + e[ 10 ] * z + e[ 14 ] * w;
+		this.w = e[ 3 ] * x + e[ 7 ] * y + e[ 11 ] * z + e[ 15 ] * w;
+
+		return this;
+
+	},
+
+	divideScalar: function ( scalar ) {
+
+		return this.multiplyScalar( 1 / scalar );
+
+	},
+
+	setAxisAngleFromQuaternion: function ( q ) {
+
+		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/index.htm
+
+		// q is assumed to be normalized
+
+		this.w = 2 * Math.acos( q.w );
+
+		var s = Math.sqrt( 1 - q.w * q.w );
+
+		if ( s < 0.0001 ) {
+
+			 this.x = 1;
+			 this.y = 0;
+			 this.z = 0;
+
+		} else {
+
+			 this.x = q.x / s;
+			 this.y = q.y / s;
+			 this.z = q.z / s;
+
+		}
+
+		return this;
+
+	},
+
+	setAxisAngleFromRotationMatrix: function ( m ) {
+
+		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToAngle/index.htm
+
+		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+
+		var angle, x, y, z,		// variables for result
+			epsilon = 0.01,		// margin to allow for rounding errors
+			epsilon2 = 0.1,		// margin to distinguish between 0 and 180 degrees
+
+			te = m.elements,
+
+			m11 = te[ 0 ], m12 = te[ 4 ], m13 = te[ 8 ],
+			m21 = te[ 1 ], m22 = te[ 5 ], m23 = te[ 9 ],
+			m31 = te[ 2 ], m32 = te[ 6 ], m33 = te[ 10 ];
+
+		if ( ( Math.abs( m12 - m21 ) < epsilon ) &&
+		     ( Math.abs( m13 - m31 ) < epsilon ) &&
+		     ( Math.abs( m23 - m32 ) < epsilon ) ) {
+
+			// singularity found
+			// first check for identity matrix which must have +1 for all terms
+			// in leading diagonal and zero in other terms
+
+			if ( ( Math.abs( m12 + m21 ) < epsilon2 ) &&
+			     ( Math.abs( m13 + m31 ) < epsilon2 ) &&
+			     ( Math.abs( m23 + m32 ) < epsilon2 ) &&
+			     ( Math.abs( m11 + m22 + m33 - 3 ) < epsilon2 ) ) {
+
+				// this singularity is identity matrix so angle = 0
+
+				this.set( 1, 0, 0, 0 );
+
+				return this; // zero angle, arbitrary axis
+
+			}
+
+			// otherwise this singularity is angle = 180
+
+			angle = Math.PI;
+
+			var xx = ( m11 + 1 ) / 2;
+			var yy = ( m22 + 1 ) / 2;
+			var zz = ( m33 + 1 ) / 2;
+			var xy = ( m12 + m21 ) / 4;
+			var xz = ( m13 + m31 ) / 4;
+			var yz = ( m23 + m32 ) / 4;
+
+			if ( ( xx > yy ) && ( xx > zz ) ) {
+
+				// m11 is the largest diagonal term
+
+				if ( xx < epsilon ) {
+
+					x = 0;
+					y = 0.707106781;
+					z = 0.707106781;
+
+				} else {
+
+					x = Math.sqrt( xx );
+					y = xy / x;
+					z = xz / x;
+
+				}
+
+			} else if ( yy > zz ) {
+
+				// m22 is the largest diagonal term
+
+				if ( yy < epsilon ) {
+
+					x = 0.707106781;
+					y = 0;
+					z = 0.707106781;
+
+				} else {
+
+					y = Math.sqrt( yy );
+					x = xy / y;
+					z = yz / y;
+
+				}
+
+			} else {
+
+				// m33 is the largest diagonal term so base result on this
+
+				if ( zz < epsilon ) {
+
+					x = 0.707106781;
+					y = 0.707106781;
+					z = 0;
+
+				} else {
+
+					z = Math.sqrt( zz );
+					x = xz / z;
+					y = yz / z;
+
+				}
+
+			}
+
+			this.set( x, y, z, angle );
+
+			return this; // return 180 deg rotation
+
+		}
+
+		// as we have reached here there are no singularities so we can handle normally
+
+		var s = Math.sqrt( ( m32 - m23 ) * ( m32 - m23 ) +
+		                   ( m13 - m31 ) * ( m13 - m31 ) +
+		                   ( m21 - m12 ) * ( m21 - m12 ) ); // used to normalize
+
+		if ( Math.abs( s ) < 0.001 ) s = 1;
+
+		// prevent divide by zero, should not happen if matrix is orthogonal and should be
+		// caught by singularity test above, but I've left it in just in case
+
+		this.x = ( m32 - m23 ) / s;
+		this.y = ( m13 - m31 ) / s;
+		this.z = ( m21 - m12 ) / s;
+		this.w = Math.acos( ( m11 + m22 + m33 - 1 ) / 2 );
+
+		return this;
+
+	},
+
+	min: function ( v ) {
+
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+		this.z = Math.min( this.z, v.z );
+		this.w = Math.min( this.w, v.w );
+
+		return this;
+
+	},
+
+	max: function ( v ) {
+
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+		this.z = Math.max( this.z, v.z );
+		this.w = Math.max( this.w, v.w );
+
+		return this;
+
+	},
+
+	clamp: function ( min, max ) {
+
+		// This function assumes min < max, if this assumption isn't true it will not operate correctly
+
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+		this.z = Math.max( min.z, Math.min( max.z, this.z ) );
+		this.w = Math.max( min.w, Math.min( max.w, this.w ) );
+
+		return this;
+
+	},
+
+	clampScalar: function () {
+
+		var min, max;
+
+		return function clampScalar( minVal, maxVal ) {
+
+			if ( min === undefined ) {
+
+				min = new Vector4();
+				max = new Vector4();
+
+			}
+
+			min.set( minVal, minVal, minVal, minVal );
+			max.set( maxVal, maxVal, maxVal, maxVal );
+
+			return this.clamp( min, max );
+
+		};
+
+	}(),
+
+	floor: function () {
+
+		this.x = Math.floor( this.x );
+		this.y = Math.floor( this.y );
+		this.z = Math.floor( this.z );
+		this.w = Math.floor( this.w );
+
+		return this;
+
+	},
+
+	ceil: function () {
+
+		this.x = Math.ceil( this.x );
+		this.y = Math.ceil( this.y );
+		this.z = Math.ceil( this.z );
+		this.w = Math.ceil( this.w );
+
+		return this;
+
+	},
+
+	round: function () {
+
+		this.x = Math.round( this.x );
+		this.y = Math.round( this.y );
+		this.z = Math.round( this.z );
+		this.w = Math.round( this.w );
+
+		return this;
+
+	},
+
+	roundToZero: function () {
+
+		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
+		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
+		this.z = ( this.z < 0 ) ? Math.ceil( this.z ) : Math.floor( this.z );
+		this.w = ( this.w < 0 ) ? Math.ceil( this.w ) : Math.floor( this.w );
+
+		return this;
+
+	},
+
+	negate: function () {
+
+		this.x = - this.x;
+		this.y = - this.y;
+		this.z = - this.z;
+		this.w = - this.w;
+
+		return this;
+
+	},
+
+	dot: function ( v ) {
+
+		return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
+
+	},
+
+	lengthSq: function () {
+
+		return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+
+	},
+
+	length: function () {
+
+		return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w );
+
+	},
+
+	lengthManhattan: function () {
+
+		return Math.abs( this.x ) + Math.abs( this.y ) + Math.abs( this.z ) + Math.abs( this.w );
+
+	},
+
+	normalize: function () {
+
+		return this.divideScalar( this.length() );
+
+	},
+
+	setLength: function ( length ) {
+
+		return this.multiplyScalar( length / this.length() );
+
+	},
+
+	lerp: function ( v, alpha ) {
+
+		this.x += ( v.x - this.x ) * alpha;
+		this.y += ( v.y - this.y ) * alpha;
+		this.z += ( v.z - this.z ) * alpha;
+		this.w += ( v.w - this.w ) * alpha;
+
+		return this;
+
+	},
+
+	lerpVectors: function ( v1, v2, alpha ) {
+
+		return this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
+
+	},
+
+	equals: function ( v ) {
+
+		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) && ( v.w === this.w ) );
+
+	},
+
+	fromArray: function ( array, offset ) {
+
+		if ( offset === undefined ) offset = 0;
+
+		this.x = array[ offset ];
+		this.y = array[ offset + 1 ];
+		this.z = array[ offset + 2 ];
+		this.w = array[ offset + 3 ];
+
+		return this;
+
+	},
+
+	toArray: function ( array, offset ) {
+
+		if ( array === undefined ) array = [];
+		if ( offset === undefined ) offset = 0;
+
+		array[ offset ] = this.x;
+		array[ offset + 1 ] = this.y;
+		array[ offset + 2 ] = this.z;
+		array[ offset + 3 ] = this.w;
+
+		return array;
+
+	},
+
+	fromBufferAttribute: function ( attribute, index, offset ) {
+
+		if ( offset !== undefined ) {
+
+			console.warn( 'THREE.Vector4: offset has been removed from .fromBufferAttribute().' );
+
+		}
+
+		this.x = attribute.getX( index );
+		this.y = attribute.getY( index );
+		this.z = attribute.getZ( index );
+		this.w = attribute.getW( index );
+
+		return this;
+
+	}
+
+};
+
+/**
+ * @author szimek / https://github.com/szimek/
+ * @author alteredq / http://alteredqualia.com/
+ * @author Marius Kintel / https://github.com/kintel
+ */
+
+/*
+ In options, we can specify:
+ * Texture parameters for an auto-generated target texture
+ * depthBuffer/stencilBuffer: Booleans to indicate if we should generate these buffers
+*/
+function WebGLRenderTarget( width, height, options ) {
+
+	this.uuid = _Math.generateUUID();
+
+	this.width = width;
+	this.height = height;
+
+	this.scissor = new Vector4( 0, 0, width, height );
+	this.scissorTest = false;
+
+	this.viewport = new Vector4( 0, 0, width, height );
+
+	options = options || {};
+
+	if ( options.minFilter === undefined ) options.minFilter = LinearFilter;
+
+	this.texture = new Texture( undefined, undefined, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
+
+	this.depthBuffer = options.depthBuffer !== undefined ? options.depthBuffer : true;
+	this.stencilBuffer = options.stencilBuffer !== undefined ? options.stencilBuffer : true;
+	this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
+
+}
+
+WebGLRenderTarget.prototype = {
+
+	constructor: WebGLRenderTarget,
+
+	isWebGLRenderTarget: true,
+
+	setSize: function ( width, height ) {
+
+		if ( this.width !== width || this.height !== height ) {
+
+			this.width = width;
+			this.height = height;
+
+			this.dispose();
+
+		}
+
+		this.viewport.set( 0, 0, width, height );
+		this.scissor.set( 0, 0, width, height );
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	copy: function ( source ) {
+
+		this.width = source.width;
+		this.height = source.height;
+
+		this.viewport.copy( source.viewport );
+
+		this.texture = source.texture.clone();
+
+		this.depthBuffer = source.depthBuffer;
+		this.stencilBuffer = source.stencilBuffer;
+		this.depthTexture = source.depthTexture;
+
+		return this;
+
+	},
+
+	dispose: function () {
+
+		this.dispatchEvent( { type: 'dispose' } );
+
+	}
+
+};
+
+Object.assign( WebGLRenderTarget.prototype, EventDispatcher.prototype );
+
+/**
+ * @author alteredq / http://alteredqualia.com
+ */
+
+function WebGLRenderTargetCube( width, height, options ) {
+
+	WebGLRenderTarget.call( this, width, height, options );
+
+	this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
+	this.activeMipMapLevel = 0;
+
+}
+
+WebGLRenderTargetCube.prototype = Object.create( WebGLRenderTarget.prototype );
+WebGLRenderTargetCube.prototype.constructor = WebGLRenderTargetCube;
+
+WebGLRenderTargetCube.prototype.isWebGLRenderTargetCube = true;
+
+/**
+ * @author mikael emtinger / http://gomo.se/
+ * @author alteredq / http://alteredqualia.com/
+ * @author WestLangley / http://github.com/WestLangley
+ * @author bhouston / http://clara.io
+ */
+
+function Quaternion( x, y, z, w ) {
+
+	this._x = x || 0;
+	this._y = y || 0;
+	this._z = z || 0;
+	this._w = ( w !== undefined ) ? w : 1;
+
+}
+
+Quaternion.prototype = {
+
+	constructor: Quaternion,
+
+	get x () {
+
+		return this._x;
+
+	},
+
+	set x ( value ) {
+
+		this._x = value;
+		this.onChangeCallback();
+
+	},
+
+	get y () {
+
+		return this._y;
+
+	},
+
+	set y ( value ) {
+
+		this._y = value;
+		this.onChangeCallback();
+
+	},
+
+	get z () {
+
+		return this._z;
+
+	},
+
+	set z ( value ) {
+
+		this._z = value;
+		this.onChangeCallback();
+
+	},
+
+	get w () {
+
+		return this._w;
+
+	},
+
+	set w ( value ) {
+
+		this._w = value;
+		this.onChangeCallback();
+
+	},
+
+	set: function ( x, y, z, w ) {
+
+		this._x = x;
+		this._y = y;
+		this._z = z;
+		this._w = w;
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor( this._x, this._y, this._z, this._w );
+
+	},
+
+	copy: function ( quaternion ) {
+
+		this._x = quaternion.x;
+		this._y = quaternion.y;
+		this._z = quaternion.z;
+		this._w = quaternion.w;
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	setFromEuler: function ( euler, update ) {
+
+		if ( (euler && euler.isEuler) === false ) {
+
+			throw new Error( 'THREE.Quaternion: .setFromEuler() now expects an Euler rotation rather than a Vector3 and order.' );
+
+		}
+
+		// http://www.mathworks.com/matlabcentral/fileexchange/
+		// 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
+		//	content/SpinCalc.m
+
+		var c1 = Math.cos( euler._x / 2 );
+		var c2 = Math.cos( euler._y / 2 );
+		var c3 = Math.cos( euler._z / 2 );
+		var s1 = Math.sin( euler._x / 2 );
+		var s2 = Math.sin( euler._y / 2 );
+		var s3 = Math.sin( euler._z / 2 );
+
+		var order = euler.order;
+
+		if ( order === 'XYZ' ) {
+
+			this._x = s1 * c2 * c3 + c1 * s2 * s3;
+			this._y = c1 * s2 * c3 - s1 * c2 * s3;
+			this._z = c1 * c2 * s3 + s1 * s2 * c3;
+			this._w = c1 * c2 * c3 - s1 * s2 * s3;
+
+		} else if ( order === 'YXZ' ) {
+
+			this._x = s1 * c2 * c3 + c1 * s2 * s3;
+			this._y = c1 * s2 * c3 - s1 * c2 * s3;
+			this._z = c1 * c2 * s3 - s1 * s2 * c3;
+			this._w = c1 * c2 * c3 + s1 * s2 * s3;
+
+		} else if ( order === 'ZXY' ) {
+
+			this._x = s1 * c2 * c3 - c1 * s2 * s3;
+			this._y = c1 * s2 * c3 + s1 * c2 * s3;
+			this._z = c1 * c2 * s3 + s1 * s2 * c3;
+			this._w = c1 * c2 * c3 - s1 * s2 * s3;
+
+		} else if ( order === 'ZYX' ) {
+
+			this._x = s1 * c2 * c3 - c1 * s2 * s3;
+			this._y = c1 * s2 * c3 + s1 * c2 * s3;
+			this._z = c1 * c2 * s3 - s1 * s2 * c3;
+			this._w = c1 * c2 * c3 + s1 * s2 * s3;
+
+		} else if ( order === 'YZX' ) {
+
+			this._x = s1 * c2 * c3 + c1 * s2 * s3;
+			this._y = c1 * s2 * c3 + s1 * c2 * s3;
+			this._z = c1 * c2 * s3 - s1 * s2 * c3;
+			this._w = c1 * c2 * c3 - s1 * s2 * s3;
+
+		} else if ( order === 'XZY' ) {
+
+			this._x = s1 * c2 * c3 - c1 * s2 * s3;
+			this._y = c1 * s2 * c3 - s1 * c2 * s3;
+			this._z = c1 * c2 * s3 + s1 * s2 * c3;
+			this._w = c1 * c2 * c3 + s1 * s2 * s3;
+
+		}
+
+		if ( update !== false ) this.onChangeCallback();
+
+		return this;
+
+	},
+
+	setFromAxisAngle: function ( axis, angle ) {
+
+		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
+
+		// assumes axis is normalized
+
+		var halfAngle = angle / 2, s = Math.sin( halfAngle );
+
+		this._x = axis.x * s;
+		this._y = axis.y * s;
+		this._z = axis.z * s;
+		this._w = Math.cos( halfAngle );
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	setFromRotationMatrix: function ( m ) {
+
+		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
+
+		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+
+		var te = m.elements,
+
+			m11 = te[ 0 ], m12 = te[ 4 ], m13 = te[ 8 ],
+			m21 = te[ 1 ], m22 = te[ 5 ], m23 = te[ 9 ],
+			m31 = te[ 2 ], m32 = te[ 6 ], m33 = te[ 10 ],
+
+			trace = m11 + m22 + m33,
+			s;
+
+		if ( trace > 0 ) {
+
+			s = 0.5 / Math.sqrt( trace + 1.0 );
+
+			this._w = 0.25 / s;
+			this._x = ( m32 - m23 ) * s;
+			this._y = ( m13 - m31 ) * s;
+			this._z = ( m21 - m12 ) * s;
+
+		} else if ( m11 > m22 && m11 > m33 ) {
+
+			s = 2.0 * Math.sqrt( 1.0 + m11 - m22 - m33 );
+
+			this._w = ( m32 - m23 ) / s;
+			this._x = 0.25 * s;
+			this._y = ( m12 + m21 ) / s;
+			this._z = ( m13 + m31 ) / s;
+
+		} else if ( m22 > m33 ) {
+
+			s = 2.0 * Math.sqrt( 1.0 + m22 - m11 - m33 );
+
+			this._w = ( m13 - m31 ) / s;
+			this._x = ( m12 + m21 ) / s;
+			this._y = 0.25 * s;
+			this._z = ( m23 + m32 ) / s;
+
+		} else {
+
+			s = 2.0 * Math.sqrt( 1.0 + m33 - m11 - m22 );
+
+			this._w = ( m21 - m12 ) / s;
+			this._x = ( m13 + m31 ) / s;
+			this._y = ( m23 + m32 ) / s;
+			this._z = 0.25 * s;
+
+		}
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	setFromUnitVectors: function () {
+
+		// http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-final
+
+		// assumes direction vectors vFrom and vTo are normalized
+
+		var v1, r;
+
+		var EPS = 0.000001;
+
+		return function setFromUnitVectors( vFrom, vTo ) {
+
+			if ( v1 === undefined ) v1 = new Vector3();
+
+			r = vFrom.dot( vTo ) + 1;
+
+			if ( r < EPS ) {
+
+				r = 0;
+
+				if ( Math.abs( vFrom.x ) > Math.abs( vFrom.z ) ) {
+
+					v1.set( - vFrom.y, vFrom.x, 0 );
+
+				} else {
+
+					v1.set( 0, - vFrom.z, vFrom.y );
+
+				}
+
+			} else {
+
+				v1.crossVectors( vFrom, vTo );
+
+			}
+
+			this._x = v1.x;
+			this._y = v1.y;
+			this._z = v1.z;
+			this._w = r;
+
+			return this.normalize();
+
+		};
+
+	}(),
+
+	inverse: function () {
+
+		return this.conjugate().normalize();
+
+	},
+
+	conjugate: function () {
+
+		this._x *= - 1;
+		this._y *= - 1;
+		this._z *= - 1;
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	dot: function ( v ) {
+
+		return this._x * v._x + this._y * v._y + this._z * v._z + this._w * v._w;
+
+	},
+
+	lengthSq: function () {
+
+		return this._x * this._x + this._y * this._y + this._z * this._z + this._w * this._w;
+
+	},
+
+	length: function () {
+
+		return Math.sqrt( this._x * this._x + this._y * this._y + this._z * this._z + this._w * this._w );
+
+	},
+
+	normalize: function () {
+
+		var l = this.length();
+
+		if ( l === 0 ) {
+
+			this._x = 0;
+			this._y = 0;
+			this._z = 0;
+			this._w = 1;
+
+		} else {
+
+			l = 1 / l;
+
+			this._x = this._x * l;
+			this._y = this._y * l;
+			this._z = this._z * l;
+			this._w = this._w * l;
+
+		}
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	multiply: function ( q, p ) {
+
+		if ( p !== undefined ) {
+
+			console.warn( 'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.' );
+			return this.multiplyQuaternions( q, p );
+
+		}
+
+		return this.multiplyQuaternions( this, q );
+
+	},
+
+	premultiply: function ( q ) {
+
+		return this.multiplyQuaternions( q, this );
+
+	},
+
+	multiplyQuaternions: function ( a, b ) {
+
+		// from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
+
+		var qax = a._x, qay = a._y, qaz = a._z, qaw = a._w;
+		var qbx = b._x, qby = b._y, qbz = b._z, qbw = b._w;
+
+		this._x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
+		this._y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
+		this._z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
+		this._w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	slerp: function ( qb, t ) {
+
+		if ( t === 0 ) return this;
+		if ( t === 1 ) return this.copy( qb );
+
+		var x = this._x, y = this._y, z = this._z, w = this._w;
+
+		// http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+
+		var cosHalfTheta = w * qb._w + x * qb._x + y * qb._y + z * qb._z;
+
+		if ( cosHalfTheta < 0 ) {
+
+			this._w = - qb._w;
+			this._x = - qb._x;
+			this._y = - qb._y;
+			this._z = - qb._z;
+
+			cosHalfTheta = - cosHalfTheta;
+
+		} else {
+
+			this.copy( qb );
+
+		}
+
+		if ( cosHalfTheta >= 1.0 ) {
+
+			this._w = w;
+			this._x = x;
+			this._y = y;
+			this._z = z;
+
+			return this;
+
+		}
+
+		var sinHalfTheta = Math.sqrt( 1.0 - cosHalfTheta * cosHalfTheta );
+
+		if ( Math.abs( sinHalfTheta ) < 0.001 ) {
+
+			this._w = 0.5 * ( w + this._w );
+			this._x = 0.5 * ( x + this._x );
+			this._y = 0.5 * ( y + this._y );
+			this._z = 0.5 * ( z + this._z );
+
+			return this;
+
+		}
+
+		var halfTheta = Math.atan2( sinHalfTheta, cosHalfTheta );
+		var ratioA = Math.sin( ( 1 - t ) * halfTheta ) / sinHalfTheta,
+		ratioB = Math.sin( t * halfTheta ) / sinHalfTheta;
+
+		this._w = ( w * ratioA + this._w * ratioB );
+		this._x = ( x * ratioA + this._x * ratioB );
+		this._y = ( y * ratioA + this._y * ratioB );
+		this._z = ( z * ratioA + this._z * ratioB );
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	equals: function ( quaternion ) {
+
+		return ( quaternion._x === this._x ) && ( quaternion._y === this._y ) && ( quaternion._z === this._z ) && ( quaternion._w === this._w );
+
+	},
+
+	fromArray: function ( array, offset ) {
+
+		if ( offset === undefined ) offset = 0;
+
+		this._x = array[ offset ];
+		this._y = array[ offset + 1 ];
+		this._z = array[ offset + 2 ];
+		this._w = array[ offset + 3 ];
+
+		this.onChangeCallback();
+
+		return this;
+
+	},
+
+	toArray: function ( array, offset ) {
+
+		if ( array === undefined ) array = [];
+		if ( offset === undefined ) offset = 0;
+
+		array[ offset ] = this._x;
+		array[ offset + 1 ] = this._y;
+		array[ offset + 2 ] = this._z;
+		array[ offset + 3 ] = this._w;
+
+		return array;
+
+	},
+
+	onChange: function ( callback ) {
+
+		this.onChangeCallback = callback;
+
+		return this;
+
+	},
+
+	onChangeCallback: function () {}
+
+};
+
+Object.assign( Quaternion, {
+
+	slerp: function( qa, qb, qm, t ) {
+
+		return qm.copy( qa ).slerp( qb, t );
+
+	},
+
+	slerpFlat: function(
+			dst, dstOffset, src0, srcOffset0, src1, srcOffset1, t ) {
+
+		// fuzz-free, array-based Quaternion SLERP operation
+
+		var x0 = src0[ srcOffset0 + 0 ],
+			y0 = src0[ srcOffset0 + 1 ],
+			z0 = src0[ srcOffset0 + 2 ],
+			w0 = src0[ srcOffset0 + 3 ],
+
+			x1 = src1[ srcOffset1 + 0 ],
+			y1 = src1[ srcOffset1 + 1 ],
+			z1 = src1[ srcOffset1 + 2 ],
+			w1 = src1[ srcOffset1 + 3 ];
+
+		if ( w0 !== w1 || x0 !== x1 || y0 !== y1 || z0 !== z1 ) {
+
+			var s = 1 - t,
+
+				cos = x0 * x1 + y0 * y1 + z0 * z1 + w0 * w1,
+
+				dir = ( cos >= 0 ? 1 : - 1 ),
+				sqrSin = 1 - cos * cos;
+
+			// Skip the Slerp for tiny steps to avoid numeric problems:
+			if ( sqrSin > Number.EPSILON ) {
+
+				var sin = Math.sqrt( sqrSin ),
+					len = Math.atan2( sin, cos * dir );
+
+				s = Math.sin( s * len ) / sin;
+				t = Math.sin( t * len ) / sin;
+
+			}
+
+			var tDir = t * dir;
+
+			x0 = x0 * s + x1 * tDir;
+			y0 = y0 * s + y1 * tDir;
+			z0 = z0 * s + z1 * tDir;
+			w0 = w0 * s + w1 * tDir;
+
+			// Normalize in case we just did a lerp:
+			if ( s === 1 - t ) {
+
+				var f = 1 / Math.sqrt( x0 * x0 + y0 * y0 + z0 * z0 + w0 * w0 );
+
+				x0 *= f;
+				y0 *= f;
+				z0 *= f;
+				w0 *= f;
+
+			}
+
+		}
+
+		dst[ dstOffset ] = x0;
+		dst[ dstOffset + 1 ] = y0;
+		dst[ dstOffset + 2 ] = z0;
+		dst[ dstOffset + 3 ] = w0;
+
+	}
+
+} );
+
 /**
  * @author mrdoob / http://mrdoob.com/
  * @author *kile / http://kile.stravaganza.org/
@@ -37963,2818 +40048,6 @@ Cylindrical.prototype = {
 /**
  * @author alteredq / http://alteredqualia.com/
  */
-
-function MorphBlendMesh( geometry, material ) {
-
-	Mesh.call( this, geometry, material );
-
-	this.animationsMap = {};
-	this.animationsList = [];
-
-	// prepare default animation
-	// (all frames played together in 1 second)
-
-	var numFrames = this.geometry.morphTargets.length;
-
-	var name = "__default";
-
-	var startFrame = 0;
-	var endFrame = numFrames - 1;
-
-	var fps = numFrames / 1;
-
-	this.createAnimation( name, startFrame, endFrame, fps );
-	this.setAnimationWeight( name, 1 );
-
-}
-
-MorphBlendMesh.prototype = Object.create( Mesh.prototype );
-MorphBlendMesh.prototype.constructor = MorphBlendMesh;
-
-MorphBlendMesh.prototype.createAnimation = function ( name, start, end, fps ) {
-
-	var animation = {
-
-		start: start,
-		end: end,
-
-		length: end - start + 1,
-
-		fps: fps,
-		duration: ( end - start ) / fps,
-
-		lastFrame: 0,
-		currentFrame: 0,
-
-		active: false,
-
-		time: 0,
-		direction: 1,
-		weight: 1,
-
-		directionBackwards: false,
-		mirroredLoop: false
-
-	};
-
-	this.animationsMap[ name ] = animation;
-	this.animationsList.push( animation );
-
-};
-
-MorphBlendMesh.prototype.autoCreateAnimations = function ( fps ) {
-
-	var pattern = /([a-z]+)_?(\d+)/i;
-
-	var firstAnimation, frameRanges = {};
-
-	var geometry = this.geometry;
-
-	for ( var i = 0, il = geometry.morphTargets.length; i < il; i ++ ) {
-
-		var morph = geometry.morphTargets[ i ];
-		var chunks = morph.name.match( pattern );
-
-		if ( chunks && chunks.length > 1 ) {
-
-			var name = chunks[ 1 ];
-
-			if ( ! frameRanges[ name ] ) frameRanges[ name ] = { start: Infinity, end: - Infinity };
-
-			var range = frameRanges[ name ];
-
-			if ( i < range.start ) range.start = i;
-			if ( i > range.end ) range.end = i;
-
-			if ( ! firstAnimation ) firstAnimation = name;
-
-		}
-
-	}
-
-	for ( var name in frameRanges ) {
-
-		var range = frameRanges[ name ];
-		this.createAnimation( name, range.start, range.end, fps );
-
-	}
-
-	this.firstAnimation = firstAnimation;
-
-};
-
-MorphBlendMesh.prototype.setAnimationDirectionForward = function ( name ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.direction = 1;
-		animation.directionBackwards = false;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.setAnimationDirectionBackward = function ( name ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.direction = - 1;
-		animation.directionBackwards = true;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.setAnimationFPS = function ( name, fps ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.fps = fps;
-		animation.duration = ( animation.end - animation.start ) / animation.fps;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.setAnimationDuration = function ( name, duration ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.duration = duration;
-		animation.fps = ( animation.end - animation.start ) / animation.duration;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.setAnimationWeight = function ( name, weight ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.weight = weight;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.setAnimationTime = function ( name, time ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.time = time;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.getAnimationTime = function ( name ) {
-
-	var time = 0;
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		time = animation.time;
-
-	}
-
-	return time;
-
-};
-
-MorphBlendMesh.prototype.getAnimationDuration = function ( name ) {
-
-	var duration = - 1;
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		duration = animation.duration;
-
-	}
-
-	return duration;
-
-};
-
-MorphBlendMesh.prototype.playAnimation = function ( name ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.time = 0;
-		animation.active = true;
-
-	} else {
-
-		console.warn( "THREE.MorphBlendMesh: animation[" + name + "] undefined in .playAnimation()" );
-
-	}
-
-};
-
-MorphBlendMesh.prototype.stopAnimation = function ( name ) {
-
-	var animation = this.animationsMap[ name ];
-
-	if ( animation ) {
-
-		animation.active = false;
-
-	}
-
-};
-
-MorphBlendMesh.prototype.update = function ( delta ) {
-
-	for ( var i = 0, il = this.animationsList.length; i < il; i ++ ) {
-
-		var animation = this.animationsList[ i ];
-
-		if ( ! animation.active ) continue;
-
-		var frameTime = animation.duration / animation.length;
-
-		animation.time += animation.direction * delta;
-
-		if ( animation.mirroredLoop ) {
-
-			if ( animation.time > animation.duration || animation.time < 0 ) {
-
-				animation.direction *= - 1;
-
-				if ( animation.time > animation.duration ) {
-
-					animation.time = animation.duration;
-					animation.directionBackwards = true;
-
-				}
-
-				if ( animation.time < 0 ) {
-
-					animation.time = 0;
-					animation.directionBackwards = false;
-
-				}
-
-			}
-
-		} else {
-
-			animation.time = animation.time % animation.duration;
-
-			if ( animation.time < 0 ) animation.time += animation.duration;
-
-		}
-
-		var keyframe = animation.start + _Math.clamp( Math.floor( animation.time / frameTime ), 0, animation.length - 1 );
-		var weight = animation.weight;
-
-		if ( keyframe !== animation.currentFrame ) {
-
-			this.morphTargetInfluences[ animation.lastFrame ] = 0;
-			this.morphTargetInfluences[ animation.currentFrame ] = 1 * weight;
-
-			this.morphTargetInfluences[ keyframe ] = 0;
-
-			animation.lastFrame = animation.currentFrame;
-			animation.currentFrame = keyframe;
-
-		}
-
-		var mix = ( animation.time % frameTime ) / frameTime;
-
-		if ( animation.directionBackwards ) mix = 1 - mix;
-
-		if ( animation.currentFrame !== animation.lastFrame ) {
-
-			this.morphTargetInfluences[ animation.currentFrame ] = mix * weight;
-			this.morphTargetInfluences[ animation.lastFrame ] = ( 1 - mix ) * weight;
-
-		} else {
-
-			this.morphTargetInfluences[ animation.currentFrame ] = weight;
-
-		}
-
-	}
-
-};
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-function ImmediateRenderObject( material ) {
-
-	Object3D.call( this );
-
-	this.material = material;
-	this.render = function ( renderCallback ) {};
-
-}
-
-ImmediateRenderObject.prototype = Object.create( Object3D.prototype );
-ImmediateRenderObject.prototype.constructor = ImmediateRenderObject;
-
-ImmediateRenderObject.prototype.isImmediateRenderObject = true;
-
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author WestLangley / http://github.com/WestLangley
-*/
-
-function VertexNormalsHelper( object, size, hex, linewidth ) {
-
-	this.object = object;
-
-	this.size = ( size !== undefined ) ? size : 1;
-
-	var color = ( hex !== undefined ) ? hex : 0xff0000;
-
-	var width = ( linewidth !== undefined ) ? linewidth : 1;
-
-	//
-
-	var nNormals = 0;
-
-	var objGeometry = this.object.geometry;
-
-	if ( objGeometry && objGeometry.isGeometry ) {
-
-		nNormals = objGeometry.faces.length * 3;
-
-	} else if ( objGeometry && objGeometry.isBufferGeometry ) {
-
-		nNormals = objGeometry.attributes.normal.count;
-
-	}
-
-	//
-
-	var geometry = new BufferGeometry();
-
-	var positions = new Float32BufferAttribute( nNormals * 2 * 3, 3 );
-
-	geometry.addAttribute( 'position', positions );
-
-	LineSegments.call( this, geometry, new LineBasicMaterial( { color: color, linewidth: width } ) );
-
-	//
-
-	this.matrixAutoUpdate = false;
-
-	this.update();
-
-}
-
-VertexNormalsHelper.prototype = Object.create( LineSegments.prototype );
-VertexNormalsHelper.prototype.constructor = VertexNormalsHelper;
-
-VertexNormalsHelper.prototype.update = ( function () {
-
-	var v1 = new Vector3();
-	var v2 = new Vector3();
-	var normalMatrix = new Matrix3();
-
-	return function update() {
-
-		var keys = [ 'a', 'b', 'c' ];
-
-		this.object.updateMatrixWorld( true );
-
-		normalMatrix.getNormalMatrix( this.object.matrixWorld );
-
-		var matrixWorld = this.object.matrixWorld;
-
-		var position = this.geometry.attributes.position;
-
-		//
-
-		var objGeometry = this.object.geometry;
-
-		if ( objGeometry && objGeometry.isGeometry ) {
-
-			var vertices = objGeometry.vertices;
-
-			var faces = objGeometry.faces;
-
-			var idx = 0;
-
-			for ( var i = 0, l = faces.length; i < l; i ++ ) {
-
-				var face = faces[ i ];
-
-				for ( var j = 0, jl = face.vertexNormals.length; j < jl; j ++ ) {
-
-					var vertex = vertices[ face[ keys[ j ] ] ];
-
-					var normal = face.vertexNormals[ j ];
-
-					v1.copy( vertex ).applyMatrix4( matrixWorld );
-
-					v2.copy( normal ).applyMatrix3( normalMatrix ).normalize().multiplyScalar( this.size ).add( v1 );
-
-					position.setXYZ( idx, v1.x, v1.y, v1.z );
-
-					idx = idx + 1;
-
-					position.setXYZ( idx, v2.x, v2.y, v2.z );
-
-					idx = idx + 1;
-
-				}
-
-			}
-
-		} else if ( objGeometry && objGeometry.isBufferGeometry ) {
-
-			var objPos = objGeometry.attributes.position;
-
-			var objNorm = objGeometry.attributes.normal;
-
-			var idx = 0;
-
-			// for simplicity, ignore index and drawcalls, and render every normal
-
-			for ( var j = 0, jl = objPos.count; j < jl; j ++ ) {
-
-				v1.set( objPos.getX( j ), objPos.getY( j ), objPos.getZ( j ) ).applyMatrix4( matrixWorld );
-
-				v2.set( objNorm.getX( j ), objNorm.getY( j ), objNorm.getZ( j ) );
-
-				v2.applyMatrix3( normalMatrix ).normalize().multiplyScalar( this.size ).add( v1 );
-
-				position.setXYZ( idx, v1.x, v1.y, v1.z );
-
-				idx = idx + 1;
-
-				position.setXYZ( idx, v2.x, v2.y, v2.z );
-
-				idx = idx + 1;
-
-			}
-
-		}
-
-		position.needsUpdate = true;
-
-		return this;
-
-	};
-
-}() );
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author mrdoob / http://mrdoob.com/
- * @author WestLangley / http://github.com/WestLangley
-*/
-
-function SpotLightHelper( light ) {
-
-	Object3D.call( this );
-
-	this.light = light;
-	this.light.updateMatrixWorld();
-
-	this.matrix = light.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	var geometry = new BufferGeometry();
-
-	var positions = [
-		0, 0, 0,   0,   0,   1,
-		0, 0, 0,   1,   0,   1,
-		0, 0, 0, - 1,   0,   1,
-		0, 0, 0,   0,   1,   1,
-		0, 0, 0,   0, - 1,   1
-	];
-
-	for ( var i = 0, j = 1, l = 32; i < l; i ++, j ++ ) {
-
-		var p1 = ( i / l ) * Math.PI * 2;
-		var p2 = ( j / l ) * Math.PI * 2;
-
-		positions.push(
-			Math.cos( p1 ), Math.sin( p1 ), 1,
-			Math.cos( p2 ), Math.sin( p2 ), 1
-		);
-
-	}
-
-	geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
-
-	var material = new LineBasicMaterial( { fog: false } );
-
-	this.cone = new LineSegments( geometry, material );
-	this.add( this.cone );
-
-	this.update();
-
-}
-
-SpotLightHelper.prototype = Object.create( Object3D.prototype );
-SpotLightHelper.prototype.constructor = SpotLightHelper;
-
-SpotLightHelper.prototype.dispose = function () {
-
-	this.cone.geometry.dispose();
-	this.cone.material.dispose();
-
-};
-
-SpotLightHelper.prototype.update = function () {
-
-	var vector = new Vector3();
-	var vector2 = new Vector3();
-
-	return function update() {
-
-		var coneLength = this.light.distance ? this.light.distance : 1000;
-		var coneWidth = coneLength * Math.tan( this.light.angle );
-
-		this.cone.scale.set( coneWidth, coneWidth, coneLength );
-
-		vector.setFromMatrixPosition( this.light.matrixWorld );
-		vector2.setFromMatrixPosition( this.light.target.matrixWorld );
-
-		this.cone.lookAt( vector2.sub( vector ) );
-
-		this.cone.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-
-	};
-
-}();
-
-/**
- * @author Sean Griffin / http://twitter.com/sgrif
- * @author Michael Guerrero / http://realitymeltdown.com
- * @author mrdoob / http://mrdoob.com/
- * @author ikerr / http://verold.com
- * @author Mugen87 / https://github.com/Mugen87
- */
-
-function SkeletonHelper( object ) {
-
-	this.bones = this.getBoneList( object );
-
-	var geometry = new BufferGeometry();
-
-	var vertices = [];
-	var colors = [];
-
-	var color1 = new Color( 0, 0, 1 );
-	var color2 = new Color( 0, 1, 0 );
-
-	for ( var i = 0; i < this.bones.length; i ++ ) {
-
-		var bone = this.bones[ i ];
-
-		if ( bone.parent && bone.parent.isBone ) {
-
-			vertices.push( 0, 0, 0 );
-			vertices.push( 0, 0, 0 );
-			colors.push( color1.r, color1.g, color1.b );
-			colors.push( color2.r, color2.g, color2.b );
-
-		}
-
-	}
-
-	geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
-
-	var material = new LineBasicMaterial( { vertexColors: VertexColors, depthTest: false, depthWrite: false, transparent: true } );
-
-	LineSegments.call( this, geometry, material );
-
-	this.root = object;
-
-	this.matrix = object.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	this.update();
-
-}
-
-
-SkeletonHelper.prototype = Object.create( LineSegments.prototype );
-SkeletonHelper.prototype.constructor = SkeletonHelper;
-
-SkeletonHelper.prototype.getBoneList = function( object ) {
-
-	var boneList = [];
-
-	if ( object && object.isBone ) {
-
-		boneList.push( object );
-
-	}
-
-	for ( var i = 0; i < object.children.length; i ++ ) {
-
-		boneList.push.apply( boneList, this.getBoneList( object.children[ i ] ) );
-
-	}
-
-	return boneList;
-
-};
-
-SkeletonHelper.prototype.update = function () {
-
-	var vector = new Vector3();
-
-	var boneMatrix = new Matrix4();
-	var matrixWorldInv = new Matrix4();
-
-	return function update() {
-
-		var geometry = this.geometry;
-		var position = geometry.getAttribute( 'position' );
-
-		matrixWorldInv.getInverse( this.root.matrixWorld );
-
-		for ( var i = 0, j = 0; i < this.bones.length; i ++ ) {
-
-			var bone = this.bones[ i ];
-
-			if ( bone.parent && bone.parent.isBone ) {
-
-				boneMatrix.multiplyMatrices( matrixWorldInv, bone.matrixWorld );
-				vector.setFromMatrixPosition( boneMatrix );
-				position.setXYZ( j, vector.x, vector.y, vector.z );
-
-				boneMatrix.multiplyMatrices( matrixWorldInv, bone.parent.matrixWorld );
-				vector.setFromMatrixPosition( boneMatrix );
-				position.setXYZ( j + 1, vector.x, vector.y, vector.z );
-
-				j += 2;
-
-			}
-
-		}
-
-		geometry.getAttribute( 'position' ).needsUpdate = true;
-
-	};
-
-}();
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author mrdoob / http://mrdoob.com/
- */
-
-function PointLightHelper( light, sphereSize ) {
-
-	this.light = light;
-	this.light.updateMatrixWorld();
-
-	var geometry = new SphereBufferGeometry( sphereSize, 4, 2 );
-	var material = new MeshBasicMaterial( { wireframe: true, fog: false } );
-	material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-
-	Mesh.call( this, geometry, material );
-
-	this.matrix = this.light.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	/*
-	var distanceGeometry = new THREE.IcosahedronGeometry( 1, 2 );
-	var distanceMaterial = new THREE.MeshBasicMaterial( { color: hexColor, fog: false, wireframe: true, opacity: 0.1, transparent: true } );
-
-	this.lightSphere = new THREE.Mesh( bulbGeometry, bulbMaterial );
-	this.lightDistance = new THREE.Mesh( distanceGeometry, distanceMaterial );
-
-	var d = light.distance;
-
-	if ( d === 0.0 ) {
-
-		this.lightDistance.visible = false;
-
-	} else {
-
-		this.lightDistance.scale.set( d, d, d );
-
-	}
-
-	this.add( this.lightDistance );
-	*/
-
-}
-
-PointLightHelper.prototype = Object.create( Mesh.prototype );
-PointLightHelper.prototype.constructor = PointLightHelper;
-
-PointLightHelper.prototype.dispose = function () {
-
-	this.geometry.dispose();
-	this.material.dispose();
-
-};
-
-PointLightHelper.prototype.update = function () {
-
-	this.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-
-	/*
-	var d = this.light.distance;
-
-	if ( d === 0.0 ) {
-
-		this.lightDistance.visible = false;
-
-	} else {
-
-		this.lightDistance.visible = true;
-		this.lightDistance.scale.set( d, d, d );
-
-	}
-	*/
-
-};
-
-/**
- * @author abelnation / http://github.com/abelnation
- * @author Mugen87 / http://github.com/Mugen87
- */
-
-function RectAreaLightHelper( light ) {
-
-	Object3D.call( this );
-
-	this.light = light;
-	this.light.updateMatrixWorld();
-
-	var materialFront = new MeshBasicMaterial( {
-		color: light.color,
-		fog: false
-	} );
-
-	var materialBack = new MeshBasicMaterial( {
-		color: light.color,
-		fog: false,
-		wireframe: true
-	} );
-
-	var geometry = new BufferGeometry();
-
-	geometry.addAttribute( 'position', new BufferAttribute( new Float32Array( 6 * 3 ), 3 ) );
-
-	// shows the "front" of the light, e.g. where light comes from
-
-	this.add( new Mesh( geometry, materialFront ) );
-
-	// shows the "back" of the light, which does not emit light
-
-	this.add( new Mesh( geometry, materialBack ) );
-
-	this.update();
-
-}
-
-RectAreaLightHelper.prototype = Object.create( Object3D.prototype );
-RectAreaLightHelper.prototype.constructor = RectAreaLightHelper;
-
-RectAreaLightHelper.prototype.dispose = function () {
-
-	this.children[ 0 ].geometry.dispose();
-	this.children[ 0 ].material.dispose();
-	this.children[ 1 ].geometry.dispose();
-	this.children[ 1 ].material.dispose();
-
-};
-
-RectAreaLightHelper.prototype.update = function () {
-
-	var vector1 = new Vector3();
-	var vector2 = new Vector3();
-
-	return function update() {
-
-		var mesh1 = this.children[ 0 ];
-		var mesh2 = this.children[ 1 ];
-
-		if ( this.light.target ) {
-
-			vector1.setFromMatrixPosition( this.light.matrixWorld );
-			vector2.setFromMatrixPosition( this.light.target.matrixWorld );
-
-			var lookVec = vector2.clone().sub( vector1 );
-			mesh1.lookAt( lookVec );
-			mesh2.lookAt( lookVec );
-
-		}
-
-		// update materials
-
-		mesh1.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-		mesh2.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-
-		// calculate new dimensions of the helper
-
-		var hx = this.light.width * 0.5;
-		var hy = this.light.height * 0.5;
-
-		// because the buffer attribute is shared over both geometries, we only have to update once
-
-		var position = mesh1.geometry.getAttribute( 'position' );
-		var array = position.array;
-
-		// first face
-
-		array[  0 ] =   hx; array[  1 ] = - hy; array[  2 ] = 0;
-		array[  3 ] =   hx; array[  4 ] =   hy; array[  5 ] = 0;
-		array[  6 ] = - hx; array[  7 ] =   hy; array[  8 ] = 0;
-
-		// second face
-
-		array[  9 ] = - hx; array[ 10 ] =   hy; array[ 11 ] = 0;
-		array[ 12 ] = - hx; array[ 13 ] = - hy; array[ 14 ] = 0;
-		array[ 15 ] =   hx; array[ 16 ] = - hy; array[ 17 ] = 0;
-
-		position.needsUpdate = true;
-
-	};
-
-}();
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author mrdoob / http://mrdoob.com/
- * @author Mugen87 / https://github.com/Mugen87
- */
-
-function HemisphereLightHelper( light, size ) {
-
-	Object3D.call( this );
-
-	this.light = light;
-	this.light.updateMatrixWorld();
-
-	this.matrix = light.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	var geometry = new OctahedronBufferGeometry( size );
-	geometry.rotateY( Math.PI * 0.5 );
-
-	var material = new MeshBasicMaterial( { vertexColors: VertexColors, wireframe: true } );
-
-	var position = geometry.getAttribute( 'position' );
-	var colors = new Float32Array( position.count * 3 );
-
-	geometry.addAttribute( 'color', new BufferAttribute( colors, 3 ) );
-
-	this.add( new Mesh( geometry, material ) );
-
-	this.update();
-
-}
-
-HemisphereLightHelper.prototype = Object.create( Object3D.prototype );
-HemisphereLightHelper.prototype.constructor = HemisphereLightHelper;
-
-HemisphereLightHelper.prototype.dispose = function () {
-
-	this.children[ 0 ].geometry.dispose();
-	this.children[ 0 ].material.dispose();
-
-};
-
-HemisphereLightHelper.prototype.update = function () {
-
-	var vector = new Vector3();
-
-	var color1 = new Color();
-	var color2 = new Color();
-
-	return function update() {
-
-		var mesh = this.children[ 0 ];
-
-		var colors = mesh.geometry.getAttribute( 'color' );
-
-		color1.copy( this.light.color ).multiplyScalar( this.light.intensity );
-		color2.copy( this.light.groundColor ).multiplyScalar( this.light.intensity );
-
-		for ( var i = 0, l = colors.count; i < l; i ++ ) {
-
-			var color = ( i < ( l / 2 ) ) ? color1 : color2;
-
-			colors.setXYZ( i, color.r, color.g, color.b );
-
-		}
-
-		mesh.lookAt( vector.setFromMatrixPosition( this.light.matrixWorld ).negate() );
-
-		colors.needsUpdate = true;
-
-	};
-
-}();
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function GridHelper( size, divisions, color1, color2 ) {
-
-	size = size || 10;
-	divisions = divisions || 10;
-	color1 = new Color( color1 !== undefined ? color1 : 0x444444 );
-	color2 = new Color( color2 !== undefined ? color2 : 0x888888 );
-
-	var center = divisions / 2;
-	var step = size / divisions;
-	var halfSize = size / 2;
-
-	var vertices = [], colors = [];
-
-	for ( var i = 0, j = 0, k = - halfSize; i <= divisions; i ++, k += step ) {
-
-		vertices.push( - halfSize, 0, k, halfSize, 0, k );
-		vertices.push( k, 0, - halfSize, k, 0, halfSize );
-
-		var color = i === center ? color1 : color2;
-
-		color.toArray( colors, j ); j += 3;
-		color.toArray( colors, j ); j += 3;
-		color.toArray( colors, j ); j += 3;
-		color.toArray( colors, j ); j += 3;
-
-	}
-
-	var geometry = new BufferGeometry();
-	geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
-
-	var material = new LineBasicMaterial( { vertexColors: VertexColors } );
-
-	LineSegments.call( this, geometry, material );
-
-}
-
-GridHelper.prototype = Object.create( LineSegments.prototype );
-GridHelper.prototype.constructor = GridHelper;
-
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author Mugen87 / http://github.com/Mugen87
- * @author Hectate / http://www.github.com/Hectate
- */
-
-function PolarGridHelper( radius, radials, circles, divisions, color1, color2 ) {
-
-	radius = radius || 10;
-	radials = radials || 16;
-	circles = circles || 8;
-	divisions = divisions || 64;
-	color1 = new Color( color1 !== undefined ? color1 : 0x444444 );
-	color2 = new Color( color2 !== undefined ? color2 : 0x888888 );
-
-	var vertices = [];
-	var colors = [];
-
-	var x, z;
-	var v, i, j, r, color;
-
-	// create the radials
-
-	for ( i = 0; i <= radials; i ++ ) {
-
-		v = ( i / radials ) * ( Math.PI * 2 );
-
-		x = Math.sin( v ) * radius;
-		z = Math.cos( v ) * radius;
-
-		vertices.push( 0, 0, 0 );
-		vertices.push( x, 0, z );
-
-		color = ( i & 1 ) ? color1 : color2;
-
-		colors.push( color.r, color.g, color.b );
-		colors.push( color.r, color.g, color.b );
-
-	}
-
-	// create the circles
-
-	for ( i = 0; i <= circles; i ++ ) {
-
-		color = ( i & 1 ) ? color1 : color2;
-
-		r = radius - ( radius / circles * i );
-
-		for ( j = 0; j < divisions; j ++ ) {
-
-			// first vertex
-
-			v = ( j / divisions ) * ( Math.PI * 2 );
-
-			x = Math.sin( v ) * r;
-			z = Math.cos( v ) * r;
-
-			vertices.push( x, 0, z );
-			colors.push( color.r, color.g, color.b );
-
-			// second vertex
-
-			v = ( ( j + 1 ) / divisions ) * ( Math.PI * 2 );
-
-			x = Math.sin( v ) * r;
-			z = Math.cos( v ) * r;
-
-			vertices.push( x, 0, z );
-			colors.push( color.r, color.g, color.b );
-
-		}
-
-	}
-
-	var geometry = new BufferGeometry();
-	geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
-
-	var material = new LineBasicMaterial( { vertexColors: VertexColors } );
-
-	LineSegments.call( this, geometry, material );
-
-}
-
-PolarGridHelper.prototype = Object.create( LineSegments.prototype );
-PolarGridHelper.prototype.constructor = PolarGridHelper;
-
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author WestLangley / http://github.com/WestLangley
-*/
-
-function FaceNormalsHelper( object, size, hex, linewidth ) {
-
-	// FaceNormalsHelper only supports THREE.Geometry
-
-	this.object = object;
-
-	this.size = ( size !== undefined ) ? size : 1;
-
-	var color = ( hex !== undefined ) ? hex : 0xffff00;
-
-	var width = ( linewidth !== undefined ) ? linewidth : 1;
-
-	//
-
-	var nNormals = 0;
-
-	var objGeometry = this.object.geometry;
-
-	if ( objGeometry && objGeometry.isGeometry ) {
-
-		nNormals = objGeometry.faces.length;
-
-	} else {
-
-		console.warn( 'THREE.FaceNormalsHelper: only THREE.Geometry is supported. Use THREE.VertexNormalsHelper, instead.' );
-
-	}
-
-	//
-
-	var geometry = new BufferGeometry();
-
-	var positions = new Float32BufferAttribute( nNormals * 2 * 3, 3 );
-
-	geometry.addAttribute( 'position', positions );
-
-	LineSegments.call( this, geometry, new LineBasicMaterial( { color: color, linewidth: width } ) );
-
-	//
-
-	this.matrixAutoUpdate = false;
-	this.update();
-
-}
-
-FaceNormalsHelper.prototype = Object.create( LineSegments.prototype );
-FaceNormalsHelper.prototype.constructor = FaceNormalsHelper;
-
-FaceNormalsHelper.prototype.update = ( function () {
-
-	var v1 = new Vector3();
-	var v2 = new Vector3();
-	var normalMatrix = new Matrix3();
-
-	return function update() {
-
-		this.object.updateMatrixWorld( true );
-
-		normalMatrix.getNormalMatrix( this.object.matrixWorld );
-
-		var matrixWorld = this.object.matrixWorld;
-
-		var position = this.geometry.attributes.position;
-
-		//
-
-		var objGeometry = this.object.geometry;
-
-		var vertices = objGeometry.vertices;
-
-		var faces = objGeometry.faces;
-
-		var idx = 0;
-
-		for ( var i = 0, l = faces.length; i < l; i ++ ) {
-
-			var face = faces[ i ];
-
-			var normal = face.normal;
-
-			v1.copy( vertices[ face.a ] )
-				.add( vertices[ face.b ] )
-				.add( vertices[ face.c ] )
-				.divideScalar( 3 )
-				.applyMatrix4( matrixWorld );
-
-			v2.copy( normal ).applyMatrix3( normalMatrix ).normalize().multiplyScalar( this.size ).add( v1 );
-
-			position.setXYZ( idx, v1.x, v1.y, v1.z );
-
-			idx = idx + 1;
-
-			position.setXYZ( idx, v2.x, v2.y, v2.z );
-
-			idx = idx + 1;
-
-		}
-
-		position.needsUpdate = true;
-
-		return this;
-
-	};
-
-}() );
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author mrdoob / http://mrdoob.com/
- * @author WestLangley / http://github.com/WestLangley
- */
-
-function DirectionalLightHelper( light, size ) {
-
-	Object3D.call( this );
-
-	this.light = light;
-	this.light.updateMatrixWorld();
-
-	this.matrix = light.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	if ( size === undefined ) size = 1;
-
-	var geometry = new BufferGeometry();
-	geometry.addAttribute( 'position', new Float32BufferAttribute( [
-		- size,   size, 0,
-		  size,   size, 0,
-		  size, - size, 0,
-		- size, - size, 0,
-		- size,   size, 0
-	], 3 ) );
-
-	var material = new LineBasicMaterial( { fog: false } );
-
-	this.add( new Line( geometry, material ) );
-
-	geometry = new BufferGeometry();
-	geometry.addAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0, 0, 0, 1 ], 3 ) );
-
-	this.add( new Line( geometry, material ));
-
-	this.update();
-
-}
-
-DirectionalLightHelper.prototype = Object.create( Object3D.prototype );
-DirectionalLightHelper.prototype.constructor = DirectionalLightHelper;
-
-DirectionalLightHelper.prototype.dispose = function () {
-
-	var lightPlane = this.children[ 0 ];
-	var targetLine = this.children[ 1 ];
-
-	lightPlane.geometry.dispose();
-	lightPlane.material.dispose();
-	targetLine.geometry.dispose();
-	targetLine.material.dispose();
-
-};
-
-DirectionalLightHelper.prototype.update = function () {
-
-	var v1 = new Vector3();
-	var v2 = new Vector3();
-	var v3 = new Vector3();
-
-	return function update() {
-
-		v1.setFromMatrixPosition( this.light.matrixWorld );
-		v2.setFromMatrixPosition( this.light.target.matrixWorld );
-		v3.subVectors( v2, v1 );
-
-		var lightPlane = this.children[ 0 ];
-		var targetLine = this.children[ 1 ];
-
-		lightPlane.lookAt( v3 );
-		lightPlane.material.color.copy( this.light.color ).multiplyScalar( this.light.intensity );
-
-		targetLine.lookAt( v3 );
-		targetLine.scale.z = v3.length();
-
-	};
-
-}();
-
-/**
- * @author alteredq / http://alteredqualia.com/
- * @author Mugen87 / https://github.com/Mugen87
- *
- *	- shows frustum, line of sight and up of the camera
- *	- suitable for fast updates
- * 	- based on frustum visualization in lightgl.js shadowmap example
- *		http://evanw.github.com/lightgl.js/tests/shadowmap.html
- */
-
-function CameraHelper( camera ) {
-
-	var geometry = new BufferGeometry();
-	var material = new LineBasicMaterial( { color: 0xffffff, vertexColors: FaceColors } );
-
-	var vertices = [];
-	var colors = [];
-
-	var pointMap = {};
-
-	// colors
-
-	var colorFrustum = new Color( 0xffaa00 );
-	var colorCone = new Color( 0xff0000 );
-	var colorUp = new Color( 0x00aaff );
-	var colorTarget = new Color( 0xffffff );
-	var colorCross = new Color( 0x333333 );
-
-	// near
-
-	addLine( "n1", "n2", colorFrustum );
-	addLine( "n2", "n4", colorFrustum );
-	addLine( "n4", "n3", colorFrustum );
-	addLine( "n3", "n1", colorFrustum );
-
-	// far
-
-	addLine( "f1", "f2", colorFrustum );
-	addLine( "f2", "f4", colorFrustum );
-	addLine( "f4", "f3", colorFrustum );
-	addLine( "f3", "f1", colorFrustum );
-
-	// sides
-
-	addLine( "n1", "f1", colorFrustum );
-	addLine( "n2", "f2", colorFrustum );
-	addLine( "n3", "f3", colorFrustum );
-	addLine( "n4", "f4", colorFrustum );
-
-	// cone
-
-	addLine( "p", "n1", colorCone );
-	addLine( "p", "n2", colorCone );
-	addLine( "p", "n3", colorCone );
-	addLine( "p", "n4", colorCone );
-
-	// up
-
-	addLine( "u1", "u2", colorUp );
-	addLine( "u2", "u3", colorUp );
-	addLine( "u3", "u1", colorUp );
-
-	// target
-
-	addLine( "c", "t", colorTarget );
-	addLine( "p", "c", colorCross );
-
-	// cross
-
-	addLine( "cn1", "cn2", colorCross );
-	addLine( "cn3", "cn4", colorCross );
-
-	addLine( "cf1", "cf2", colorCross );
-	addLine( "cf3", "cf4", colorCross );
-
-	function addLine( a, b, color ) {
-
-		addPoint( a, color );
-		addPoint( b, color );
-
-	}
-
-	function addPoint( id, color ) {
-
-		vertices.push( 0, 0, 0 );
-		colors.push( color.r, color.g, color.b );
-
-		if ( pointMap[ id ] === undefined ) {
-
-			pointMap[ id ] = [];
-
-		}
-
-		pointMap[ id ].push( ( vertices.length / 3 ) - 1 );
-
-	}
-
-	geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
-
-	LineSegments.call( this, geometry, material );
-
-	this.camera = camera;
-	if ( this.camera.updateProjectionMatrix ) this.camera.updateProjectionMatrix();
-
-	this.matrix = camera.matrixWorld;
-	this.matrixAutoUpdate = false;
-
-	this.pointMap = pointMap;
-
-	this.update();
-
-}
-
-CameraHelper.prototype = Object.create( LineSegments.prototype );
-CameraHelper.prototype.constructor = CameraHelper;
-
-CameraHelper.prototype.update = function () {
-
-	var geometry, pointMap;
-
-	var vector = new Vector3();
-	var camera = new Camera();
-
-	function setPoint( point, x, y, z ) {
-
-		vector.set( x, y, z ).unproject( camera );
-
-		var points = pointMap[ point ];
-
-		if ( points !== undefined ) {
-
-			var position = geometry.getAttribute( 'position' );
-
-			for ( var i = 0, l = points.length; i < l; i ++ ) {
-
-				position.setXYZ( points[ i ], vector.x, vector.y, vector.z );
-
-			}
-
-		}
-
-	}
-
-	return function update() {
-
-		geometry = this.geometry;
-		pointMap = this.pointMap;
-
-		var w = 1, h = 1;
-
-		// we need just camera projection matrix
-		// world matrix must be identity
-
-		camera.projectionMatrix.copy( this.camera.projectionMatrix );
-
-		// center / target
-
-		setPoint( "c", 0, 0, - 1 );
-		setPoint( "t", 0, 0,  1 );
-
-		// near
-
-		setPoint( "n1", - w, - h, - 1 );
-		setPoint( "n2",   w, - h, - 1 );
-		setPoint( "n3", - w,   h, - 1 );
-		setPoint( "n4",   w,   h, - 1 );
-
-		// far
-
-		setPoint( "f1", - w, - h, 1 );
-		setPoint( "f2",   w, - h, 1 );
-		setPoint( "f3", - w,   h, 1 );
-		setPoint( "f4",   w,   h, 1 );
-
-		// up
-
-		setPoint( "u1",   w * 0.7, h * 1.1, - 1 );
-		setPoint( "u2", - w * 0.7, h * 1.1, - 1 );
-		setPoint( "u3",         0, h * 2,   - 1 );
-
-		// cross
-
-		setPoint( "cf1", - w,   0, 1 );
-		setPoint( "cf2",   w,   0, 1 );
-		setPoint( "cf3",   0, - h, 1 );
-		setPoint( "cf4",   0,   h, 1 );
-
-		setPoint( "cn1", - w,   0, - 1 );
-		setPoint( "cn2",   w,   0, - 1 );
-		setPoint( "cn3",   0, - h, - 1 );
-		setPoint( "cn4",   0,   h, - 1 );
-
-		geometry.getAttribute( 'position' ).needsUpdate = true;
-
-	};
-
-}();
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function BoxHelper( object, color ) {
-
-	if ( color === undefined ) color = 0xffff00;
-
-	var indices = new Uint16Array( [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ] );
-	var positions = new Float32Array( 8 * 3 );
-
-	var geometry = new BufferGeometry();
-	geometry.setIndex( new BufferAttribute( indices, 1 ) );
-	geometry.addAttribute( 'position', new BufferAttribute( positions, 3 ) );
-
-	LineSegments.call( this, geometry, new LineBasicMaterial( { color: color } ) );
-
-	if ( object !== undefined ) {
-
-		this.update( object );
-
-	}
-
-}
-
-BoxHelper.prototype = Object.create( LineSegments.prototype );
-BoxHelper.prototype.constructor = BoxHelper;
-
-BoxHelper.prototype.update = ( function () {
-
-	var box = new Box3();
-
-	return function update( object ) {
-
-		if ( object && object.isBox3 ) {
-
-			box.copy( object );
-
-		} else {
-
-			box.setFromObject( object );
-
-		}
-
-		if ( box.isEmpty() ) return;
-
-		var min = box.min;
-		var max = box.max;
-
-		/*
-		  5____4
-		1/___0/|
-		| 6__|_7
-		2/___3/
-
-		0: max.x, max.y, max.z
-		1: min.x, max.y, max.z
-		2: min.x, min.y, max.z
-		3: max.x, min.y, max.z
-		4: max.x, max.y, min.z
-		5: min.x, max.y, min.z
-		6: min.x, min.y, min.z
-		7: max.x, min.y, min.z
-		*/
-
-		var position = this.geometry.attributes.position;
-		var array = position.array;
-
-		array[  0 ] = max.x; array[  1 ] = max.y; array[  2 ] = max.z;
-		array[  3 ] = min.x; array[  4 ] = max.y; array[  5 ] = max.z;
-		array[  6 ] = min.x; array[  7 ] = min.y; array[  8 ] = max.z;
-		array[  9 ] = max.x; array[ 10 ] = min.y; array[ 11 ] = max.z;
-		array[ 12 ] = max.x; array[ 13 ] = max.y; array[ 14 ] = min.z;
-		array[ 15 ] = min.x; array[ 16 ] = max.y; array[ 17 ] = min.z;
-		array[ 18 ] = min.x; array[ 19 ] = min.y; array[ 20 ] = min.z;
-		array[ 21 ] = max.x; array[ 22 ] = min.y; array[ 23 ] = min.z;
-
-		position.needsUpdate = true;
-
-		this.geometry.computeBoundingSphere();
-
-	};
-
-} )();
-
-/**
- * @author WestLangley / http://github.com/WestLangley
- * @author zz85 / http://github.com/zz85
- * @author bhouston / http://clara.io
- *
- * Creates an arrow for visualizing directions
- *
- * Parameters:
- *  dir - Vector3
- *  origin - Vector3
- *  length - Number
- *  color - color in hex value
- *  headLength - Number
- *  headWidth - Number
- */
-
-var lineGeometry;
-var coneGeometry;
-
-function ArrowHelper( dir, origin, length, color, headLength, headWidth ) {
-
-	// dir is assumed to be normalized
-
-	Object3D.call( this );
-
-	if ( color === undefined ) color = 0xffff00;
-	if ( length === undefined ) length = 1;
-	if ( headLength === undefined ) headLength = 0.2 * length;
-	if ( headWidth === undefined ) headWidth = 0.2 * headLength;
-
-	if ( lineGeometry === undefined ) {
-
-		lineGeometry = new BufferGeometry();
-		lineGeometry.addAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0, 0, 1, 0 ], 3 ) );
-
-		coneGeometry = new CylinderBufferGeometry( 0, 0.5, 1, 5, 1 );
-		coneGeometry.translate( 0, - 0.5, 0 );
-
-	}
-
-	this.position.copy( origin );
-
-	this.line = new Line( lineGeometry, new LineBasicMaterial( { color: color } ) );
-	this.line.matrixAutoUpdate = false;
-	this.add( this.line );
-
-	this.cone = new Mesh( coneGeometry, new MeshBasicMaterial( { color: color } ) );
-	this.cone.matrixAutoUpdate = false;
-	this.add( this.cone );
-
-	this.setDirection( dir );
-	this.setLength( length, headLength, headWidth );
-
-}
-
-ArrowHelper.prototype = Object.create( Object3D.prototype );
-ArrowHelper.prototype.constructor = ArrowHelper;
-
-ArrowHelper.prototype.setDirection = ( function () {
-
-	var axis = new Vector3();
-	var radians;
-
-	return function setDirection( dir ) {
-
-		// dir is assumed to be normalized
-
-		if ( dir.y > 0.99999 ) {
-
-			this.quaternion.set( 0, 0, 0, 1 );
-
-		} else if ( dir.y < - 0.99999 ) {
-
-			this.quaternion.set( 1, 0, 0, 0 );
-
-		} else {
-
-			axis.set( dir.z, 0, - dir.x ).normalize();
-
-			radians = Math.acos( dir.y );
-
-			this.quaternion.setFromAxisAngle( axis, radians );
-
-		}
-
-	};
-
-}() );
-
-ArrowHelper.prototype.setLength = function ( length, headLength, headWidth ) {
-
-	if ( headLength === undefined ) headLength = 0.2 * length;
-	if ( headWidth === undefined ) headWidth = 0.2 * headLength;
-
-	this.line.scale.set( 1, Math.max( 0, length - headLength ), 1 );
-	this.line.updateMatrix();
-
-	this.cone.scale.set( headWidth, headLength, headWidth );
-	this.cone.position.y = length;
-	this.cone.updateMatrix();
-
-};
-
-ArrowHelper.prototype.setColor = function ( color ) {
-
-	this.line.material.color.copy( color );
-	this.cone.material.color.copy( color );
-
-};
-
-/**
- * @author sroucheray / http://sroucheray.org/
- * @author mrdoob / http://mrdoob.com/
- */
-
-function AxisHelper( size ) {
-
-	size = size || 1;
-
-	var vertices = [
-		0, 0, 0,  size, 0, 0,
-		0, 0, 0,  0, size, 0,
-		0, 0, 0,  0, 0, size
-	];
-
-	var colors = [
-		1, 0, 0,  1, 0.6, 0,
-		0, 1, 0,  0.6, 1, 0,
-		0, 0, 1,  0, 0.6, 1
-	];
-
-	var geometry = new BufferGeometry();
-	geometry.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
-
-	var material = new LineBasicMaterial( { vertexColors: VertexColors } );
-
-	LineSegments.call( this, geometry, material );
-
-}
-
-AxisHelper.prototype = Object.create( LineSegments.prototype );
-AxisHelper.prototype.constructor = AxisHelper;
-
-/**
- * @author zz85 https://github.com/zz85
- *
- * Centripetal CatmullRom Curve - which is useful for avoiding
- * cusps and self-intersections in non-uniform catmull rom curves.
- * http://www.cemyuksel.com/research/catmullrom_param/catmullrom.pdf
- *
- * curve.type accepts centripetal(default), chordal and catmullrom
- * curve.tension is used for catmullrom which defaults to 0.5
- */
-
-
-/*
-Based on an optimized c++ solution in
- - http://stackoverflow.com/questions/9489736/catmull-rom-curve-with-no-cusps-and-no-self-intersections/
- - http://ideone.com/NoEbVM
-
-This CubicPoly class could be used for reusing some variables and calculations,
-but for three.js curve use, it could be possible inlined and flatten into a single function call
-which can be placed in CurveUtils.
-*/
-
-function CubicPoly() {
-
-	var c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-
-	/*
-	 * Compute coefficients for a cubic polynomial
-	 *   p(s) = c0 + c1*s + c2*s^2 + c3*s^3
-	 * such that
-	 *   p(0) = x0, p(1) = x1
-	 *  and
-	 *   p'(0) = t0, p'(1) = t1.
-	 */
-	function init( x0, x1, t0, t1 ) {
-
-		c0 = x0;
-		c1 = t0;
-		c2 = - 3 * x0 + 3 * x1 - 2 * t0 - t1;
-		c3 = 2 * x0 - 2 * x1 + t0 + t1;
-
-	}
-
-	return {
-
-		initCatmullRom: function ( x0, x1, x2, x3, tension ) {
-
-			init( x1, x2, tension * ( x2 - x0 ), tension * ( x3 - x1 ) );
-
-		},
-
-		initNonuniformCatmullRom: function ( x0, x1, x2, x3, dt0, dt1, dt2 ) {
-
-			// compute tangents when parameterized in [t1,t2]
-			var t1 = ( x1 - x0 ) / dt0 - ( x2 - x0 ) / ( dt0 + dt1 ) + ( x2 - x1 ) / dt1;
-			var t2 = ( x2 - x1 ) / dt1 - ( x3 - x1 ) / ( dt1 + dt2 ) + ( x3 - x2 ) / dt2;
-
-			// rescale tangents for parametrization in [0,1]
-			t1 *= dt1;
-			t2 *= dt1;
-
-			init( x1, x2, t1, t2 );
-
-		},
-
-		calc: function ( t ) {
-
-			var t2 = t * t;
-			var t3 = t2 * t;
-			return c0 + c1 * t + c2 * t2 + c3 * t3;
-
-		}
-
-	};
-
-}
-
-//
-
-var tmp = new Vector3();
-var px = new CubicPoly();
-var py = new CubicPoly();
-var pz = new CubicPoly();
-
-function CatmullRomCurve3( p /* array of Vector3 */ ) {
-
-	this.points = p || [];
-	this.closed = false;
-
-}
-
-CatmullRomCurve3.prototype = Object.create( Curve.prototype );
-CatmullRomCurve3.prototype.constructor = CatmullRomCurve3;
-
-CatmullRomCurve3.prototype.getPoint = function ( t ) {
-
-	var points = this.points;
-	var l = points.length;
-
-	if ( l < 2 ) console.log( 'duh, you need at least 2 points' );
-
-	var point = ( l - ( this.closed ? 0 : 1 ) ) * t;
-	var intPoint = Math.floor( point );
-	var weight = point - intPoint;
-
-	if ( this.closed ) {
-
-		intPoint += intPoint > 0 ? 0 : ( Math.floor( Math.abs( intPoint ) / points.length ) + 1 ) * points.length;
-
-	} else if ( weight === 0 && intPoint === l - 1 ) {
-
-		intPoint = l - 2;
-		weight = 1;
-
-	}
-
-	var p0, p1, p2, p3; // 4 points
-
-	if ( this.closed || intPoint > 0 ) {
-
-		p0 = points[ ( intPoint - 1 ) % l ];
-
-	} else {
-
-		// extrapolate first point
-		tmp.subVectors( points[ 0 ], points[ 1 ] ).add( points[ 0 ] );
-		p0 = tmp;
-
-	}
-
-	p1 = points[ intPoint % l ];
-	p2 = points[ ( intPoint + 1 ) % l ];
-
-	if ( this.closed || intPoint + 2 < l ) {
-
-		p3 = points[ ( intPoint + 2 ) % l ];
-
-	} else {
-
-		// extrapolate last point
-		tmp.subVectors( points[ l - 1 ], points[ l - 2 ] ).add( points[ l - 1 ] );
-		p3 = tmp;
-
-	}
-
-	if ( this.type === undefined || this.type === 'centripetal' || this.type === 'chordal' ) {
-
-		// init Centripetal / Chordal Catmull-Rom
-		var pow = this.type === 'chordal' ? 0.5 : 0.25;
-		var dt0 = Math.pow( p0.distanceToSquared( p1 ), pow );
-		var dt1 = Math.pow( p1.distanceToSquared( p2 ), pow );
-		var dt2 = Math.pow( p2.distanceToSquared( p3 ), pow );
-
-		// safety check for repeated points
-		if ( dt1 < 1e-4 ) dt1 = 1.0;
-		if ( dt0 < 1e-4 ) dt0 = dt1;
-		if ( dt2 < 1e-4 ) dt2 = dt1;
-
-		px.initNonuniformCatmullRom( p0.x, p1.x, p2.x, p3.x, dt0, dt1, dt2 );
-		py.initNonuniformCatmullRom( p0.y, p1.y, p2.y, p3.y, dt0, dt1, dt2 );
-		pz.initNonuniformCatmullRom( p0.z, p1.z, p2.z, p3.z, dt0, dt1, dt2 );
-
-	} else if ( this.type === 'catmullrom' ) {
-
-		var tension = this.tension !== undefined ? this.tension : 0.5;
-		px.initCatmullRom( p0.x, p1.x, p2.x, p3.x, tension );
-		py.initCatmullRom( p0.y, p1.y, p2.y, p3.y, tension );
-		pz.initCatmullRom( p0.z, p1.z, p2.z, p3.z, tension );
-
-	}
-
-	return new Vector3( px.calc( weight ), py.calc( weight ), pz.calc( weight ) );
-
-};
-
-function CubicBezierCurve3( v0, v1, v2, v3 ) {
-
-	this.v0 = v0;
-	this.v1 = v1;
-	this.v2 = v2;
-	this.v3 = v3;
-
-}
-
-CubicBezierCurve3.prototype = Object.create( Curve.prototype );
-CubicBezierCurve3.prototype.constructor = CubicBezierCurve3;
-
-CubicBezierCurve3.prototype.getPoint = function ( t ) {
-
-	var v0 = this.v0, v1 = this.v1, v2 = this.v2, v3 = this.v3;
-
-	return new Vector3(
-		CubicBezier( t, v0.x, v1.x, v2.x, v3.x ),
-		CubicBezier( t, v0.y, v1.y, v2.y, v3.y ),
-		CubicBezier( t, v0.z, v1.z, v2.z, v3.z )
-	);
-
-};
-
-function QuadraticBezierCurve3( v0, v1, v2 ) {
-
-	this.v0 = v0;
-	this.v1 = v1;
-	this.v2 = v2;
-
-}
-
-QuadraticBezierCurve3.prototype = Object.create( Curve.prototype );
-QuadraticBezierCurve3.prototype.constructor = QuadraticBezierCurve3;
-
-QuadraticBezierCurve3.prototype.getPoint = function ( t ) {
-
-	var v0 = this.v0, v1 = this.v1, v2 = this.v2;
-
-	return new Vector3(
-		QuadraticBezier( t, v0.x, v1.x, v2.x ),
-		QuadraticBezier( t, v0.y, v1.y, v2.y ),
-		QuadraticBezier( t, v0.z, v1.z, v2.z )
-	);
-
-};
-
-function LineCurve3( v1, v2 ) {
-
-	this.v1 = v1;
-	this.v2 = v2;
-
-}
-
-LineCurve3.prototype = Object.create( Curve.prototype );
-LineCurve3.prototype.constructor = LineCurve3;
-
-LineCurve3.prototype.getPoint = function ( t ) {
-
-	if ( t === 1 ) {
-
-		return this.v2.clone();
-
-	}
-
-	var vector = new Vector3();
-
-	vector.subVectors( this.v2, this.v1 ); // diff
-	vector.multiplyScalar( t );
-	vector.add( this.v1 );
-
-	return vector;
-
-};
-
-function ArcCurve( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise ) {
-
-	EllipseCurve.call( this, aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise );
-
-}
-
-ArcCurve.prototype = Object.create( EllipseCurve.prototype );
-ArcCurve.prototype.constructor = ArcCurve;
-
-/**
- * @author alteredq / http://alteredqualia.com/
- */
-
-var SceneUtils = {
-
-	createMultiMaterialObject: function ( geometry, materials ) {
-
-		var group = new Group();
-
-		for ( var i = 0, l = materials.length; i < l; i ++ ) {
-
-			group.add( new Mesh( geometry, materials[ i ] ) );
-
-		}
-
-		return group;
-
-	},
-
-	detach: function ( child, parent, scene ) {
-
-		child.applyMatrix( parent.matrixWorld );
-		parent.remove( child );
-		scene.add( child );
-
-	},
-
-	attach: function ( child, scene, parent ) {
-
-		var matrixWorldInverse = new Matrix4();
-		matrixWorldInverse.getInverse( parent.matrixWorld );
-		child.applyMatrix( matrixWorldInverse );
-
-		scene.remove( child );
-		parent.add( child );
-
-	}
-
-};
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-function Face4( a, b, c, d, normal, color, materialIndex ) {
-
-	console.warn( 'THREE.Face4 has been removed. A THREE.Face3 will be created instead.' );
-	return new Face3( a, b, c, normal, color, materialIndex );
-
-}
-
-var LineStrip = 0;
-
-var LinePieces = 1;
-
-function MeshFaceMaterial( materials ) {
-
-	console.warn( 'THREE.MeshFaceMaterial has been renamed to THREE.MultiMaterial.' );
-	return new MultiMaterial( materials );
-
-}
-
-function PointCloud( geometry, material ) {
-
-	console.warn( 'THREE.PointCloud has been renamed to THREE.Points.' );
-	return new Points( geometry, material );
-
-}
-
-function Particle( material ) {
-
-	console.warn( 'THREE.Particle has been renamed to THREE.Sprite.' );
-	return new Sprite( material );
-
-}
-
-function ParticleSystem( geometry, material ) {
-
-	console.warn( 'THREE.ParticleSystem has been renamed to THREE.Points.' );
-	return new Points( geometry, material );
-
-}
-
-function PointCloudMaterial( parameters ) {
-
-	console.warn( 'THREE.PointCloudMaterial has been renamed to THREE.PointsMaterial.' );
-	return new PointsMaterial( parameters );
-
-}
-
-function ParticleBasicMaterial( parameters ) {
-
-	console.warn( 'THREE.ParticleBasicMaterial has been renamed to THREE.PointsMaterial.' );
-	return new PointsMaterial( parameters );
-
-}
-
-function ParticleSystemMaterial( parameters ) {
-
-	console.warn( 'THREE.ParticleSystemMaterial has been renamed to THREE.PointsMaterial.' );
-	return new PointsMaterial( parameters );
-
-}
-
-function Vertex( x, y, z ) {
-
-	console.warn( 'THREE.Vertex has been removed. Use THREE.Vector3 instead.' );
-	return new Vector3( x, y, z );
-
-}
-
-//
-
-function DynamicBufferAttribute( array, itemSize ) {
-
-	console.warn( 'THREE.DynamicBufferAttribute has been removed. Use new THREE.BufferAttribute().setDynamic( true ) instead.' );
-	return new BufferAttribute( array, itemSize ).setDynamic( true );
-
-}
-
-function Int8Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Int8Attribute has been removed. Use new THREE.Int8BufferAttribute() instead.' );
-	return new Int8BufferAttribute( array, itemSize );
-
-}
-
-function Uint8Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Uint8Attribute has been removed. Use new THREE.Uint8BufferAttribute() instead.' );
-	return new Uint8BufferAttribute( array, itemSize );
-
-}
-
-function Uint8ClampedAttribute( array, itemSize ) {
-
-	console.warn( 'THREE.Uint8ClampedAttribute has been removed. Use new THREE.Uint8ClampedBufferAttribute() instead.' );
-	return new Uint8ClampedBufferAttribute( array, itemSize );
-
-}
-
-function Int16Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Int16Attribute has been removed. Use new THREE.Int16BufferAttribute() instead.' );
-	return new Int16BufferAttribute( array, itemSize );
-
-}
-
-function Uint16Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Uint16Attribute has been removed. Use new THREE.Uint16BufferAttribute() instead.' );
-	return new Uint16BufferAttribute( array, itemSize );
-
-}
-
-function Int32Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Int32Attribute has been removed. Use new THREE.Int32BufferAttribute() instead.' );
-	return new Int32BufferAttribute( array, itemSize );
-
-}
-
-function Uint32Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Uint32Attribute has been removed. Use new THREE.Uint32BufferAttribute() instead.' );
-	return new Uint32BufferAttribute( array, itemSize );
-
-}
-
-function Float32Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Float32Attribute has been removed. Use new THREE.Float32BufferAttribute() instead.' );
-	return new Float32BufferAttribute( array, itemSize );
-
-}
-
-function Float64Attribute( array, itemSize ) {
-
-	console.warn( 'THREE.Float64Attribute has been removed. Use new THREE.Float64BufferAttribute() instead.' );
-	return new Float64BufferAttribute( array, itemSize );
-
-}
-
-//
-
-Curve.create = function ( construct, getPoint ) {
-
-	console.log( 'THREE.Curve.create() has been deprecated' );
-
-	construct.prototype = Object.create( Curve.prototype );
-	construct.prototype.constructor = construct;
-	construct.prototype.getPoint = getPoint;
-
-	return construct;
-
-};
-
-//
-
-function ClosedSplineCurve3( points ) {
-
-	console.warn( 'THREE.ClosedSplineCurve3 has been deprecated. Use THREE.CatmullRomCurve3 instead.' );
-
-	CatmullRomCurve3.call( this, points );
-	this.type = 'catmullrom';
-	this.closed = true;
-
-}
-
-ClosedSplineCurve3.prototype = Object.create( CatmullRomCurve3.prototype );
-
-//
-
-function SplineCurve3( points ) {
-
-	console.warn( 'THREE.SplineCurve3 has been deprecated. Use THREE.CatmullRomCurve3 instead.' );
-
-	CatmullRomCurve3.call( this, points );
-	this.type = 'catmullrom';
-
-}
-
-SplineCurve3.prototype = Object.create( CatmullRomCurve3.prototype );
-
-//
-
-function Spline( points ) {
-
-	console.warn( 'THREE.Spline has been removed. Use THREE.CatmullRomCurve3 instead.' );
-
-	CatmullRomCurve3.call( this, points );
-	this.type = 'catmullrom';
-
-}
-
-Spline.prototype = Object.create( CatmullRomCurve3.prototype );
-
-Object.assign( Spline.prototype, {
-
-	initFromArray: function ( a ) {
-
-		console.error( 'THREE.Spline: .initFromArray() has been removed.' );
-
-	},
-	getControlPointsArray: function ( optionalTarget ) {
-
-		console.error( 'THREE.Spline: .getControlPointsArray() has been removed.' );
-
-	},
-	reparametrizeByArcLength: function ( samplingCoef ) {
-
-		console.error( 'THREE.Spline: .reparametrizeByArcLength() has been removed.' );
-
-	}
-
-} );
-
-//
-function BoundingBoxHelper( object, color ) {
-
-	console.warn( 'THREE.BoundingBoxHelper has been deprecated. Creating a THREE.BoxHelper instead.' );
-	return new BoxHelper( object, color );
-
-}
-
-function EdgesHelper( object, hex ) {
-
-	console.warn( 'THREE.EdgesHelper has been removed. Use THREE.EdgesGeometry instead.' );
-	return new LineSegments( new EdgesGeometry( object.geometry ), new LineBasicMaterial( { color: hex !== undefined ? hex : 0xffffff } ) );
-
-}
-
-GridHelper.prototype.setColors = function () {
-
-	console.error( 'THREE.GridHelper: setColors() has been deprecated, pass them in the constructor instead.' );
-
-};
-
-function WireframeHelper( object, hex ) {
-
-	console.warn( 'THREE.WireframeHelper has been removed. Use THREE.WireframeGeometry instead.' );
-	return new LineSegments( new WireframeGeometry( object.geometry ), new LineBasicMaterial( { color: hex !== undefined ? hex : 0xffffff } ) );
-
-}
-
-//
-
-function XHRLoader( manager ) {
-
-	console.warn( 'THREE.XHRLoader has been renamed to THREE.FileLoader.' );
-	return new FileLoader( manager );
-
-}
-
-function BinaryTextureLoader( manager ) {
-
-	console.warn( 'THREE.BinaryTextureLoader has been renamed to THREE.DataTextureLoader.' );
-	return new DataTextureLoader( manager );
-
-}
-
-//
-
-Object.assign( Box2.prototype, {
-
-	center: function ( optionalTarget ) {
-
-		console.warn( 'THREE.Box2: .center() has been renamed to .getCenter().' );
-		return this.getCenter( optionalTarget );
-
-	},
-	empty: function () {
-
-		console.warn( 'THREE.Box2: .empty() has been renamed to .isEmpty().' );
-		return this.isEmpty();
-
-	},
-	isIntersectionBox: function ( box ) {
-
-		console.warn( 'THREE.Box2: .isIntersectionBox() has been renamed to .intersectsBox().' );
-		return this.intersectsBox( box );
-
-	},
-	size: function ( optionalTarget ) {
-
-		console.warn( 'THREE.Box2: .size() has been renamed to .getSize().' );
-		return this.getSize( optionalTarget );
-
-	}
-} );
-
-Object.assign( Box3.prototype, {
-
-	center: function ( optionalTarget ) {
-
-		console.warn( 'THREE.Box3: .center() has been renamed to .getCenter().' );
-		return this.getCenter( optionalTarget );
-
-	},
-	empty: function () {
-
-		console.warn( 'THREE.Box3: .empty() has been renamed to .isEmpty().' );
-		return this.isEmpty();
-
-	},
-	isIntersectionBox: function ( box ) {
-
-		console.warn( 'THREE.Box3: .isIntersectionBox() has been renamed to .intersectsBox().' );
-		return this.intersectsBox( box );
-
-	},
-	isIntersectionSphere: function ( sphere ) {
-
-		console.warn( 'THREE.Box3: .isIntersectionSphere() has been renamed to .intersectsSphere().' );
-		return this.intersectsSphere( sphere );
-
-	},
-	size: function ( optionalTarget ) {
-
-		console.warn( 'THREE.Box3: .size() has been renamed to .getSize().' );
-		return this.getSize( optionalTarget );
-
-	}
-} );
-
-Line3.prototype.center = function ( optionalTarget ) {
-
-	console.warn( 'THREE.Line3: .center() has been renamed to .getCenter().' );
-	return this.getCenter( optionalTarget );
-
-};
-
-_Math.random16 = function () {
-
-	console.warn( 'THREE.Math.random16() has been deprecated. Use Math.random() instead.' );
-	return Math.random();
-
-};
-
-Object.assign( Matrix3.prototype, {
-
-	flattenToArrayOffset: function ( array, offset ) {
-
-		console.warn( "THREE.Matrix3: .flattenToArrayOffset() has been deprecated. Use .toArray() instead." );
-		return this.toArray( array, offset );
-
-	},
-	multiplyVector3: function ( vector ) {
-
-		console.warn( 'THREE.Matrix3: .multiplyVector3() has been removed. Use vector.applyMatrix3( matrix ) instead.' );
-		return vector.applyMatrix3( this );
-
-	},
-	multiplyVector3Array: function ( a ) {
-
-		console.warn( 'THREE.Matrix3: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
-		return this.applyToVector3Array( a );
-
-	},
-	applyToBuffer: function( buffer, offset, length ) {
-
-		console.warn( 'THREE.Matrix3: .applyToBuffer() has been removed. Use matrix.applyToBufferAttribute( attribute ) instead.' );
-		return this.applyToBufferAttribute( buffer );
-
-	},
-	applyToVector3Array: function( array, offset, length ) {
-
-		console.error( 'THREE.Matrix3: .applyToVector3Array() has been removed.' );
-
-	}
-
-} );
-
-Object.assign( Matrix4.prototype, {
-
-	extractPosition: function ( m ) {
-
-		console.warn( 'THREE.Matrix4: .extractPosition() has been renamed to .copyPosition().' );
-		return this.copyPosition( m );
-
-	},
-	flattenToArrayOffset: function ( array, offset ) {
-
-		console.warn( "THREE.Matrix4: .flattenToArrayOffset() has been deprecated. Use .toArray() instead." );
-		return this.toArray( array, offset );
-
-	},
-	getPosition: function () {
-
-		var v1;
-
-		return function getPosition() {
-
-			if ( v1 === undefined ) v1 = new Vector3();
-			console.warn( 'THREE.Matrix4: .getPosition() has been removed. Use Vector3.setFromMatrixPosition( matrix ) instead.' );
-			return v1.setFromMatrixColumn( this, 3 );
-
-		};
-
-	}(),
-	setRotationFromQuaternion: function ( q ) {
-
-		console.warn( 'THREE.Matrix4: .setRotationFromQuaternion() has been renamed to .makeRotationFromQuaternion().' );
-		return this.makeRotationFromQuaternion( q );
-
-	},
-	multiplyVector3: function ( vector ) {
-
-		console.warn( 'THREE.Matrix4: .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
-		return vector.applyMatrix4( this );
-
-	},
-	multiplyVector4: function ( vector ) {
-
-		console.warn( 'THREE.Matrix4: .multiplyVector4() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
-		return vector.applyMatrix4( this );
-
-	},
-	multiplyVector3Array: function ( a ) {
-
-		console.warn( 'THREE.Matrix4: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
-		return this.applyToVector3Array( a );
-
-	},
-	rotateAxis: function ( v ) {
-
-		console.warn( 'THREE.Matrix4: .rotateAxis() has been removed. Use Vector3.transformDirection( matrix ) instead.' );
-		v.transformDirection( this );
-
-	},
-	crossVector: function ( vector ) {
-
-		console.warn( 'THREE.Matrix4: .crossVector() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
-		return vector.applyMatrix4( this );
-
-	},
-	translate: function () {
-
-		console.error( 'THREE.Matrix4: .translate() has been removed.' );
-
-	},
-	rotateX: function () {
-
-		console.error( 'THREE.Matrix4: .rotateX() has been removed.' );
-
-	},
-	rotateY: function () {
-
-		console.error( 'THREE.Matrix4: .rotateY() has been removed.' );
-
-	},
-	rotateZ: function () {
-
-		console.error( 'THREE.Matrix4: .rotateZ() has been removed.' );
-
-	},
-	rotateByAxis: function () {
-
-		console.error( 'THREE.Matrix4: .rotateByAxis() has been removed.' );
-
-	},
-	applyToBuffer: function( buffer, offset, length ) {
-
-		console.warn( 'THREE.Matrix4: .applyToBuffer() has been removed. Use matrix.applyToBufferAttribute( attribute ) instead.' );
-		return this.applyToBufferAttribute( buffer );
-
-	},
-	applyToVector3Array: function( array, offset, length ) {
-
-		console.error( 'THREE.Matrix4: .applyToVector3Array() has been removed.' );
-
-	},
-	makeFrustum: function( left, right, bottom, top, near, far ) {
-
-		console.warn( 'THREE.Matrix4: .makeFrustum() has been removed. Use .makePerspective( left, right, top, bottom, near, far ) instead.' );
-		return this.makePerspective( left, right, top, bottom, near, far );
-
-	}
-
-} );
-
-Plane.prototype.isIntersectionLine = function ( line ) {
-
-	console.warn( 'THREE.Plane: .isIntersectionLine() has been renamed to .intersectsLine().' );
-	return this.intersectsLine( line );
-
-};
-
-Quaternion.prototype.multiplyVector3 = function ( vector ) {
-
-	console.warn( 'THREE.Quaternion: .multiplyVector3() has been removed. Use is now vector.applyQuaternion( quaternion ) instead.' );
-	return vector.applyQuaternion( this );
-
-};
-
-Object.assign( Ray.prototype, {
-
-	isIntersectionBox: function ( box ) {
-
-		console.warn( 'THREE.Ray: .isIntersectionBox() has been renamed to .intersectsBox().' );
-		return this.intersectsBox( box );
-
-	},
-	isIntersectionPlane: function ( plane ) {
-
-		console.warn( 'THREE.Ray: .isIntersectionPlane() has been renamed to .intersectsPlane().' );
-		return this.intersectsPlane( plane );
-
-	},
-	isIntersectionSphere: function ( sphere ) {
-
-		console.warn( 'THREE.Ray: .isIntersectionSphere() has been renamed to .intersectsSphere().' );
-		return this.intersectsSphere( sphere );
-
-	}
-
-} );
-
-Object.assign( Shape.prototype, {
-
-	extrude: function ( options ) {
-
-		console.warn( 'THREE.Shape: .extrude() has been removed. Use ExtrudeGeometry() instead.' );
-		return new ExtrudeGeometry( this, options );
-
-	},
-	makeGeometry: function ( options ) {
-
-		console.warn( 'THREE.Shape: .makeGeometry() has been removed. Use ShapeGeometry() instead.' );
-		return new ShapeGeometry( this, options );
-
-	}
-
-} );
-
-Object.assign( Vector2.prototype, {
-
-	fromAttribute: function ( attribute, index, offset ) {
-
-		console.error( 'THREE.Vector2: .fromAttribute() has been renamed to .fromBufferAttribute().' );
-		return this.fromBufferAttribute( attribute, index, offset );
-
-	}
-
-} );
-
-Object.assign( Vector3.prototype, {
-
-	setEulerFromRotationMatrix: function () {
-
-		console.error( 'THREE.Vector3: .setEulerFromRotationMatrix() has been removed. Use Euler.setFromRotationMatrix() instead.' );
-
-	},
-	setEulerFromQuaternion: function () {
-
-		console.error( 'THREE.Vector3: .setEulerFromQuaternion() has been removed. Use Euler.setFromQuaternion() instead.' );
-
-	},
-	getPositionFromMatrix: function ( m ) {
-
-		console.warn( 'THREE.Vector3: .getPositionFromMatrix() has been renamed to .setFromMatrixPosition().' );
-		return this.setFromMatrixPosition( m );
-
-	},
-	getScaleFromMatrix: function ( m ) {
-
-		console.warn( 'THREE.Vector3: .getScaleFromMatrix() has been renamed to .setFromMatrixScale().' );
-		return this.setFromMatrixScale( m );
-
-	},
-	getColumnFromMatrix: function ( index, matrix ) {
-
-		console.warn( 'THREE.Vector3: .getColumnFromMatrix() has been renamed to .setFromMatrixColumn().' );
-		return this.setFromMatrixColumn( matrix, index );
-
-	},
-	applyProjection: function ( m ) {
-
-		console.warn( 'THREE.Vector3: .applyProjection() has been removed. Use .applyMatrix4( m ) instead.' );
-		return this.applyMatrix4( m );
-
-	},
-	fromAttribute: function ( attribute, index, offset ) {
-
-		console.error( 'THREE.Vector3: .fromAttribute() has been renamed to .fromBufferAttribute().' );
-		return this.fromBufferAttribute( attribute, index, offset );
-
-	}
-
-} );
-
-Object.assign( Vector4.prototype, {
-
-	fromAttribute: function ( attribute, index, offset ) {
-
-		console.error( 'THREE.Vector4: .fromAttribute() has been renamed to .fromBufferAttribute().' );
-		return this.fromBufferAttribute( attribute, index, offset );
-
-	}
-
-} );
-
-//
-
-Geometry.prototype.computeTangents = function () {
-
-	console.warn( 'THREE.Geometry: .computeTangents() has been removed.' );
-
-};
-
-Object.assign( Object3D.prototype, {
-
-	getChildByName: function ( name ) {
-
-		console.warn( 'THREE.Object3D: .getChildByName() has been renamed to .getObjectByName().' );
-		return this.getObjectByName( name );
-
-	},
-	renderDepth: function () {
-
-		console.warn( 'THREE.Object3D: .renderDepth has been removed. Use .renderOrder, instead.' );
-
-	},
-	translate: function ( distance, axis ) {
-
-		console.warn( 'THREE.Object3D: .translate() has been removed. Use .translateOnAxis( axis, distance ) instead.' );
-		return this.translateOnAxis( axis, distance );
-
-	}
-
-} );
-
-Object.defineProperties( Object3D.prototype, {
-
-	eulerOrder: {
-		get: function () {
-
-			console.warn( 'THREE.Object3D: .eulerOrder is now .rotation.order.' );
-			return this.rotation.order;
-
-		},
-		set: function ( value ) {
-
-			console.warn( 'THREE.Object3D: .eulerOrder is now .rotation.order.' );
-			this.rotation.order = value;
-
-		}
-	},
-	useQuaternion: {
-		get: function () {
-
-			console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
-
-		},
-		set: function () {
-
-			console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
-
-		}
-	}
-
-} );
-
-Object.defineProperties( LOD.prototype, {
-
-	objects: {
-		get: function () {
-
-			console.warn( 'THREE.LOD: .objects has been renamed to .levels.' );
-			return this.levels;
-
-		}
-	}
-
-} );
-
-//
-
-PerspectiveCamera.prototype.setLens = function ( focalLength, filmGauge ) {
-
-	console.warn( "THREE.PerspectiveCamera.setLens is deprecated. " +
-			"Use .setFocalLength and .filmGauge for a photographic setup." );
-
-	if ( filmGauge !== undefined ) this.filmGauge = filmGauge;
-	this.setFocalLength( focalLength );
-
-};
-
-//
-
-Object.defineProperties( Light.prototype, {
-	onlyShadow: {
-		set: function () {
-
-			console.warn( 'THREE.Light: .onlyShadow has been removed.' );
-
-		}
-	},
-	shadowCameraFov: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraFov is now .shadow.camera.fov.' );
-			this.shadow.camera.fov = value;
-
-		}
-	},
-	shadowCameraLeft: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraLeft is now .shadow.camera.left.' );
-			this.shadow.camera.left = value;
-
-		}
-	},
-	shadowCameraRight: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraRight is now .shadow.camera.right.' );
-			this.shadow.camera.right = value;
-
-		}
-	},
-	shadowCameraTop: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraTop is now .shadow.camera.top.' );
-			this.shadow.camera.top = value;
-
-		}
-	},
-	shadowCameraBottom: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraBottom is now .shadow.camera.bottom.' );
-			this.shadow.camera.bottom = value;
-
-		}
-	},
-	shadowCameraNear: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraNear is now .shadow.camera.near.' );
-			this.shadow.camera.near = value;
-
-		}
-	},
-	shadowCameraFar: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowCameraFar is now .shadow.camera.far.' );
-			this.shadow.camera.far = value;
-
-		}
-	},
-	shadowCameraVisible: {
-		set: function () {
-
-			console.warn( 'THREE.Light: .shadowCameraVisible has been removed. Use new THREE.CameraHelper( light.shadow.camera ) instead.' );
-
-		}
-	},
-	shadowBias: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowBias is now .shadow.bias.' );
-			this.shadow.bias = value;
-
-		}
-	},
-	shadowDarkness: {
-		set: function () {
-
-			console.warn( 'THREE.Light: .shadowDarkness has been removed.' );
-
-		}
-	},
-	shadowMapWidth: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowMapWidth is now .shadow.mapSize.width.' );
-			this.shadow.mapSize.width = value;
-
-		}
-	},
-	shadowMapHeight: {
-		set: function ( value ) {
-
-			console.warn( 'THREE.Light: .shadowMapHeight is now .shadow.mapSize.height.' );
-			this.shadow.mapSize.height = value;
-
-		}
-	}
-} );
-
-//
-
-Object.defineProperties( BufferAttribute.prototype, {
-
-	length: {
-		get: function () {
-
-			console.warn( 'THREE.BufferAttribute: .length has been deprecated. Use .count instead.' );
-			return this.array.length;
-
-		}
-	}
-
-} );
-
-Object.assign( BufferGeometry.prototype, {
-
-	addIndex: function ( index ) {
-
-		console.warn( 'THREE.BufferGeometry: .addIndex() has been renamed to .setIndex().' );
-		this.setIndex( index );
-
-	},
-	addDrawCall: function ( start, count, indexOffset ) {
-
-		if ( indexOffset !== undefined ) {
-
-			console.warn( 'THREE.BufferGeometry: .addDrawCall() no longer supports indexOffset.' );
-
-		}
-		console.warn( 'THREE.BufferGeometry: .addDrawCall() is now .addGroup().' );
-		this.addGroup( start, count );
-
-	},
-	clearDrawCalls: function () {
-
-		console.warn( 'THREE.BufferGeometry: .clearDrawCalls() is now .clearGroups().' );
-		this.clearGroups();
-
-	},
-	computeTangents: function () {
 
 function MorphBlendMesh( geometry, material ) {
 
