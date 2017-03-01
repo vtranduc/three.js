@@ -162,6 +162,7 @@ Material.prototype = {
 		if ( this.metalness !== undefined ) data.metalness = this.metalness;
 
 		if ( this.emissive && this.emissive.isColor ) data.emissive = this.emissive.getHex();
+		if ( this.emissiveIntensity ) data.emissiveIntensity = this.emissiveIntensity;
 		if ( this.specular && this.specular.isColor ) data.specular = this.specular.getHex();
 		if ( this.shininess !== undefined ) data.shininess = this.shininess;
 		if ( this.clearCoat !== undefined ) data.clearCoat = this.clearCoat;
@@ -171,6 +172,8 @@ Material.prototype = {
 		if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
 		if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
 		if ( this.lightMapIntensity !== undefined ) data.lightMapIntensity = this.lightMapIntensity;
+		if ( this.aoMap && this.aoMap.isTexture ) data.aoMap = this.aoMap.toJSON( meta ).uuid;
+		if ( this.aoMapIntensity !== undefined ) data.aoMapIntensity = this.aoMapIntensity;
 		if ( this.bumpMap && this.bumpMap.isTexture ) {
 
 			data.bumpMap = this.bumpMap.toJSON( meta ).uuid;
@@ -202,6 +205,8 @@ Material.prototype = {
 			data.reflectivity = this.reflectivity; // Scale behind envMap
 
 		}
+
+		if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
 
 		if ( this.gradientMap && this.gradientMap.isTexture ) {
 

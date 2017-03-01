@@ -362,7 +362,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		} else {
 
 			material.transparent = originalMaterial.transparent;
-			material.visible = originalMaterial.visible;
+			material.visible = false;
 
 		}
 
