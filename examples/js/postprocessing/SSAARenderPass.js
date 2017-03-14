@@ -21,8 +21,7 @@ THREE.SSAARenderPass = function ( scene, camera, clearColor, clearAlpha) {
 
 	this.sampleLevel = 4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
 	this.unbiased = true;
-	this.widthMult = 1;
-	this.widthOffset = 0;
+
 	// as we need to clear the buffer in this pass, clearColor must be set to something, defaults to black.
 	this.clearColor = ( clearColor !== undefined ) ? clearColor : 0x000000;
 	this.clearAlpha = ( clearAlpha !== undefined ) ? clearAlpha : 0;
@@ -102,12 +101,12 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 			var jitterOffset = jitterOffsets[i];
 			
 			if ( this.stereoCamera) {
-				this.stereoCamera.update(this.camera, jitterOffset[ 0 ] * 0.0625 / width, jitterOffset[ 1 ] * 0.0625 / height);//setPerEyeViewOffset(jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625)
+				this.stereoCamera.update(this.camera, jitterOffset[ 0 ] * 0.0625 / width, jitterOffset[ 1 ] * 0.0625 / height);
 			}
 			else if ( this.camera.setViewOffset ) {
 				this.camera.setViewOffset( width, height,
-					jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625,//jitterOffset[ 0 ] * 0.0625, jitterOffset[ 1 ] * 0.0625,   // 0.0625 = 1 / 16
-				this.widthMult * width, height);
+					jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625,
+				 	width, height);
 			}
 
 			var sampleWeight = baseSampleWeight;
@@ -131,7 +130,7 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 
 		}
 
-		//if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
+		if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
 
 		renderer.autoClear = autoClear;
 		renderer.setClearColor( oldClearColor, oldClearAlpha );
