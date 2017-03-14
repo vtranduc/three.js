@@ -10,16 +10,19 @@
 *
 */
 
-THREE.SSAARenderPass = function ( scene, camera, clearColor, clearAlpha ) {
+THREE.SSAARenderPass = function ( scene, camera, clearColor, clearAlpha) {
 
 	THREE.Pass.call( this );
 
 	this.scene = scene;
 	this.camera = camera;
+	this.stereoCamera;
+	this.isLeftEye = false;
 
 	this.sampleLevel = 4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
 	this.unbiased = true;
-
+	this.widthMult = 1;
+	this.widthOffset = 0;
 	// as we need to clear the buffer in this pass, clearColor must be set to something, defaults to black.
 	this.clearColor = ( clearColor !== undefined ) ? clearColor : 0x000000;
 	this.clearAlpha = ( clearAlpha !== undefined ) ? clearAlpha : 0;
@@ -95,11 +98,16 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 		// render the scene multiple times, each slightly jitter offset from the last and accumulate the results.
 		for ( var i = 0; i < jitterOffsets.length; i ++ ) {
 
+			
 			var jitterOffset = jitterOffsets[i];
-			if ( this.camera.setViewOffset ) {
+			
+			if ( this.stereoCamera) {
+				this.stereoCamera.update(this.camera, jitterOffset[ 0 ] * 0.0625 / width, jitterOffset[ 1 ] * 0.0625 / height);//setPerEyeViewOffset(jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625)
+			}
+			else if ( this.camera.setViewOffset ) {
 				this.camera.setViewOffset( width, height,
-					jitterOffset[ 0 ] * 0.0625, jitterOffset[ 1 ] * 0.0625,   // 0.0625 = 1 / 16
-					width, height );
+					jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625,//jitterOffset[ 0 ] * 0.0625, jitterOffset[ 1 ] * 0.0625,   // 0.0625 = 1 / 16
+				this.widthMult * width, height);
 			}
 
 			var sampleWeight = baseSampleWeight;
@@ -112,16 +120,18 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 			}
 
 			this.copyUniforms[ "opacity" ].value = sampleWeight;
+			let renderCam = this.stereoCamera ? (this.isLeftEye ? this.stereoCamera.cameraL : this.stereoCamera.cameraR) : this.camera;
 			renderer.setClearColor( this.clearColor, this.clearAlpha );
-			renderer.render( this.scene, this.camera, this.sampleRenderTarget, true );
+			renderer.render( this.scene, renderCam, this.sampleRenderTarget, true );
 			if (i === 0) {
 				renderer.setClearColor( 0x000000, 0.0 );
 			}
+
 			renderer.render( this.scene2, this.camera2, this.renderToScreen ? null : writeBuffer, (i === 0) );
 
 		}
 
-		if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
+		//if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
 
 		renderer.autoClear = autoClear;
 		renderer.setClearColor( oldClearColor, oldClearAlpha );
