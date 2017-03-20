@@ -21,11 +21,9 @@ function StereoCamera() {
 	this.cameraR = new PerspectiveCamera();
 	this.cameraR.layers.enable( 2 );
 	this.cameraR.matrixAutoUpdate = false;
-
 }
 
 Object.assign( StereoCamera.prototype, {
-
 	update: ( function () {
 
 		var instance, focus, fov, aspect, near, far, zoom;
@@ -33,11 +31,13 @@ Object.assign( StereoCamera.prototype, {
 		var eyeRight = new Matrix4();
 		var eyeLeft = new Matrix4();
 
-		return function update( camera ) {
+		return function update( camera, xOffset, yOffset) {
+			xOffset = xOffset || 0;
+			yOffset = yOffset || 0;
 
 			var needsUpdate = instance !== this || focus !== camera.focus || fov !== camera.fov ||
 												aspect !== camera.aspect * this.aspect || near !== camera.near ||
-												far !== camera.far || zoom !== camera.zoom;
+												far !== camera.far || zoom !== camera.zoom || camera.projectionMatrix !== this.baseProjectionMatrix || camera.matrixWorld !== this.baseMatrixWorld;
 
 			if ( needsUpdate ) {
 
@@ -56,8 +56,10 @@ Object.assign( StereoCamera.prototype, {
 				var eyeSep = this.eyeSep / 2;
 				var eyeSepOnProjection = eyeSep * near / focus;
 				var ymax = ( near * Math.tan( _Math.DEG2RAD * fov * 0.5 ) ) / zoom;
-				var xmin, xmax;
-
+				var height = 2 * ymax
+				var xmin, xmax, ymin;
+				ymax -= yOffset * height;
+				ymin = -0.5 * height
 				// translate xOffset
 
 				eyeLeft.elements[ 12 ] = - eyeSep;
@@ -67,6 +69,10 @@ Object.assign( StereoCamera.prototype, {
 
 				xmin = - ymax * aspect + eyeSepOnProjection;
 				xmax = ymax * aspect + eyeSepOnProjection;
+				xmin += xOffset * (xmax - xmin);
+
+				projectionMatrix.elements[5] = 2 * near / (ymax - ymin);
+				projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin);
 
 				projectionMatrix.elements[ 0 ] = 2 * near / ( xmax - xmin );
 				projectionMatrix.elements[ 8 ] = ( xmax + xmin ) / ( xmax - xmin );
@@ -75,8 +81,12 @@ Object.assign( StereoCamera.prototype, {
 
 				// for right eye
 
-				xmin = - ymax * aspect - eyeSepOnProjection;
+				xmin = - ymax * aspect - eyeSepOnProjection + xOffset * (xmax - xmin);
 				xmax = ymax * aspect - eyeSepOnProjection;
+				xmin += xOffset * (xmax - xmin);
+
+				projectionMatrix.elements[5] = 2 * near / (ymax - ymin);
+				projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin);
 
 				projectionMatrix.elements[ 0 ] = 2 * near / ( xmax - xmin );
 				projectionMatrix.elements[ 8 ] = ( xmax + xmin ) / ( xmax - xmin );
