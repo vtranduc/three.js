@@ -100,26 +100,17 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 
 			
 			var jitterOffset = jitterOffsets[i];
-			
+			var jitterOffsetX = jitterOffset[ 0 ] * 0.0625
+			var jitterOffsetY = jitterOffset[ 1 ] * 0.0625
 			if ( this.stereoCamera) {
-				this.stereoCamera.update(this.camera, jitterOffset[ 0 ] * 0.0625 / width, jitterOffset[ 1 ] * 0.0625 / height);
+					this.stereoCamera.update(this.camera, jitterOffsetX / width, jitterOffsetY / height);
 			}
 			else if ( this.useCustomProjectionMatrix) {
-					var A = this.camera.projectionMatrix.elements[5]
-					var B = this.camera.projectionMatrix.elements[9]
-					var C = this.camera.projectionMatrix.elements[0]
-					var D = this.camera.projectionMatrix.elements[8]
-
-					var ySigma = 2.0 * this.camera.near / A
-					var ymin = (B - 1.0) * ySigma / 2.0
-					var ymax = ymin + ySigma
-
-					this.camera.projectionMatrix.elements[5] = 2 * this.camera.near / (ymax - ymin)
-					this.camera.projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin)
+					this.SetCameraJitterOffset(jitterOffsetX, jitterOffsetY, width, height)
 			}
 			else if ( this.camera.setViewOffset ) {
 					this.camera.setViewOffset( width, height,
-					jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625,
+					jitterOffsetX, jitterOffsetY,
 				 	width, height);
 			}
 
@@ -149,6 +140,32 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 		renderer.autoClear = autoClear;
 		renderer.setClearColor( oldClearColor, oldClearAlpha );
 
+	},
+
+	SetCameraJitterOffset: function(Xoffset, Yoffset, width, height) {
+			var A = this.camera.projectionMatrix.elements[5]
+			var B = this.camera.projectionMatrix.elements[9]
+			var C = this.camera.projectionMatrix.elements[0]
+			var D = this.camera.projectionMatrix.elements[8]
+			
+			//y offset
+			var ySigma = 2.0 * this.camera.near / A
+			var ymin = (B - 1.0) * ySigma / 2.0
+			var ymax = ymin + ySigma
+			var yHeight = 2 * ymax
+			ymax -= Yoffset / height * yHeight
+
+			this.camera.projectionMatrix.elements[5] = 2 * this.camera.near / (ymax - ymin)
+			this.camera.projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin)
+			
+			//xoffset
+			var xSigma = 2.0 * this.camera.near / C
+			var xmin = (D - 1.0) * xSigma / 2.0
+			var xmax = xmin + xSigma
+			xmin += Xoffset / width * (xmax - xmin)
+
+			this.camera.projectionMatrix.elements[0] = 2 * this.camera.near / (xmax - xmin)
+			this.camera.projectionMatrix.elements[8] = (xmax + xmin ) / ( xmax - xmin)
 	}
 
 } );
