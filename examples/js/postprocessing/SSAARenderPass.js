@@ -18,6 +18,7 @@ THREE.SSAARenderPass = function ( scene, camera, clearColor, clearAlpha) {
 	this.camera = camera;
 	this.stereoCamera;
 	this.isLeftEye = false;
+	this.useCustomProjectionMatrix = false;
 
 	this.sampleLevel = 4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
 	this.unbiased = true;
@@ -103,8 +104,21 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 			if ( this.stereoCamera) {
 				this.stereoCamera.update(this.camera, jitterOffset[ 0 ] * 0.0625 / width, jitterOffset[ 1 ] * 0.0625 / height);
 			}
+			else if ( this.useCustomProjectionMatrix) {
+					var A = this.camera.projectionMatrix.elements[5]
+					var B = this.camera.projectionMatrix.elements[9]
+					var C = this.camera.projectionMatrix.elements[0]
+					var D = this.camera.projectionMatrix.elements[8]
+
+					var ySigma = 2.0 * this.camera.near / A
+					var ymin = (B - 1.0) * ySigma / 2.0
+					var ymax = ymin + ySigma
+
+					this.camera.projectionMatrix.elements[5] = 2 * this.camera.near / (ymax - ymin)
+					this.camera.projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin)
+			}
 			else if ( this.camera.setViewOffset ) {
-				this.camera.setViewOffset( width, height,
+					this.camera.setViewOffset( width, height,
 					jitterOffset[ 0 ] * 0.0625,jitterOffset[ 1 ] * 0.0625,
 				 	width, height);
 			}
@@ -130,7 +144,7 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 
 		}
 
-		if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
+		//if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
 
 		renderer.autoClear = autoClear;
 		renderer.setClearColor( oldClearColor, oldClearAlpha );
