@@ -124,7 +124,12 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 			}
 
 			this.copyUniforms[ "opacity" ].value = sampleWeight;
-			let renderCam = this.stereoCamera ? (this.isLeftEye ? this.stereoCamera.cameraL : this.stereoCamera.cameraR) : this.camera;
+			
+			let renderCam = this.camera
+			if (this.stereoCamera) {
+				renderCam = this.isLeftEye ? this.stereoCamera.cameraL : this.stereoCamera.cameraR
+			}
+
 			renderer.setClearColor( this.clearColor, this.clearAlpha );
 			renderer.render( this.scene, renderCam, this.sampleRenderTarget, true );
 			if (i === 0) {
