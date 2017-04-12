@@ -1014,6 +1014,28 @@ Geometry.prototype = {
 
 		}
 
+		// skin weights
+
+		var skinWeights = [];
+
+		for ( var i = 0; i < this.skinWeights.length; i ++ ) {
+
+			var skinWeight = this.skinWeights[ i ];
+			skinWeights.push( skinWeight.x, skinWeight.y, skinWeight.z, skinWeight.z );
+
+		}
+
+		// skin indices
+
+		var skinIndices = [];
+
+		for ( var i = 0; i < this.skinIndices.length; i ++ ) {
+
+			var skinIndex = this.skinIndices[ i ];
+			skinIndices.push( skinIndex.x, skinIndex.y, skinIndex.z, skinIndex.z );
+
+		}
+
 		var faces = [];
 		var normals = [];
 		var normalsHash = {};
@@ -1159,6 +1181,9 @@ Geometry.prototype = {
 		data.data = {};
 
 		data.data.vertices = vertices;
+		data.data.skinWeights = skinWeights;
+		data.data.skinIndices = skinIndices;
+		data.data.influencesPerVertex = 4
 		data.data.normals = normals;
 		if ( colors.length > 0 ) data.data.colors = colors;
 		if ( uvs.length > 0 ) data.data.uvs = [ uvs ]; // temporal backward compatibility
