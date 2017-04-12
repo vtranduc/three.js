@@ -4,7 +4,7 @@
 
 		float fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );
 
-	#elif defined( FOG_HEIGHT )
+	#elif defined( FOG_GROUND )
 
 		float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );
 		float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );

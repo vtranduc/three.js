@@ -147,7 +147,7 @@ function SpritePlugin( renderer, sprites ) {
 				oldFogType = 2;
 				sceneFogType = 2;
 
-			} else if ( fog.isFogHeight ) {
+			} else if ( fog.isFogGround ) {
 
 				gl.uniform1f( uniforms.fogOpacity, fog.opacity );
 				gl.uniform1f( uniforms.fogDistanceNear, fog.distanceNear );

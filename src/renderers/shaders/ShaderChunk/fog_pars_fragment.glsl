@@ -7,7 +7,7 @@
 
 		uniform float fogDensity;
 
-	#elif defined( FOG_HEIGHT )
+	#elif defined( FOG_GROUND )
 
 		varying float fogHeight;
 		uniform float fogOpacity;

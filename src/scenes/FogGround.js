@@ -5,7 +5,7 @@ import { Color } from '../math/Color';
  * @author alteredq / http://alteredqualia.com/
  */
 
-function FogHeight ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+function FogGround ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
 
 	this.name = '';
 
@@ -19,18 +19,18 @@ function FogHeight ( color, opacity, distanceNear, distanceFar, heightNear, heig
 
 }
 
-FogHeight.prototype.isFogHeight = true;
+FogGround.prototype.isFogGround = true;
 
-FogHeight.prototype.clone = function () {
+FogGround.prototype.clone = function () {
 
-	return new FogHeight( this.color.getHex(), this.opacity, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
+	return new FogGround( this.color.getHex(), this.opacity, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
 
 };
 
-FogHeight.prototype.toJSON = function ( meta ) {
+FogGround.prototype.toJSON = function ( meta ) {
 
 	return {
-		type: 'FogHeight',
+		type: 'FogGround',
 		color: this.color.getHex(),
 		opacity: this.opacity,
 		distanceNear: this.distanceNear,
@@ -41,4 +41,4 @@ FogHeight.prototype.toJSON = function ( meta ) {
 
 };
 
-export { FogHeight };
+export { FogGround };

@@ -15175,9 +15175,9 @@
 
 	var fog_pars_vertex = "#ifdef USE_FOG\n  varying float fogDepth;\n  varying float fogHeight;\n#endif\n";
 
-	var fog_fragment = "#ifdef USE_FOG\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\t#elif defined( FOG_HEIGHT )\n\t\tfloat distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );\n\t\tfloat heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );\n\t\tfloat fogFactor = fogOpacity * max( distanceFactor, heightFactor );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif\n";
+	var fog_fragment = "#ifdef USE_FOG\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\t#elif defined( FOG_GROUND )\n\t\tfloat distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );\n\t\tfloat heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );\n\t\tfloat fogFactor = fogOpacity * max( distanceFactor, heightFactor );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif\n";
 
-	var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float fogDepth;\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#elif defined( FOG_HEIGHT )\n\t\tvarying float fogHeight;\n\t\tuniform float fogOpacity;\n\t\tuniform float fogDistanceNear;\n\t\tuniform float fogDistanceFar;\n\t\tuniform float fogHeightNear;\n\t\tuniform float fogHeightFar;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif\n";
+	var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float fogDepth;\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#elif defined( FOG_GROUND )\n\t\tvarying float fogHeight;\n\t\tuniform float fogOpacity;\n\t\tuniform float fogDistanceNear;\n\t\tuniform float fogDistanceFar;\n\t\tuniform float fogHeightNear;\n\t\tuniform float fogHeightFar;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif\n";
 
 	var gradientmap_pars_fragment = "#ifdef TOON\n\tuniform sampler2D gradientMap;\n\tvec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\t\tfloat dotNL = dot( normal, lightDirection );\n\t\tvec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\t\t#ifdef USE_GRADIENTMAP\n\t\t\treturn texture2D( gradientMap, coord ).rgb;\n\t\t#else\n\t\t\treturn ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\t\t#endif\n\t}\n#endif\n";
 
@@ -16613,7 +16613,7 @@
 					oldFogType = 2;
 					sceneFogType = 2;
 
-				} else if ( fog.isFogHeight ) {
+				} else if ( fog.isFogGround ) {
 
 					gl.uniform1f( uniforms.fogOpacity, fog.opacity );
 					gl.uniform1f( uniforms.fogDistanceNear, fog.distanceNear );
@@ -18765,7 +18765,7 @@
 				'#define MAX_BONES ' + parameters.maxBones,
 				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
-				( parameters.useFog && parameters.fogHeight ) ? '#define FOG_HEIGHT' : '',
+				( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 
 				parameters.map ? '#define USE_MAP' : '',
@@ -18873,7 +18873,7 @@
 
 				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
-				( parameters.useFog && parameters.fogHeight ) ? '#define FOG_HEIGHT' : '',
+				( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 				parameters.map ? '#define USE_MAP' : '',
 				parameters.envMap ? '#define USE_ENVMAP' : '',
@@ -19138,7 +19138,7 @@
 			"precision", "supportsVertexTextures", "map", "mapEncoding", "envMap", "envMapMode", "envMapEncoding",
 			"lightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
 			"roughnessMap", "metalnessMap", "gradientMap",
-			"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp", "fogHeight",
+			"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp", "fogGround",
 			"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
 			"maxBones", "useVertexTexture", "morphTargets", "morphNormals",
 			"maxMorphTargets", "maxMorphNormals", "premultipliedAlpha",
@@ -19274,7 +19274,7 @@
 				fog: !! fog,
 				useFog: material.fog,
 				fogExp: (fog && fog.isFogExp2),
-				fogHeight: (fog && fog.isFogHeight),
+				fogGround: (fog && fog.isFogGround),
 
 				flatShading: material.shading === FlatShading,
 
@@ -24020,7 +24020,7 @@
 
 				uniforms.fogDensity.value = fog.density;
 
-			} else if ( fog.isFogHeight ) {
+			} else if ( fog.isFogGround ) {
 
 				uniforms.fogOpacity.value = fog.opacity;
 				uniforms.fogDistanceNear.value = fog.distanceNear;
@@ -24839,7 +24839,7 @@
 	 * @author alteredq / http://alteredqualia.com/
 	 */
 
-	function FogHeight ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+	function FogGround ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
 
 		this.name = '';
 
@@ -24853,18 +24853,18 @@
 
 	}
 
-	FogHeight.prototype.isFogHeight = true;
+	FogGround.prototype.isFogGround = true;
 
-	FogHeight.prototype.clone = function () {
+	FogGround.prototype.clone = function () {
 
-		return new FogHeight( this.color.getHex(), this.opacity, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
+		return new FogGround( this.color.getHex(), this.opacity, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
 
 	};
 
-	FogHeight.prototype.toJSON = function ( meta ) {
+	FogGround.prototype.toJSON = function ( meta ) {
 
 		return {
-			type: 'FogHeight',
+			type: 'FogGround',
 			color: this.color.getHex(),
 			opacity: this.opacity,
 			distanceNear: this.distanceNear,
@@ -34223,9 +34223,9 @@
 
 								object.fog = new FogExp2( data.fog.color, data.fog.density );
 
-							} else if ( data.fog.type === 'FogHeight' ) {
+							} else if ( data.fog.type === 'FogGround' ) {
 
-								object.fog = new FogExp2( data.fog.color, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
+								object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
 
 							}
 
@@ -43532,7 +43532,7 @@
 	exports.UniformsUtils = UniformsUtils;
 	exports.ShaderChunk = ShaderChunk;
 	exports.FogExp2 = FogExp2;
-	exports.FogHeight = FogHeight;
+	exports.FogGround = FogGround;
 	exports.Fog = Fog;
 	exports.Scene = Scene;
 	exports.LensFlare = LensFlare;
