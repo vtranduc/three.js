@@ -36,13 +36,12 @@
 
 		<script src="../build/three.js"></script>
 
-		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/controls/FirstPersonControls.js"></script>
 
 		<script src="js/ImprovedNoise.js"></script>
 
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/dat.gui.min.js"></script>
 
 		<script>
 
@@ -73,10 +72,12 @@
 
 				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
 
-				controls = new THREE.OrbitControls( camera );
+				controls = new THREE.FirstPersonControls( camera );
+				controls.movementSpeed = 150;
+				controls.lookSpeed = 0.1;
 
 				scene = new THREE.Scene();
-				scene.fog = new THREE.FogHeight( 0xefd1b5, 1, 0, 3000, 0, 500 );
+				scene.fog = new THREE.FogExp2( 0xefd1b5, 0.0025 );
 
 				data = generateHeight( worldWidth, worldDepth );
 
@@ -111,21 +112,6 @@
 
 				stats = new Stats();
 				container.appendChild( stats.dom );
-
-				// GUI
-				mode = {};
-				mode.opacity = 1;
-				mode.distanceNear = 0;
-				mode.distanceFar = 3000;
-				mode.heightNear = 0;
-				mode.heightFar = 500;
-
-				var gui = new dat.GUI();
-				gui.add( mode, 'opacity', 0, 1 );
-				gui.add( mode, 'distanceNear', 0, 1000 );
-				gui.add( mode, 'distanceFar', 0, 5000 );
-				gui.add( mode, 'heightNear', 0, 1000 );
-				gui.add( mode, 'heightFar', 0, 5000 );
 
 
 				//
@@ -247,12 +233,6 @@
 
 
 			function render() {
-
-				scene.fog.opacity = mode.opacity
-				scene.fog.distanceNear = mode.distanceNear
-				scene.fog.distanceFar = mode.distanceFar
-				scene.fog.heightNear = mode.heightNear
-				scene.fog.heightFar = mode.heightFar
 
 				controls.update( clock.getDelta() );
 				renderer.render( scene, camera );
