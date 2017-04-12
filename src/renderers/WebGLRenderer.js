@@ -2116,7 +2116,7 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.fogDensity.value = fog.density;
 
-		} else if ( fog.isFogHeight ) {
+		} else if ( fog.isFogGround ) {
 
 			uniforms.fogOpacity.value = fog.opacity;
 			uniforms.fogDistanceNear.value = fog.distanceNear;
