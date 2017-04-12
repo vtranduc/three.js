@@ -141,30 +141,33 @@ SkinnedMesh.prototype = Object.assign( Object.create( Mesh.prototype ), {
 
 		} else if ( this.geometry && this.geometry.isBufferGeometry ) {
 
-			var vec = new Vector4();
-
 			var skinWeight = this.geometry.attributes.skinWeight;
 
-			for ( var i = 0; i < skinWeight.count; i ++ ) {
+			if(skinWeight) {
+				var vec = new Vector4();
 
-				vec.x = skinWeight.getX( i );
-				vec.y = skinWeight.getY( i );
-				vec.z = skinWeight.getZ( i );
-				vec.w = skinWeight.getW( i );
+				for ( var i = 0; i < skinWeight.count; i ++ ) {
 
-				var scale = 1.0 / vec.lengthManhattan();
+					vec.x = skinWeight.getX( i );
+					vec.y = skinWeight.getY( i );
+					vec.z = skinWeight.getZ( i );
+					vec.w = skinWeight.getW( i );
 
-				if ( scale !== Infinity ) {
+					var scale = 1.0 / vec.lengthManhattan();
 
-					vec.multiplyScalar( scale );
+					if ( scale !== Infinity ) {
 
-				} else {
+						vec.multiplyScalar( scale );
 
-					vec.set( 1, 0, 0, 0 ); // do something reasonable
+					} else {
+
+						vec.set( 1, 0, 0, 0 ); // do something reasonable
+
+					}
+
+					skinWeight.setXYZW( i, vec.x, vec.y, vec.z, vec.w );
 
 				}
-
-				skinWeight.setXYZW( i, vec.x, vec.y, vec.z, vec.w );
 
 			}
 
