@@ -16779,6 +16779,11 @@ function SpritePlugin( renderer, sprites ) {
 			'uniform float fogDensity;',
 			'uniform float fogNear;',
 			'uniform float fogFar;',
+			'uniform float fogOpacity;',
+			'uniform float fogDistanceNear;',
+			'uniform float fogDistanceFar;',
+			'uniform float fogHeightNear;',
+			'uniform float fogHeightFar;',
 			'uniform float alphaTest;',
 
 			'varying vec2 vUV;',
@@ -16799,6 +16804,12 @@ function SpritePlugin( renderer, sprites ) {
 					'if ( fogType == 1 ) {',
 
 						'fogFactor = smoothstep( fogNear, fogFar, depth );',
+
+					'} else if ( fogType == 3 ) {',
+
+						'float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );',
+						'float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );',
+						'fogFactor = fogOpacity * max( distanceFactor, heightFactor );',
 
 					'} else {',
 
@@ -24790,17 +24801,12 @@ function WebGLRenderer( parameters ) {
  * @author alteredq / http://alteredqualia.com/
  */
 
-function FogExp2 ( color, density, distanceNear, distanceFar, heightNear, heightFar ) {
+function FogExp2 ( color, density ) {
 
 	this.name = '';
 
 	this.color = new Color( color );
-	this.density = ( density !== undefined ) ? density : 1;
-
-	this.distanceNear = ( distanceNear !== undefined ) ? distanceNear : 1;
-	this.distanceFar = ( distanceFar !== undefined ) ? distanceFar : 1000;
-	this.heightNear = ( heightNear !== undefined ) ? heightNear : 1;
-	this.heightFar = ( heightFar !== undefined ) ? heightFar : 1000;
+	this.density = ( density !== undefined ) ? density : 0.00025;
 
 }
 
@@ -24808,7 +24814,7 @@ FogExp2.prototype.isFogExp2 = true;
 
 FogExp2.prototype.clone = function () {
 
-	return new FogExp2( this.color.getHex(), this.density, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
+	return new FogExp2( this.color.getHex(), this.density );
 
 };
 
@@ -24817,11 +24823,7 @@ FogExp2.prototype.toJSON = function ( meta ) {
 	return {
 		type: 'FogExp2',
 		color: this.color.getHex(),
-		density: this.density,
-		distanceNear: this.distanceNear,
-		distanceFar: this.distanceFar,
-		heightNear: this.heightNear,
-		heightFar: this.heightFar
+		density: this.density
 	};
 
 };

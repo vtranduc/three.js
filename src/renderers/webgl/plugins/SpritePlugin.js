@@ -345,11 +345,11 @@ function SpritePlugin( renderer, sprites ) {
 
 						'fogFactor = smoothstep( fogNear, fogFar, depth );',
 
-					'} else if ( fogType == 3 ) {'
+					'} else if ( fogType == 3 ) {',
 
-						'float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );'
-						'float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );'
-						'fogFactor = fogOpacity * max( distanceFactor, heightFactor );'
+						'float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );',
+						'float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );',
+						'fogFactor = fogOpacity * max( distanceFactor, heightFactor );',
 
 					'} else {',
 
