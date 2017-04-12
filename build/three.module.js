@@ -11142,15 +11142,6 @@ function arrayMax( array ) {
 
 }
 
-/**
- * @author mrdoob / http://mrdoob.com/
- * @author kile / http://kile.stravaganza.org/
- * @author alteredq / http://alteredqualia.com/
- * @author mikael emtinger / http://gomo.se/
- * @author zz85 / http://www.lab4games.net/zz85/blog
- * @author bhouston / http://clara.io
- */
-
 var count = 0;
 function GeometryIdCount() { return count++; }
 
@@ -25082,6 +25073,12 @@ Object.assign( Skeleton.prototype, {
 	}
 
 } );
+
+/**
+ * @author mikael emtinger / http://gomo.se/
+ * @author alteredq / http://alteredqualia.com/
+ * @author ikerr / http://verold.com
+ */
 
 function SkinnedMesh( geometry, material, useVertexTexture ) {
 
