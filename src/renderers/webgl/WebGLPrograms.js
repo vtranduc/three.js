@@ -27,7 +27,7 @@ function WebGLPrograms( renderer, capabilities ) {
 		"precision", "supportsVertexTextures", "map", "mapEncoding", "envMap", "envMapMode", "envMapEncoding",
 		"lightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
 		"roughnessMap", "metalnessMap", "gradientMap",
-		"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp",
+		"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp", "fogHeight",
 		"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
 		"maxBones", "useVertexTexture", "morphTargets", "morphNormals",
 		"maxMorphTargets", "maxMorphNormals", "premultipliedAlpha",
@@ -163,6 +163,7 @@ function WebGLPrograms( renderer, capabilities ) {
 			fog: !! fog,
 			useFog: material.fog,
 			fogExp: (fog && fog.isFogExp2),
+			fogHeight: (fog && fog.isFogHeight),
 
 			flatShading: material.shading === FlatShading,
 

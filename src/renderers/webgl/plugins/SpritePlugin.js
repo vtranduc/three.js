@@ -147,6 +147,18 @@ function SpritePlugin( renderer, sprites ) {
 				oldFogType = 2;
 				sceneFogType = 2;
 
+			} else if ( fog.isFogHeight ) {
+
+				gl.uniform1f( uniforms.fogOpacity, fog.opacity );
+				gl.uniform1f( uniforms.fogDistanceNear, fog.distanceNear );
+				gl.uniform1f( uniforms.fogDistanceFar, fog.distanceFar );
+				gl.uniform1f( uniforms.fogHeightNear, fog.heightNear );
+				gl.uniform1f( uniforms.fogHeightFar, fog.heightFar );
+
+				gl.uniform1i( uniforms.fogType, 3 );
+				oldFogType = 3;
+				sceneFogType = 3;
+
 			}
 
 		} else {
@@ -307,6 +319,11 @@ function SpritePlugin( renderer, sprites ) {
 			'uniform float fogDensity;',
 			'uniform float fogNear;',
 			'uniform float fogFar;',
+			'uniform float fogOpacity;',
+			'uniform float fogDistanceNear;',
+			'uniform float fogDistanceFar;',
+			'uniform float fogHeightNear;',
+			'uniform float fogHeightFar;',
 			'uniform float alphaTest;',
 
 			'varying vec2 vUV;',
@@ -327,6 +344,12 @@ function SpritePlugin( renderer, sprites ) {
 					'if ( fogType == 1 ) {',
 
 						'fogFactor = smoothstep( fogNear, fogFar, depth );',
+
+					'} else if ( fogType == 3 ) {'
+
+						'float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );'
+						'float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );'
+						'fogFactor = fogOpacity * max( distanceFactor, heightFactor );'
 
 					'} else {',
 
