@@ -75,8 +75,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 	var vertexShaderChunk = [
 
-		"#include <fog_pars_vertex>",
-
 		"uniform float outlineThickness;",
 
 		"vec4 calculateOutline( vec4 pos, vec3 objectNormal, vec4 skinned ) {",
@@ -115,16 +113,13 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		"	gl_Position = calculateOutline( gl_Position, objectNormal, skinned );",
 		"#else",
 		"	gl_Position = calculateOutline( gl_Position, objectNormal, vec4( transformed, 1.0 ) );",
-		"#endif",
-
-		"#include <fog_vertex>"
+		"#endif"
 
 	].join( "\n" );
 
 	var fragmentShader = [
 
 		"#include <common>",
-		"#include <fog_pars_fragment>",
 
 		"uniform vec3 outlineColor;",
 		"uniform float outlineAlpha;",
@@ -132,8 +127,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		"void main() {",
 
 		"	gl_FragColor = vec4( outlineColor, outlineAlpha );",
-
-		"	#include <fog_fragment>",
 
 		"}"
 
