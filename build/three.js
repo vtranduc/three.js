@@ -6642,20 +6642,27 @@
 					duration = morphTargetNames.length * ( fps || 1.0 );
 
 				} else {
-					// ...assume skeletal animation
+					// ...assume skeletal animation if bones are passed in
 
-					var boneName = '.bones[' + bones[ h ].name + ']';
+					// if no bones, assume we're going for keyframed object animation
+					let refName = null;
+					if(!bones) {
+						refName = animation.node.name;
+					}
+					else {
+						refName = '.bones[' + bones[ h ].name + ']';
+					}
 
 					addNonemptyTrack(
-							VectorKeyframeTrack, boneName + '.position',
+							VectorKeyframeTrack, refName + '.position',
 							animationKeys, 'pos', tracks );
 
 					addNonemptyTrack(
-							QuaternionKeyframeTrack, boneName + '.quaternion',
+							QuaternionKeyframeTrack, refName + '.quaternion',
 							animationKeys, 'rot', tracks );
 
 					addNonemptyTrack(
-							VectorKeyframeTrack, boneName + '.scale',
+							VectorKeyframeTrack, refName + '.scale',
 							animationKeys, 'scl', tracks );
 
 				}
@@ -12423,6 +12430,28 @@
 
 			}
 
+			// skin weights
+
+			var skinWeights = [];
+
+			for ( var i = 0; i < this.skinWeights.length; i ++ ) {
+
+				var skinWeight = this.skinWeights[ i ];
+				skinWeights.push( skinWeight.x, skinWeight.y, skinWeight.z, skinWeight.z );
+
+			}
+
+			// skin indices
+
+			var skinIndices = [];
+
+			for ( var i = 0; i < this.skinIndices.length; i ++ ) {
+
+				var skinIndex = this.skinIndices[ i ];
+				skinIndices.push( skinIndex.x, skinIndex.y, skinIndex.z, skinIndex.z );
+
+			}
+
 			var faces = [];
 			var normals = [];
 			var normalsHash = {};
@@ -12568,6 +12597,9 @@
 			data.data = {};
 
 			data.data.vertices = vertices;
+			data.data.skinWeights = skinWeights;
+			data.data.skinIndices = skinIndices;
+			data.data.influencesPerVertex = 4;
 			data.data.normals = normals;
 			if ( colors.length > 0 ) data.data.colors = colors;
 			if ( uvs.length > 0 ) data.data.uvs = [ uvs ]; // temporal backward compatibility
@@ -15171,13 +15203,13 @@
 
 	var envmap_vertex = "#ifdef USE_ENVMAP\r\n\r\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\r\n\r\n\t\tvWorldPosition = worldPosition.xyz;\r\n\r\n\t#else\r\n\r\n\t\tvec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\r\n\r\n\t\tvec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\r\n\r\n\t\t#ifdef ENVMAP_MODE_REFLECTION\r\n\r\n\t\t\tvReflect = reflect( cameraToVertex, worldNormal );\r\n\r\n\t\t#else\r\n\r\n\t\t\tvReflect = refract( cameraToVertex, worldNormal, refractionRatio );\r\n\r\n\t\t#endif\r\n\r\n\t#endif\r\n\r\n#endif\r\n";
 
-	var fog_vertex = "\r\n#ifdef USE_FOG\r\nfogDepth = -mvPosition.z;\r\n#endif";
+	var fog_vertex = "\r\n#ifdef USE_FOG\r\nfogDepth = -mvPosition.z;\r\ngl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\r\nfogHeight = position.y;\r\n#endif\r\n";
 
-	var fog_pars_vertex = "#ifdef USE_FOG\r\n\r\n  varying float fogDepth;\r\n\r\n#endif\r\n";
+	var fog_pars_vertex = "#ifdef USE_FOG\r\n\r\n  varying float fogDepth;\r\n  varying float fogHeight;\r\n\r\n#endif\r\n";
 
-	var fog_fragment = "#ifdef USE_FOG\r\n\r\n\t#ifdef FOG_EXP2\r\n\r\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\r\n\r\n\t#else\r\n\r\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\r\n\r\n\t#endif\r\n\r\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\r\n\r\n#endif\r\n";
+	var fog_fragment = "#ifdef USE_FOG\r\n\r\n\t#ifdef FOG_EXP2\r\n\r\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\r\n\r\n\t#elif defined( FOG_GROUND )\r\n\r\n\t\tfloat distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );\r\n\t\tfloat heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );\r\n\t\tfloat fogFactor = fogOpacity * max( distanceFactor, heightFactor );\r\n\r\n\t#else\r\n\r\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\r\n\r\n\t#endif\r\n\r\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\r\n\r\n#endif\r\n";
 
-	var fog_pars_fragment = "#ifdef USE_FOG\r\n\r\n\tuniform vec3 fogColor;\r\n\tvarying float fogDepth;\r\n\r\n\t#ifdef FOG_EXP2\r\n\r\n\t\tuniform float fogDensity;\r\n\r\n\t#else\r\n\r\n\t\tuniform float fogNear;\r\n\t\tuniform float fogFar;\r\n\r\n\t#endif\r\n\r\n#endif\r\n";
+	var fog_pars_fragment = "#ifdef USE_FOG\r\n\r\n\tuniform vec3 fogColor;\r\n\tvarying float fogDepth;\r\n\r\n\t#ifdef FOG_EXP2\r\n\r\n\t\tuniform float fogDensity;\r\n\r\n\t#elif defined( FOG_GROUND )\r\n\r\n\t\tvarying float fogHeight;\r\n\t\tuniform float fogOpacity;\r\n\t\tuniform float fogDistanceNear;\r\n\t\tuniform float fogDistanceFar;\r\n\t\tuniform float fogHeightNear;\r\n\t\tuniform float fogHeightFar;\r\n\r\n\t#else\r\n\r\n\t\tuniform float fogNear;\r\n\t\tuniform float fogFar;\r\n\r\n\t#endif\r\n\r\n#endif\r\n";
 
 	var gradientmap_pars_fragment = "#ifdef TOON\r\n\r\n\tuniform sampler2D gradientMap;\r\n\r\n\tvec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\r\n\r\n\t\t// dotNL will be from -1.0 to 1.0\r\n\t\tfloat dotNL = dot( normal, lightDirection );\r\n\t\tvec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\r\n\r\n\t\t#ifdef USE_GRADIENTMAP\r\n\r\n\t\t\treturn texture2D( gradientMap, coord ).rgb;\r\n\r\n\t\t#else\r\n\r\n\t\t\treturn ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\r\n\r\n\t\t#endif\r\n\r\n\r\n\t}\r\n\r\n#endif\r\n";
 
@@ -15561,7 +15593,12 @@
 			fogDensity: { value: 0.00025 },
 			fogNear: { value: 1 },
 			fogFar: { value: 2000 },
-			fogColor: { value: new Color( 0xffffff ) }
+			fogColor: { value: new Color( 0xffffff ) },
+			fogOpacity: { value: 1 },
+			fogDistanceNear: { value: 0 },
+			fogDistanceFar: { value: 100 },
+			fogHeightNear: { value: 0 },
+			fogHeightFar: { value: 100 }
 
 		},
 
@@ -16611,6 +16648,18 @@
 					oldFogType = 2;
 					sceneFogType = 2;
 
+				} else if ( fog.isFogGround ) {
+
+					gl.uniform1f( uniforms.fogOpacity, fog.opacity );
+					gl.uniform1f( uniforms.fogDistanceNear, fog.distanceNear );
+					gl.uniform1f( uniforms.fogDistanceFar, fog.distanceFar );
+					gl.uniform1f( uniforms.fogHeightNear, fog.heightNear );
+					gl.uniform1f( uniforms.fogHeightFar, fog.heightFar );
+
+					gl.uniform1i( uniforms.fogType, 3 );
+					oldFogType = 3;
+					sceneFogType = 3;
+
 				}
 
 			} else {
@@ -16771,6 +16820,11 @@
 				'uniform float fogDensity;',
 				'uniform float fogNear;',
 				'uniform float fogFar;',
+				'uniform float fogOpacity;',
+				'uniform float fogDistanceNear;',
+				'uniform float fogDistanceFar;',
+				'uniform float fogHeightNear;',
+				'uniform float fogHeightFar;',
 				'uniform float alphaTest;',
 
 				'varying vec2 vUV;',
@@ -16791,6 +16845,12 @@
 						'if ( fogType == 1 ) {',
 
 							'fogFactor = smoothstep( fogNear, fogFar, depth );',
+
+						'} else if ( fogType == 3 ) {',
+
+							'float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );',
+							'float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );',
+							'fogFactor = fogOpacity * max( distanceFactor, heightFactor );',
 
 						'} else {',
 
@@ -18725,7 +18785,7 @@
 
 			prefixVertex = [
 
-	        
+
 				'precision ' + parameters.precision + ' float;',
 				'precision ' + parameters.precision + ' int;',
 
@@ -18740,6 +18800,7 @@
 				'#define MAX_BONES ' + parameters.maxBones,
 				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
+				( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 
 				parameters.map ? '#define USE_MAP' : '',
@@ -18847,6 +18908,7 @@
 
 				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
+				( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 				parameters.map ? '#define USE_MAP' : '',
 				parameters.envMap ? '#define USE_ENVMAP' : '',
@@ -19112,7 +19174,7 @@
 			"precision", "supportsVertexTextures", "map", "mapEncoding", "envMap", "envIrradianceMap", "envMapMode", "envMapEncoding",
 			"lightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
 			"roughnessMap", "metalnessMap", "gradientMap",
-			"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp",
+			"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp", "fogGround",
 			"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
 			"maxBones", "useVertexTexture", "morphTargets", "morphNormals",
 			"maxMorphTargets", "maxMorphNormals", "premultipliedAlpha",
@@ -19249,6 +19311,7 @@
 				fog: !! fog,
 				useFog: material.fog,
 				fogExp: (fog && fog.isFogExp2),
+				fogGround: (fog && fog.isFogGround),
 
 				flatShading: material.shading === FlatShading,
 
@@ -23994,6 +24057,14 @@
 
 				uniforms.fogDensity.value = fog.density;
 
+			} else if ( fog.isFogGround ) {
+
+				uniforms.fogOpacity.value = fog.opacity;
+				uniforms.fogDistanceNear.value = fog.distanceNear;
+				uniforms.fogDistanceFar.value = fog.distanceFar;
+				uniforms.fogHeightNear.value = fog.heightNear;
+				uniforms.fogHeightFar.value = fog.heightFar;
+
 			}
 
 		}
@@ -24798,6 +24869,47 @@
 			type: 'FogExp2',
 			color: this.color.getHex(),
 			density: this.density
+		};
+
+	};
+
+	/**
+	 * @author mrdoob / http://mrdoob.com/
+	 * @author alteredq / http://alteredqualia.com/
+	 */
+
+	function FogGround ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+
+		this.name = '';
+
+		this.color = new Color( color );
+		this.opacity = ( opacity !== undefined ) ? opacity : 1;
+
+		this.distanceNear = ( distanceNear !== undefined ) ? distanceNear : 0;
+		this.distanceFar = ( distanceFar !== undefined ) ? distanceFar : 100;
+		this.heightNear = ( heightNear !== undefined ) ? heightNear : 0;
+		this.heightFar = ( heightFar !== undefined ) ? heightFar : 100;
+
+	}
+
+	FogGround.prototype.isFogGround = true;
+
+	FogGround.prototype.clone = function () {
+
+		return new FogGround( this.color.getHex(), this.opacity, this.distanceNear, this.distanceFar, this.heightNear, this.heightFar );
+
+	};
+
+	FogGround.prototype.toJSON = function ( meta ) {
+
+		return {
+			type: 'FogGround',
+			color: this.color.getHex(),
+			opacity: this.opacity,
+			distanceNear: this.distanceNear,
+			distanceFar: this.distanceFar,
+			heightNear: this.heightNear,
+			heightFar: this.heightFar
 		};
 
 	};
@@ -25638,30 +25750,33 @@
 
 			} else if ( this.geometry && this.geometry.isBufferGeometry ) {
 
-				var vec = new Vector4();
-
 				var skinWeight = this.geometry.attributes.skinWeight;
 
-				for ( var i = 0; i < skinWeight.count; i ++ ) {
+				if(skinWeight) {
+					var vec = new Vector4();
 
-					vec.x = skinWeight.getX( i );
-					vec.y = skinWeight.getY( i );
-					vec.z = skinWeight.getZ( i );
-					vec.w = skinWeight.getW( i );
+					for ( var i = 0; i < skinWeight.count; i ++ ) {
 
-					var scale = 1.0 / vec.lengthManhattan();
+						vec.x = skinWeight.getX( i );
+						vec.y = skinWeight.getY( i );
+						vec.z = skinWeight.getZ( i );
+						vec.w = skinWeight.getW( i );
 
-					if ( scale !== Infinity ) {
+						var scale = 1.0 / vec.lengthManhattan();
 
-						vec.multiplyScalar( scale );
+						if ( scale !== Infinity ) {
 
-					} else {
+							vec.multiplyScalar( scale );
 
-						vec.set( 1, 0, 0, 0 ); // do something reasonable
+						} else {
+
+							vec.set( 1, 0, 0, 0 ); // do something reasonable
+
+						}
+
+						skinWeight.setXYZW( i, vec.x, vec.y, vec.z, vec.w );
 
 					}
-
-					skinWeight.setXYZW( i, vec.x, vec.y, vec.z, vec.w );
 
 				}
 
@@ -34149,6 +34264,10 @@
 							} else if ( data.fog.type === 'FogExp2' ) {
 
 								object.fog = new FogExp2( data.fog.color, data.fog.density );
+
+							} else if ( data.fog.type === 'FogGround' ) {
+
+								object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
 
 							}
 
@@ -43455,6 +43574,7 @@
 	exports.UniformsUtils = UniformsUtils;
 	exports.ShaderChunk = ShaderChunk;
 	exports.FogExp2 = FogExp2;
+	exports.FogGround = FogGround;
 	exports.Fog = Fog;
 	exports.Scene = Scene;
 	exports.LensFlare = LensFlare;

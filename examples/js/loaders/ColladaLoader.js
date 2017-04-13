@@ -4472,6 +4472,10 @@ THREE.ColladaLoader = function () {
 	function Key ( time ) {
 
 		this.targets = [];
+		this.matrix = new THREE.Matrix4()
+		this.pos = new THREE.Vector3(0, 0, 0)
+		this.scl = new THREE.Vector3(0, 0, 0)
+		this.rot = new THREE.Quaternion(0, 0, 0)
 		this.time = time;
 
 	}
@@ -4485,6 +4489,11 @@ THREE.ColladaLoader = function () {
 			data: data
 		} );
 
+		if (data instanceof THREE.Matrix4) {
+			this.matrix = data
+			var compData = [ new THREE.Vector3(),new THREE.Quaternion(),new THREE.Vector3() ];
+			this.matrix.decompose(this.pos, this.rot, this.scl);
+		}
 	};
 
 	Key.prototype.apply = function ( opt_sid ) {
