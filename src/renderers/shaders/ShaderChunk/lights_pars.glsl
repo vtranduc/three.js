@@ -200,6 +200,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 
 			#ifdef USE_IRRADIANCE_MAP
 			vec4 envMapColor = textureCube( envIrradianceMap, queryVec );
+			envMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;
 			#else
 			vec4 envMapColor = textureCubeUV( queryVec, 1.0 );
 			#endif
