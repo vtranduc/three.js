@@ -325,20 +325,27 @@ Object.assign( AnimationClip, {
 				duration = morphTargetNames.length * ( fps || 1.0 );
 
 			} else {
-				// ...assume skeletal animation
+				// ...assume skeletal animation if bones are passed in
 
-				var boneName = '.bones[' + bones[ h ].name + ']';
+				// if no bones, assume we're going for keyframed object animation
+				let refName = null
+				if(!bones) {
+					refName = animation.node.name
+				}
+				else {
+					refName = '.bones[' + bones[ h ].name + ']';
+				}
 
 				addNonemptyTrack(
-						VectorKeyframeTrack, boneName + '.position',
+						VectorKeyframeTrack, refName + '.position',
 						animationKeys, 'pos', tracks );
 
 				addNonemptyTrack(
-						QuaternionKeyframeTrack, boneName + '.quaternion',
+						QuaternionKeyframeTrack, refName + '.quaternion',
 						animationKeys, 'rot', tracks );
 
 				addNonemptyTrack(
-						VectorKeyframeTrack, boneName + '.scale',
+						VectorKeyframeTrack, refName + '.scale',
 						animationKeys, 'scl', tracks );
 
 			}
