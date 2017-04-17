@@ -328,9 +328,9 @@ Object.assign( AnimationClip, {
 				// ...assume skeletal animation if bones are passed in
 
 				// if no bones, assume we're going for keyframed object animation
-				let refName = null
+				var refName = null;
 				if(!bones) {
-					refName = animation.node.name
+					refName = animation.node.name;
 				}
 				else {
 					refName = '.bones[' + bones[ h ].name + ']';
