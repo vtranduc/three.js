@@ -15197,7 +15197,7 @@ var envmap_pars_vertex = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || def
 
 var envmap_vertex = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\t\tvWorldPosition = worldPosition.xyz;\n\t#else\n\t\tvec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\t\tvec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\n\t\t#ifdef ENVMAP_MODE_REFLECTION\n\t\t\tvReflect = reflect( cameraToVertex, worldNormal );\n\t\t#else\n\t\t\tvReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\t\t#endif\n\t#endif\n#endif\n";
 
-var fog_vertex = "\n#ifdef USE_FOG\nfogDepth = -mvPosition.z;\nvec4 pos = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\nfogHeight = pos.y;\n#endif\n";
+var fog_vertex = "\n#ifdef USE_FOG\nfogDepth = -mvPosition.z;\ngl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\nfogHeight = position.y;\n#endif\n";
 
 var fog_pars_vertex = "#ifdef USE_FOG\n  varying float fogDepth;\n  varying float fogHeight;\n#endif\n";
 
