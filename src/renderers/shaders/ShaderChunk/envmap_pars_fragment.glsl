@@ -21,5 +21,7 @@
 	#else
 		varying vec3 vReflect;
 	#endif
-
+	#ifdef USE_IRRADIANCE_MAP
+		uniform samplerCube envIrradianceMap;
+	#endif
 #endif
