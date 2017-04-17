@@ -17,7 +17,7 @@ function MeshPhysicalMaterial( parameters ) {
 	this.type = 'MeshPhysicalMaterial';
 
 	this.reflectivity = 0.5; // maps to F0 = 0.04
-
+	this.envIrradianceMap = null;
 	this.clearCoat = 0.0;
 	this.clearCoatRoughness = 0.0;
 
@@ -37,7 +37,7 @@ MeshPhysicalMaterial.prototype.copy = function ( source ) {
 	this.defines = { 'PHYSICAL': '' };
 
 	this.reflectivity = source.reflectivity;
-
+	this.envIrradianceMap = source.envIrradianceMap;
 	this.clearCoat = source.clearCoat;
 	this.clearCoatRoughness = source.clearCoatRoughness;
 
