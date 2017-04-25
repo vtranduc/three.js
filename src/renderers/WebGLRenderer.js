@@ -1168,6 +1168,8 @@ function WebGLRenderer( parameters ) {
 		}
 
 		if ( background && ( background.isCubeTexture || background.isRenderTargetCubeTexture ) ) {
+			
+			this.clear( false, true, false );
 
 			if ( backgroundBoxCamera === undefined ) {
 
