@@ -1168,7 +1168,7 @@ function WebGLRenderer( parameters ) {
 		}
 
 		if ( background && ( background.isCubeTexture || background.isRenderTargetCubeTexture ) ) {
-			
+
 			this.clear( false, true, false );
 
 			if ( backgroundBoxCamera === undefined ) {
@@ -2120,6 +2120,8 @@ function WebGLRenderer( parameters ) {
 
 		} else if ( fog.isFogGround ) {
 
+			uniforms.fogHeightEnabled.value = fog.heightEnabled;
+			uniforms.fogDistanceEnabled.value = fog.distanceEnabled;
 			uniforms.fogOpacity.value = fog.opacity;
 			uniforms.fogDistanceNear.value = fog.distanceNear;
 			uniforms.fogDistanceFar.value = fog.distanceFar;
