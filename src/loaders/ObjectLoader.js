@@ -675,7 +675,7 @@ Object.assign( ObjectLoader.prototype, {
 
 						} else if ( data.fog.type === 'FogGround' ) {
 
-							object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
+							object.fog = new FogGround( data.fog.color, data.fog.heightEnabled, data.fog.distanceEnabled, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
 
 						}
 
