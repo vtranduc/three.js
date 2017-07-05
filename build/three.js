@@ -15207,9 +15207,9 @@
 
 	var fog_pars_vertex = "#ifdef USE_FOG\n  varying float fogDepth;\n  varying float fogHeight;\n#endif\n";
 
-	var fog_fragment = "#ifdef USE_FOG\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\t#elif defined( FOG_GROUND )\n\t\tfloat distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );\n\t\tfloat heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );\n\t\tfloat fogFactor = fogOpacity * max( distanceFactor, heightFactor );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif\n";
+	var fog_fragment = "#ifdef USE_FOG\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\t#elif defined( FOG_GROUND )\n\t\tfloat distanceFactor = fogDistanceEnabled ? smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth ) : 0.0;\n\t\tfloat heightFactor = fogHeightEnabled ? 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight ) : 0.0;\n\t\tfloat fogFactor = fogOpacity * max( distanceFactor, heightFactor );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif\n";
 
-	var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float fogDepth;\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#elif defined( FOG_GROUND )\n\t\tvarying float fogHeight;\n\t\tuniform float fogOpacity;\n\t\tuniform float fogDistanceNear;\n\t\tuniform float fogDistanceFar;\n\t\tuniform float fogHeightNear;\n\t\tuniform float fogHeightFar;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif\n";
+	var fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying float fogDepth;\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#elif defined( FOG_GROUND )\n\t\tvarying float fogHeight;\n\t\tuniform bool fogHeightEnabled;\n\t\tuniform bool fogDistanceEnabled;\n\t\tuniform float fogOpacity;\n\t\tuniform float fogDistanceNear;\n\t\tuniform float fogDistanceFar;\n\t\tuniform float fogHeightNear;\n\t\tuniform float fogHeightFar;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif\n";
 
 	var gradientmap_pars_fragment = "#ifdef TOON\n\tuniform sampler2D gradientMap;\n\tvec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\t\tfloat dotNL = dot( normal, lightDirection );\n\t\tvec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\t\t#ifdef USE_GRADIENTMAP\n\t\t\treturn texture2D( gradientMap, coord ).rgb;\n\t\t#else\n\t\t\treturn ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\t\t#endif\n\t}\n#endif\n";
 
@@ -15594,6 +15594,8 @@
 			fogNear: { value: 1 },
 			fogFar: { value: 2000 },
 			fogColor: { value: new Color( 0xffffff ) },
+			fogHeightEnabled: { value: true },
+			fogDistanceEnabled: { value: true },
 			fogOpacity: { value: 1 },
 			fogDistanceNear: { value: 0 },
 			fogDistanceFar: { value: 100 },
@@ -23086,7 +23088,7 @@
 			}
 
 			if ( background && ( background.isCubeTexture || background.isRenderTargetCubeTexture ) ) {
-				
+
 				this.clear( false, true, false );
 
 				if ( backgroundBoxCamera === undefined ) {
@@ -24038,6 +24040,8 @@
 
 			} else if ( fog.isFogGround ) {
 
+				uniforms.fogHeightEnabled.value = fog.heightEnabled;
+				uniforms.fogDistanceEnabled.value = fog.distanceEnabled;
 				uniforms.fogOpacity.value = fog.opacity;
 				uniforms.fogDistanceNear.value = fog.distanceNear;
 				uniforms.fogDistanceFar.value = fog.distanceFar;
@@ -24857,11 +24861,13 @@
 	 * @author alteredq / http://alteredqualia.com/
 	 */
 
-	function FogGround ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+	function FogGround ( color, opacity, distanceEnabled, distanceNear, distanceFar, heightEnabled, heightNear, heightFar ) {
 
 		this.name = '';
 
 		this.color = new Color( color );
+		this.heightEnabled = ( heightEnabled !== undefined ) ? heightEnabled : true;
+		this.distanceEnabled = ( distanceEnabled !== undefined ) ? distanceEnabled : true;
 		this.opacity = ( opacity !== undefined ) ? opacity : 1;
 
 		this.distanceNear = ( distanceNear !== undefined ) ? distanceNear : 0;
@@ -24884,6 +24890,8 @@
 		return {
 			type: 'FogGround',
 			color: this.color.getHex(),
+			heightEnabled: this.heightEnabled,
+			distanceEnabled: this.distanceEnabled,
 			opacity: this.opacity,
 			distanceNear: this.distanceNear,
 			distanceFar: this.distanceFar,
@@ -34253,7 +34261,7 @@
 
 							} else if ( data.fog.type === 'FogGround' ) {
 
-								object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
+								object.fog = new FogGround( data.fog.color, data.fog.heightEnabled, data.fog.distanceEnabled, data.fog.opacity, data.fog.distanceNear, data.fog.distanceFar, data.fog.heightNear, data.fog.heightFar );
 
 							}
 

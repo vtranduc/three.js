@@ -10,6 +10,8 @@
 	#elif defined( FOG_GROUND )
 
 		varying float fogHeight;
+		uniform bool fogHeightEnabled;
+		uniform bool fogDistanceEnabled;
 		uniform float fogOpacity;
 		uniform float fogDistanceNear;
 		uniform float fogDistanceFar;

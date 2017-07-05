@@ -5,11 +5,13 @@ import { Color } from '../math/Color';
  * @author alteredq / http://alteredqualia.com/
  */
 
-function FogGround ( color, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+function FogGround ( color, opacity, distanceEnabled, distanceNear, distanceFar, heightEnabled, heightNear, heightFar ) {
 
 	this.name = '';
 
 	this.color = new Color( color );
+	this.heightEnabled = ( heightEnabled !== undefined ) ? heightEnabled : true
+	this.distanceEnabled = ( distanceEnabled !== undefined ) ? distanceEnabled : true
 	this.opacity = ( opacity !== undefined ) ? opacity : 1;
 
 	this.distanceNear = ( distanceNear !== undefined ) ? distanceNear : 0;
@@ -32,6 +34,8 @@ FogGround.prototype.toJSON = function ( meta ) {
 	return {
 		type: 'FogGround',
 		color: this.color.getHex(),
+		heightEnabled: this.heightEnabled,
+		distanceEnabled: this.distanceEnabled,
 		opacity: this.opacity,
 		distanceNear: this.distanceNear,
 		distanceFar: this.distanceFar,
