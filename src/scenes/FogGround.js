@@ -5,7 +5,7 @@ import { Color } from '../math/Color';
  * @author alteredq / http://alteredqualia.com/
  */
 
-function FogGround ( color, heightEnabled, distanceEnabled, opacity, distanceNear, distanceFar, heightNear, heightFar ) {
+function FogGround ( color, opacity, distanceEnabled, distanceNear, distanceFar, heightEnabled, heightNear, heightFar ) {
 
 	this.name = '';
 
