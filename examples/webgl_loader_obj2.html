@@ -68,7 +68,7 @@
 
 		</div>
 		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> - OBJLoader2 direct loader test
+			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - OBJLoader2 direct loader test
 			<div id="feedback"></div>
 		</div>
 
@@ -264,9 +264,10 @@
 
 					if ( object3d.material instanceof THREE.MultiMaterial ) {
 
-						for ( var matName in object3d.material.materials ) {
+						var materials = object3d.material.materials;
+						for ( var name in materials ) {
 
-							this.traversalFunction( object3d.material.materials[ matName ] );
+							if ( materials.hasOwnProperty( name ) )	this.traversalFunction( materials[ name ] );
 
 						}
 
