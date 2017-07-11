@@ -6,7 +6,6 @@ import { Euler } from '../math/Euler';
 import { Layers } from './Layers';
 import { Matrix3 } from '../math/Matrix3';
 import { _Math } from '../math/Math';
-import { AnimationClip } from '../animation/AnimationClip';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -102,9 +101,7 @@ function Object3D() {
 Object3D.DefaultUp = new Vector3( 0, 1, 0 );
 Object3D.DefaultMatrixAutoUpdate = true;
 
-Object3D.prototype = {
-
-	constructor: Object3D,
+Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 	isObject3D: true,
 
@@ -282,7 +279,15 @@ Object3D.prototype = {
 
 		return function lookAt( vector ) {
 
-			m1.lookAt( vector, this.position, this.up );
+			if ( this.isCamera ) {
+
+				m1.lookAt( this.position, vector, this.up );
+
+			} else {
+
+				m1.lookAt( vector, this.position, this.up );
+
+			}
 
 			this.quaternion.setFromRotationMatrix( m1 );
 
@@ -529,9 +534,9 @@ Object3D.prototype = {
 
 	updateMatrixWorld: function ( force ) {
 
-		if ( this.matrixAutoUpdate === true ) this.updateMatrix();
+		if ( this.matrixAutoUpdate ) this.updateMatrix();
 
-		if ( this.matrixWorldNeedsUpdate === true || force === true ) {
+		if ( this.matrixWorldNeedsUpdate || force ) {
 
 			if ( this.parent === null ) {
 
@@ -561,7 +566,7 @@ Object3D.prototype = {
 
 	},
 
-	toJSON: function ( meta, options ) {
+	toJSON: function ( meta ) {
 
 		// meta is '' when called from JSON.stringify
 		var isRootObject = ( meta === undefined || meta === '' );
@@ -575,16 +580,14 @@ Object3D.prototype = {
 
 			// initialize meta obj
 			meta = {
-				animations: {},
 				geometries: {},
 				materials: {},
 				textures: {},
-				images: {},
-				skeletons: {}
+				images: {}
 			};
 
 			output.metadata = {
-				version: 4.4,
+				version: 4.5,
 				type: 'Object',
 				generator: 'Object3D.toJSON'
 			};
@@ -608,27 +611,43 @@ Object3D.prototype = {
 
 		//
 
-		if ( this.geometry !== undefined ) {
+		function serialize( library, element ) {
 
-			if ( meta.geometries[ this.geometry.uuid ] === undefined ) {
+			if ( library[ element.uuid ] === undefined ) {
 
-				meta.geometries[ this.geometry.uuid ] = this.geometry.toJSON( options );
+				library[ element.uuid ] = element.toJSON( meta );
 
 			}
 
-			object.geometry = this.geometry.uuid;
+			return element.uuid;
+
+		}
+
+		if ( this.geometry !== undefined ) {
+
+			object.geometry = serialize( meta.geometries, this.geometry );
 
 		}
 
 		if ( this.material !== undefined ) {
 
-			if ( meta.materials[ this.material.uuid ] === undefined ) {
+			if ( Array.isArray( this.material ) ) {
 
-				meta.materials[ this.material.uuid ] = this.material.toJSON( meta );
+				var uuids = [];
+
+				for ( var i = 0, l = this.material.length; i < l; i ++ ) {
+
+					uuids.push( serialize( meta.materials, this.material[ i ] ) );
+
+				}
+
+				object.material = uuids;
+
+			} else {
+
+				object.material = serialize( meta.materials, this.material );
 
 			}
-
-			object.material = this.material.uuid;
 
 		}
 
@@ -640,7 +659,7 @@ Object3D.prototype = {
 
 			for ( var i = 0; i < this.children.length; i ++ ) {
 
-				object.children.push( this.children[ i ].toJSON( meta, options ).object );
+				object.children.push( this.children[ i ].toJSON( meta ).object );
 
 			}
 
@@ -648,32 +667,15 @@ Object3D.prototype = {
 
 		if ( isRootObject ) {
 
-			var animations = [];
-
-			if ( this.animations !== undefined ) {
-
-				for ( var i = 0; i < this.animations.length; i ++ ) {
-
-						var animation = AnimationClip.toJSON( this.animations[i] );
-
-						animations.push( animation );
-
-				}
-
-			}
-
 			var geometries = extractFromCache( meta.geometries );
 			var materials = extractFromCache( meta.materials );
 			var textures = extractFromCache( meta.textures );
 			var images = extractFromCache( meta.images );
-			var skeletons = extractFromCache( meta.skeletons );
 
 			if ( geometries.length > 0 ) output.geometries = geometries;
 			if ( materials.length > 0 ) output.materials = materials;
 			if ( textures.length > 0 ) output.textures = textures;
 			if ( images.length > 0 ) output.images = images;
-			if ( animations.length > 0 ) output.animations = animations;
-			if ( skeletons.length > 0 ) output.skeletons = skeletons;
 
 		}
 
@@ -750,8 +752,7 @@ Object3D.prototype = {
 
 	}
 
-};
+} );
 
-Object.assign( Object3D.prototype, EventDispatcher.prototype );
 
 export { Object3D };
