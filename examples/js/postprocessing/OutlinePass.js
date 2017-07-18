@@ -147,7 +147,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 		function gatherSelectedMeshesCallBack( object ) {
 
-			if ( object instanceof THREE.Mesh ) object.visible = bVisible;
+			if ( object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Sprite) object.visible = bVisible;
 
 		}
 
@@ -166,7 +166,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 		function gatherSelectedMeshesCallBack( object ) {
 
-			if ( object instanceof THREE.Mesh ) selectedMeshes.push( object );
+			if ( object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Sprite ) selectedMeshes.push( object );
 
 		}
 
@@ -179,7 +179,7 @@ THREE.OutlinePass.prototype = Object.assign( Object.create( THREE.Pass.prototype
 
 		function VisibilityChangeCallBack( object ) {
 
-			if ( object instanceof THREE.Mesh ) {
+			if ( object instanceof THREE.Mesh  || object instanceof THREE.LineSegments || object instanceof THREE.Sprite ) {
 
 				var bFound = false;
 
