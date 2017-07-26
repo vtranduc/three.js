@@ -19201,7 +19201,7 @@
 
 		}
 
-		function getTextureEncodingFromMap( map, gammaOverrideLinear ) {
+		function getTextureEncodingFromMap( map, gammaOverrideLinear, forceLinear ) {
 
 			var encoding;
 
@@ -19224,6 +19224,12 @@
 			if ( encoding === LinearEncoding && gammaOverrideLinear ) {
 
 				encoding = GammaEncoding;
+
+			}
+
+			if ( forceLinear ) {
+
+				encoding = LinearEncoding;
 
 			}
 
@@ -19261,7 +19267,7 @@
 
 				precision: precision,
 				supportsVertexTextures: capabilities.vertexTextures,
-				outputEncoding: getTextureEncodingFromMap( ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput ),
+				outputEncoding: getTextureEncodingFromMap( ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput, material.forceLinear ),
 				map: !! material.map,
 				mapEncoding: getTextureEncodingFromMap( material.map, renderer.gammaInput ),
 				envMap: !! material.envMap,
