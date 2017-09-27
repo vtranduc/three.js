@@ -13795,20 +13795,20 @@
 
 			data.data = { attributes: {} };
 
-			var index = this.index;
-
-			if ( index !== null ) {
-
-				var array = Array.prototype.slice.call( index.array );
-
-				data.data.index = {
-					type: index.array.constructor.name,
-					array: array
-				};
-
-			}
-
 			if ( options && options.serialiseAttributes ) {
+
+				var index = this.index;
+
+				if ( index !== null ) {
+
+					var array = Array.prototype.slice.call( index.array );
+
+					data.data.index = {
+						type: index.array.constructor.name,
+						array: array
+					};
+
+				}
 
 				var attributes = this.attributes;
 
