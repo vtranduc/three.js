@@ -52,7 +52,5 @@
     "rollup-watch": "^2.5.0",
     "uglify-js": "^2.6.0"
   },
-  "dependencies": {
-    "http-server": "^0.10.0"
-  }
+  "dependencies": {}
 }
