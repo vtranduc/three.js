@@ -99,12 +99,7 @@ IncidentLight directLight;
 	vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
 
 	#ifdef USE_LIGHTMAP
-
-		#ifdef USE_TRIPLANAR
-		vec3 lightMapIrradiance = (enableProjection ? GetTexelColorFromProjection(lightMap, vProjectionPosition) : texture2D( lightMap, vUv2 )).xyz * lightMapIntensity;
-		#else
 		vec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;
-		#endif
 		#ifndef PHYSICALLY_CORRECT_LIGHTS
 
 			lightMapIrradiance *= PI; // factor of PI should not be present; included here to prevent breakage
