@@ -41,9 +41,9 @@ function ascSort( a, b ) {
 
 }
 
-function intersectObject( object, raycaster, intersects, recursive ) {
+function intersectObject( object, raycaster, intersects, recursive, allowInvisible ) {
 
-	if ( object.visible === false ) return;
+	if ( object.visible === false && !allowInvisible ) return;
 
 	object.raycast( raycaster, intersects );
 
@@ -53,7 +53,7 @@ function intersectObject( object, raycaster, intersects, recursive ) {
 
 		for ( var i = 0, l = children.length; i < l; i ++ ) {
 
-			intersectObject( children[ i ], raycaster, intersects, true );
+			intersectObject( children[ i ], raycaster, intersects, true, allowInvisible );
 
 		}
 
@@ -93,11 +93,11 @@ Object.assign( Raycaster.prototype, {
 
 	},
 
-	intersectObject: function ( object, recursive ) {
+	intersectObject: function ( object, recursive, allowInvisible ) {
 
 		var intersects = [];
 
-		intersectObject( object, this, intersects, recursive );
+		intersectObject( object, this, intersects, recursive, allowInvisible );
 
 		intersects.sort( ascSort );
 
@@ -105,7 +105,7 @@ Object.assign( Raycaster.prototype, {
 
 	},
 
-	intersectObjects: function ( objects, recursive ) {
+	intersectObjects: function ( objects, recursive, allowInvisible ) {
 
 		var intersects = [];
 
@@ -118,7 +118,7 @@ Object.assign( Raycaster.prototype, {
 
 		for ( var i = 0, l = objects.length; i < l; i ++ ) {
 
-			intersectObject( objects[ i ], this, intersects, recursive );
+			intersectObject( objects[ i ], this, intersects, recursive, allowInvisible );
 
 		}
 
