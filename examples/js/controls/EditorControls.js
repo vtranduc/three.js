@@ -167,7 +167,7 @@ THREE.EditorControls = function ( object, domElement ) {
 
 		// if ( scope.enabled === false ) return;
 
-		scope.zoom( new THREE.Vector3( 0, 0, event.deltaY ) );
+		scope.zoom( new THREE.Vector3( 0, 0, Math.sign( event.deltaY ) * 50 ) );
 
 	}
 
