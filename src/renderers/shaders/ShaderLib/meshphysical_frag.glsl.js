@@ -1,5 +1,6 @@
 export default /* glsl */`
 #define STANDARD
+#define USE_TRIPLANAR
 
 #ifdef PHYSICAL
 	#define REFLECTIVITY

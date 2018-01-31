@@ -202,6 +202,13 @@ var UniformsLib = {
 		map: { value: null },
 		uvTransform: { value: new Matrix3() }
 
+	},
+
+	projection: {
+
+		enableProjection: { value: false },
+		projectionSharpness: { value: 2.0 }
+
 	}
 
 };

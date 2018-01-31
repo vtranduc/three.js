@@ -234,6 +234,8 @@ Object.assign( MaterialLoader.prototype, {
 
 		if ( json.clearcoatNormalMap !== undefined ) material.clearcoatNormalMap = getTexture( json.clearcoatNormalMap );
 		if ( json.clearcoatNormalScale !== undefined ) material.clearcoatNormalScale = new Vector2().fromArray( json.clearcoatNormalScale );
+		if ( json.enableProjection !== undefined ) material.enableProjection = json.enableProjection;
+		if ( json.projectionSharpness !== undefined) material.projectionSharpness = json.projectionSharpness;
 
 		return material;
 

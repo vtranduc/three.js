@@ -1,5 +1,6 @@
 export default /* glsl */`
 #define STANDARD
+#define USE_TRIPLANAR
 
 varying vec3 vViewPosition;
 
