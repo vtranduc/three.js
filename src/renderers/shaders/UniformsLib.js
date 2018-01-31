@@ -100,7 +100,12 @@ var UniformsLib = {
 		fogDensity: { value: 0.00025 },
 		fogNear: { value: 1 },
 		fogFar: { value: 2000 },
-		fogColor: { value: new Color( 0xffffff ) }
+		fogColor: { value: new Color( 0xffffff ) },
+		fogOpacity: { value: 1 },
+		fogDistanceNear: { value: 0 },
+		fogDistanceFar: { value: 100 },
+		fogHeightNear: { value: 0 },
+		fogHeightFar: { value: 100 }
 
 	},
 
