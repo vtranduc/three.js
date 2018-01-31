@@ -52,6 +52,9 @@ Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
 
+		if ( this.width !== undefined ) data.object.width = this.width;
+		if ( this.height !== undefined ) data.object.height = this.height;
+
 		return data;
 
 	}
