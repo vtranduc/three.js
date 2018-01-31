@@ -41,7 +41,7 @@ function WebGLBackground( renderer, state, geometries, premultipliedAlpha ) {
 
 		}
 
-		if ( background && background.isCubeTexture ) {
+		if ( background && ( background.isCubeTexture || background.isRenderTargetCubeTexture ) ) {
 
 			if ( boxMesh === undefined ) {
 
