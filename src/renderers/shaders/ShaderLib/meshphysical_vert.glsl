@@ -1,4 +1,5 @@
 #define PHYSICAL
+#define USE_TRIPLANAR
 
 varying vec3 vViewPosition;
 
@@ -19,6 +20,7 @@ varying vec3 vViewPosition;
 #include <shadowmap_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+#include <triplanarprojection_pars_vertex>
 
 void main() {
 
@@ -45,6 +47,7 @@ void main() {
 	#include <project_vertex>
 	#include <logdepthbuf_vertex>
 	#include <clipping_planes_vertex>
+	#include <triplanarprojection_vertex>
 
 	vViewPosition = - mvPosition.xyz;
 

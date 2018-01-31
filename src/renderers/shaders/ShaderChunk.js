@@ -83,6 +83,9 @@ import uv2_pars_fragment from './ShaderChunk/uv2_pars_fragment.glsl';
 import uv2_pars_vertex from './ShaderChunk/uv2_pars_vertex.glsl';
 import uv2_vertex from './ShaderChunk/uv2_vertex.glsl';
 import worldpos_vertex from './ShaderChunk/worldpos_vertex.glsl';
+import triplanarprojection_vertex from './ShaderChunk/triplanarprojection_vertex.glsl';
+import triplanarprojection_pars_vertex from './ShaderChunk/triplanarprojection_pars_vertex.glsl';
+import triplanarprojection_pars_fragment from './ShaderChunk/triplanarprojection_pars_fragment.glsl';
 
 import cube_frag from './ShaderLib/cube_frag.glsl';
 import cube_vert from './ShaderLib/cube_vert.glsl';
@@ -195,6 +198,9 @@ export var ShaderChunk = {
 	uv2_pars_vertex: uv2_pars_vertex,
 	uv2_vertex: uv2_vertex,
 	worldpos_vertex: worldpos_vertex,
+	triplanarprojection_vertex: triplanarprojection_vertex,
+	triplanarprojection_pars_vertex: triplanarprojection_pars_vertex,
+	triplanarprojection_pars_fragment: triplanarprojection_pars_fragment,
 
 	cube_frag: cube_frag,
 	cube_vert: cube_vert,

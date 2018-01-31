@@ -250,6 +250,13 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 		if ( this.wireframeLinecap !== 'round' ) data.wireframeLinecap = this.wireframeLinecap;
 		if ( this.wireframeLinejoin !== 'round' ) data.wireframeLinejoin = this.wireframeLinejoin;
 
+		if ( this.enableProjection !== undefined ) {
+
+			data.enableProjection = this.enableProjection;
+			data.projectionSharpness = this.projectionSharpness;
+
+ 		}
+
 		if ( this.morphTargets === true ) data.morphTargets = true;
 		if ( this.skinning === true ) data.skinning = true;
 

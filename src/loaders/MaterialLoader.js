@@ -161,6 +161,9 @@ Object.assign( MaterialLoader.prototype, {
 
 		if ( json.gradientMap !== undefined ) material.gradientMap = getTexture( json.gradientMap );
 
+		if ( json.enableProjection !== undefined ) material.enableProjection = json.enableProjection;
+		if ( json.projectionSharpness !== undefined) material.projectionSharpness = json.projectionSharpness;
+
 		return material;
 
 	}
