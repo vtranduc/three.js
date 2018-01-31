@@ -174,6 +174,9 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 		if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
 		if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
 		if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
+		if ( this.lightMapIntensity !== undefined ) data.lightMapIntensity = this.lightMapIntensity;
+		if ( this.aoMap && this.aoMap.isTexture ) data.aoMap = this.aoMap.toJSON( meta ).uuid;
+		if ( this.aoMapIntensity !== undefined ) data.aoMapIntensity = this.aoMapIntensity;
 		if ( this.bumpMap && this.bumpMap.isTexture ) {
 
 			data.bumpMap = this.bumpMap.toJSON( meta ).uuid;
@@ -202,6 +205,7 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 		if ( this.envMap && this.envMap.isTexture ) {
 
 			data.envMap = this.envMap.toJSON( meta ).uuid;
+			data.envMapIntensity = this.envMapIntensity;
 			data.reflectivity = this.reflectivity; // Scale behind envMap
 
 		}
