@@ -25,7 +25,9 @@ THREE.PMREMGenerator = ( function () {
 
 		this.sourceTexture = sourceTexture;
 		this.resolution = ( resolution !== undefined ) ? resolution : 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
-		this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 32;
+		this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 16;
+		this.roughnessCurve = [ 0.0, 0.01, 0.08, 0.14, 0.3, 2.0 ];
+		this.roughnessMultiplier = 2.0;
 
 		var monotonicEncoding = ( this.sourceTexture.encoding === THREE.LinearEncoding ) ||
 			( this.sourceTexture.encoding === THREE.GammaEncoding ) || ( this.sourceTexture.encoding === THREE.sRGBEncoding );
@@ -59,7 +61,11 @@ THREE.PMREMGenerator = ( function () {
 
 		}
 
-	};
+			shader.uniforms[ 'roughness' ].value = this.roughnessMultiplier * this.roughnessCurve[i];
+			shader.uniforms[ 'queryScale' ].value.x = ( i == 0 ) ? -1 : 1;
+			var size = this.cubeLods[ i ].width;
+			shader.uniforms[ 'mapSize' ].value = size;
+			this.renderToCubeMapTarget( renderer, this.cubeLods[ i ] );
 
 	PMREMGenerator.prototype = {
 
@@ -200,7 +206,7 @@ THREE.PMREMGenerator = ( function () {
 				}\n\
 				vec3 ImportanceSampleGGX( vec2 uv, mat3 vecSpace, float Roughness )\n\
 				{\n\
-					float a = Roughness * Roughness;\n\
+					float a = Roughness;\n\
 					float Phi = 2.0 * PI * uv.x;\n\
 					float CosTheta = sqrt( (1.0 - uv.y) / ( 1.0 + (a*a - 1.0) * uv.y ) );\n\
 					float SinTheta = sqrt( 1.0 - CosTheta * CosTheta );\n\
