@@ -931,36 +931,6 @@ BufferGeometry.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 		data.data = { attributes: {} };
 
-		var index = this.index;
-
-		if ( index !== null ) {
-
-			var array = Array.prototype.slice.call( index.array );
-
-			data.data.index = {
-				type: index.array.constructor.name,
-				array: array
-			};
-
-		}
-
-		var attributes = this.attributes;
-
-		for ( var key in attributes ) {
-
-			var attribute = attributes[ key ];
-
-			var array = Array.prototype.slice.call( attribute.array );
-
-			data.data.attributes[ key ] = {
-				itemSize: attribute.itemSize,
-				type: attribute.array.constructor.name,
-				array: array,
-				normalized: attribute.normalized
-			};
-
-		}
-
 		var groups = this.groups;
 
 		if ( groups.length > 0 ) {
