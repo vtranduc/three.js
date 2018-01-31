@@ -213,7 +213,7 @@ Texture.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
 
 				meta.images[ image.uuid ] = {
 					uuid: image.uuid,
-					url: url
+					url: ''
 				};
 
 			}
