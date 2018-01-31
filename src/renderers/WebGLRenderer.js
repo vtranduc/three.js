@@ -2247,6 +2247,12 @@ function WebGLRenderer( parameters ) {
 		uniforms.clearCoat.value = material.clearCoat;
 		uniforms.clearCoatRoughness.value = material.clearCoatRoughness;
 
+		if ( material.envMap && material.envIrradianceMap ) {
+
+			uniforms.envIrradianceMap.value = material.envIrradianceMap;
+
+		}
+
 		refreshUniformsStandard( uniforms, material );
 
 	}

@@ -233,6 +233,9 @@ ShaderLib.physical = {
 		{
 			clearCoat: { value: 0 },
 			clearCoatRoughness: { value: 0 }
+		},
+		{
+			envIrradianceMap: { value: null }
 		}
 	] ),
 
