@@ -6,8 +6,8 @@
 
 	#elif defined( FOG_GROUND )
 
-		float distanceFactor = smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth );
-		float heightFactor = 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight );
+		float distanceFactor = fogDistanceEnabled ? smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth ) : 0.0;
+		float heightFactor = fogHeightEnabled ? 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight ) : 0.0;
 		float fogFactor = fogOpacity * max( distanceFactor, heightFactor );
 
 	#else
