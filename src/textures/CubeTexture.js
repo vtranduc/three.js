@@ -66,7 +66,7 @@ CubeTexture.prototype.fromEquirectangular = function( renderer, source, size, de
 
 	scene.add( mesh );
 
-	camera.updateCubeMap( renderer, scene );
+	camera.update( renderer, scene );
 	camera.renderTarget.texture.isRenderTargetCubeTexture = true;
 
 	return camera.renderTarget.texture;

@@ -218,6 +218,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 	var envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
 	var envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
 	var envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+	var envMapCubeUVTextureSize = 1024.0
 
 	if ( parameters.envMap ) {
 
@@ -268,6 +269,8 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 				break;
 
 		}
+
+		if ( material.envMap.cubeUVTextureSize ) envMapCubeUVTextureSize = material.envMap.cubeUVTextureSize;
 
 	}
 
@@ -446,6 +449,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 			parameters.envMap ? '#define ' + envMapTypeDefine : '',
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
 			parameters.envMap ? '#define ' + envMapBlendingDefine : '',
+			parameters.envMap ? '#define cubeUV_textureSize (float(' + envMapCubeUVTextureSize + '))' : '',
 			parameters.envIrradianceMap ? '#define USE_IRRADIANCE_MAP' : '',
 			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',

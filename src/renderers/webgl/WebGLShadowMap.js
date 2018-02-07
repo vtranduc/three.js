@@ -295,12 +295,6 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 
 			}
 
-			if ( object.isSkinnedMesh && material.skinning === false ) {
-
-				console.warn( 'THREE.WebGLShadowMap: THREE.SkinnedMesh with material.skinning set to false:', object );
-
-			}
-
 			var useSkinning = object.isSkinnedMesh && material.skinning;
 
 			var variantIndex = 0;

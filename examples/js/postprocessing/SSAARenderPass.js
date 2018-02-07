@@ -16,6 +16,9 @@ THREE.SSAARenderPass = function ( scene, camera, clearColor, clearAlpha ) {
 
 	this.scene = scene;
 	this.camera = camera;
+	this.stereoCamera = null;
+	this.isLeftEye = false;
+	this.useCustomProjectionMatrix = false;
 
 	this.sampleLevel = 4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
 	this.unbiased = true;
@@ -96,8 +99,18 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 		for ( var i = 0; i < jitterOffsets.length; i ++ ) {
 
 			var jitterOffset = jitterOffsets[ i ];
+			var jitterOffsetX = jitterOffset[ 0 ] * 0.0625
+			var jitterOffsetY = jitterOffset[ 1 ] * 0.0625
 
-			if ( this.camera.setViewOffset ) {
+			if ( this.stereoCamera ) {
+
+				this.stereoCamera.update( this.camera, jitterOffsetX / width, jitterOffsetY / height );
+
+			} else if ( this.useCustomProjectionMatrix ) {
+
+				this.setCameraJitterOffset( jitterOffsetX, jitterOffsetY, width, height );
+
+			} else if ( this.camera.setViewOffset ) {
 
 				this.camera.setViewOffset( width, height,
 					jitterOffset[ 0 ] * 0.0625, jitterOffset[ 1 ] * 0.0625,   // 0.0625 = 1 / 16
@@ -119,8 +132,9 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 			}
 
 			this.copyUniforms[ "opacity" ].value = sampleWeight;
+			var renderCam = this.stereoCamera ? ( this.isLeftEye ? this.stereoCamera.cameraL : this.stereoCamera.cameraR ) : this.camera
 			renderer.setClearColor( this.clearColor, this.clearAlpha );
-			renderer.render( this.scene, this.camera, this.sampleRenderTarget, true );
+			renderer.render( this.scene, renderCam, this.sampleRenderTarget, true );
 
 			if ( i === 0 ) {
 
@@ -132,11 +146,34 @@ THREE.SSAARenderPass.prototype = Object.assign( Object.create( THREE.Pass.protot
 
 		}
 
-		if ( this.camera.clearViewOffset ) this.camera.clearViewOffset();
-
 		renderer.autoClear = autoClear;
 		renderer.setClearColor( oldClearColor, oldClearAlpha );
 
+	},
+
+	setCameraJitterOffset: function( offsetX, offsetY, width, height ) {
+
+		var A = this.camera.projectionMatrix.elements[5]
+		var B = this.camera.projectionMatrix.elements[9]
+		var C = this.camera.projectionMatrix.elements[0]
+		var D = this.camera.projectionMatrix.elements[8]
+
+		var ySigma = 2.0 * this.camera.near / A
+		var ymin = (B - 1.0) * ySigma / 2.0
+		var ymax = ymin + ySigma
+		var yHeight = 2 * ymax
+		ymax -= offsetY / height * yHeight
+
+		this.camera.projectionMatrix.elements[5] = 2 * this.camera.near / (ymax - ymin)
+		this.camera.projectionMatrix.elements[9] = (ymax + ymin) / (ymax - ymin)
+
+		var xSigma = 2.0 * this.camera.near / C
+		var xmin = (D - 1.0) * xSigma / 2.0
+		var xmax = xmin + xSigma
+		xmin += offsetX / width * (xmax - xmin)
+
+		this.camera.projectionMatrix.elements[0] = 2 * this.camera.near / (xmax - xmin)
+		this.camera.projectionMatrix.elements[8] = (xmax + xmin ) / ( xmax - xmin)
 	}
 
 } );

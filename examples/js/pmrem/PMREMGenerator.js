@@ -16,7 +16,7 @@ THREE.PMREMGenerator = function( sourceTexture, samplesPerLevel, resolution ) {
 	this.sourceTexture = sourceTexture;
 	this.resolution = ( resolution !== undefined ) ? resolution : 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
 	this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 16;
-	this.roughnessCurve = [ 0.0, 0.01, 0.08, 0.14, 0.3, 2.0 ];
+	this.roughnessCurve = [ 0.0, 0.01, 0.08, 0.32, 0.64, 2.0 ];
 	this.roughnessMultiplier = 2.0;
 
 	var monotonicEncoding = ( sourceTexture.encoding === THREE.LinearEncoding ) ||

@@ -33,11 +33,16 @@ Object.assign( StereoCamera.prototype, {
 		var eyeRight = new Matrix4();
 		var eyeLeft = new Matrix4();
 
-		return function update( camera ) {
+		return function update( camera, offsetX, offsetY ) {
+
+			offsetX = offsetX || 0;
+			offsetY = offsetY || 0;
 
 			var needsUpdate = instance !== this || focus !== camera.focus || fov !== camera.fov ||
 												aspect !== camera.aspect * this.aspect || near !== camera.near ||
-												far !== camera.far || zoom !== camera.zoom || eyeSep !== this.eyeSep;
+												far !== camera.far || zoom !== camera.zoom || eyeSep !== this.eyeSep ||
+												camera.projectionMatrix !== this.baseProjectionMatrix ||
+												camera.matrixWorld !== this.baseMatrixWorld;;
 
 			if ( needsUpdate ) {
 
@@ -57,6 +62,10 @@ Object.assign( StereoCamera.prototype, {
 				var eyeSepOnProjection = eyeSep * near / focus;
 				var ymax = ( near * Math.tan( _Math.DEG2RAD * fov * 0.5 ) ) / zoom;
 				var xmin, xmax;
+				var height = 2 * ymax;
+				var xmin, xmax, ymin;
+				ymax -= yOffset * height;
+				ymin = -0.5 * height
 
 				// translate xOffset
 
@@ -67,6 +76,10 @@ Object.assign( StereoCamera.prototype, {
 
 				xmin = - ymax * aspect + eyeSepOnProjection;
 				xmax = ymax * aspect + eyeSepOnProjection;
+				xmin = offsetX * ( xmax - xmin );
+
+				projectionMatrix.elements[ 5 ] = 2 * near / ( ymax - ymin );
+				projectionMatrix.elements[ 9 ] = ( ymax + ymin ) / ( ymax - ymin );
 
 				projectionMatrix.elements[ 0 ] = 2 * near / ( xmax - xmin );
 				projectionMatrix.elements[ 8 ] = ( xmax + xmin ) / ( xmax - xmin );
@@ -75,8 +88,12 @@ Object.assign( StereoCamera.prototype, {
 
 				// for right eye
 
-				xmin = - ymax * aspect - eyeSepOnProjection;
+				xmin = - ymax * aspect - eyeSepOnProjection + xOffset * ( xmax - xmin );
 				xmax = ymax * aspect - eyeSepOnProjection;
+				xmin += xOffset * ( xmax - xmin );
+
+				projectionMatrix.elements[ 5 ] = 2 * near / ( ymax - ymin );
+				projectionMatrix.elements[ 9 ] = ( ymax + ymin ) / ( ymax - ymin );
 
 				projectionMatrix.elements[ 0 ] = 2 * near / ( xmax - xmin );
 				projectionMatrix.elements[ 8 ] = ( xmax + xmin ) / ( xmax - xmin );
