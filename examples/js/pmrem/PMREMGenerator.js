@@ -26,7 +26,7 @@ THREE.PMREMGenerator = ( function () {
 		this.sourceTexture = sourceTexture;
 		this.resolution = ( resolution !== undefined ) ? resolution : 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
 		this.samplesPerLevel = ( samplesPerLevel !== undefined ) ? samplesPerLevel : 16;
-		this.roughnessCurve = [ 0.0, 0.01, 0.08, 0.14, 0.3, 2.0 ];
+		this.roughnessCurve = [ 0.0, 0.01, 0.08, 0.32, 0.64, 2.0 ];
 		this.roughnessMultiplier = 2.0;
 
 		var monotonicEncoding = ( this.sourceTexture.encoding === THREE.LinearEncoding ) ||
@@ -61,11 +61,6 @@ THREE.PMREMGenerator = ( function () {
 
 		}
 
-			shader.uniforms[ 'roughness' ].value = this.roughnessMultiplier * this.roughnessCurve[i];
-			shader.uniforms[ 'queryScale' ].value.x = ( i == 0 ) ? -1 : 1;
-			var size = this.cubeLods[ i ].width;
-			shader.uniforms[ 'mapSize' ].value = size;
-			this.renderToCubeMapTarget( renderer, this.cubeLods[ i ] );
 
 	PMREMGenerator.prototype = {
 
@@ -110,7 +105,7 @@ THREE.PMREMGenerator = ( function () {
 			for ( var i = 0; i < this.numLods; i ++ ) {
 
 				var r = i / ( this.numLods - 1 );
-				shader.uniforms[ 'roughness' ].value = r * 0.9; // see comment above, pragmatic choice
+				shader.uniforms[ 'roughness' ].value = this.roughnessMultiplier * this.roughnessCurve[i];
 				// Only apply the tFlip for the first LOD
 				shader.uniforms[ 'tFlip' ].value = ( i == 0 ) ? tFlip : 1;
 				var size = this.cubeLods[ i ].width;

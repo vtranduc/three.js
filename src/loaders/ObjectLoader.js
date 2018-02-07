@@ -33,6 +33,7 @@ import { SkinnedMesh } from '../objects/SkinnedMesh.js';
 import { Shape } from '../extras/core/Shape.js';
 import { Fog } from '../scenes/Fog.js';
 import { FogExp2 } from '../scenes/FogExp2.js';
+import { FogGround } from '../scenes/FogGround.js';
 import { HemisphereLight } from '../lights/HemisphereLight.js';
 import { SpotLight } from '../lights/SpotLight.js';
 import { PointLight } from '../lights/PointLight.js';
@@ -839,25 +840,12 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 				break;
 
 			case 'SkinnedMesh':
-
-				console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh yet.' );
-
 			case 'Mesh':
 
 				var geometry = getGeometry( data.geometry );
 				var material = getMaterial( data.material );
 
-				if ( geometry.bones && geometry.bones.length > 0 ) {
-
-					object = new SkinnedMesh( geometry, material );
-
-				} else {
-
-					object = new Mesh( geometry, material );
-
-				}
-
-				if ( data.drawMode !== undefined ) object.setDrawMode( data.drawMode );
+				object = new Mesh( geometry, material );
 
 				break;
 

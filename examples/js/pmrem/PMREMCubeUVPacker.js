@@ -45,6 +45,7 @@ THREE.PMREMCubeUVPacker = ( function () {
 		this.CubeUVRenderTarget = new THREE.WebGLRenderTarget( size, size, params );
 		this.CubeUVRenderTarget.texture.name = "PMREMCubeUVPacker.cubeUv";
 		this.CubeUVRenderTarget.texture.mapping = THREE.CubeUVReflectionMapping;
+		this.CubeUVRenderTarget.texture.cubeUVTextureSize = cubeTextureLods[ 0 ].width * 4;
 
 		this.objects = [];
 
