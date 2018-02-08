@@ -61,10 +61,9 @@ Object.assign( StereoCamera.prototype, {
 				eyeSep = this.eyeSep / 2;
 				var eyeSepOnProjection = eyeSep * near / focus;
 				var ymax = ( near * Math.tan( _Math.DEG2RAD * fov * 0.5 ) ) / zoom;
-				var xmin, xmax;
-				var height = 2 * ymax;
 				var xmin, xmax, ymin;
-				ymax -= yOffset * height;
+				var height = 2 * ymax;
+				ymax -= offsetY * height;
 				ymin = -0.5 * height
 
 				// translate xOffset
@@ -76,7 +75,7 @@ Object.assign( StereoCamera.prototype, {
 
 				xmin = - ymax * aspect + eyeSepOnProjection;
 				xmax = ymax * aspect + eyeSepOnProjection;
-				xmin = offsetX * ( xmax - xmin );
+				xmin += offsetX * ( xmax - xmin );
 
 				projectionMatrix.elements[ 5 ] = 2 * near / ( ymax - ymin );
 				projectionMatrix.elements[ 9 ] = ( ymax + ymin ) / ( ymax - ymin );
@@ -88,9 +87,9 @@ Object.assign( StereoCamera.prototype, {
 
 				// for right eye
 
-				xmin = - ymax * aspect - eyeSepOnProjection + xOffset * ( xmax - xmin );
+				xmin = - ymax * aspect - eyeSepOnProjection + offsetX * ( xmax - xmin );
 				xmax = ymax * aspect - eyeSepOnProjection;
-				xmin += xOffset * ( xmax - xmin );
+				xmin += offsetX * ( xmax - xmin );
 
 				projectionMatrix.elements[ 5 ] = 2 * near / ( ymax - ymin );
 				projectionMatrix.elements[ 9 ] = ( ymax + ymin ) / ( ymax - ymin );
