@@ -2303,7 +2303,7 @@ function WebGLRenderer( parameters ) {
 
 		}
 
-		if ( material.envMap && material.envIrradianceMap ) {
+		if ( material.envIrradianceMap ) {
 
 			uniforms.envIrradianceMap.value = material.envIrradianceMap;
 
