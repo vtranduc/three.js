@@ -7502,6 +7502,8 @@
 
 			function traverse( node ) {
 
+				if ( node.userData.excludeFromBox ) return;
+
 				var geometry = node.geometry;
 
 				if ( geometry !== undefined ) {
