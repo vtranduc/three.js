@@ -247,6 +247,8 @@ Object.assign( Box3.prototype, {
 
 		object.updateWorldMatrix( false, false );
 
+		if ( object.userData.excludeFromBox ) return;
+
 		var geometry = object.geometry;
 
 		if ( geometry !== undefined ) {
