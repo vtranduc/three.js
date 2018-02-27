@@ -37357,6 +37357,9 @@
 				case 'SkinnedMesh':
 				case 'Mesh':
 
+					var geometry = getGeometry( data.geometry );
+					var material = getMaterial( data.material );
+
 					object = new Mesh( geometry, material );
 
 					break;
