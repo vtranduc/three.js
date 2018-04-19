@@ -91,6 +91,7 @@ var ShaderLib = {
 			UniformsLib.metalnessmap,
 			UniformsLib.fog,
 			UniformsLib.lights,
+			UniformsLib.projection,
 			{
 				emissive: { value: new Color( 0x000000 ) },
 				roughness: { value: 0.5 },
@@ -232,6 +233,9 @@ ShaderLib.physical = {
 		{
 			clearCoat: { value: 0 },
 			clearCoatRoughness: { value: 0 }
+		},
+		{
+			envIrradianceMap: { value: null }
 		}
 	] ),
 

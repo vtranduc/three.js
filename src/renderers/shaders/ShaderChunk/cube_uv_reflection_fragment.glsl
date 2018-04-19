@@ -1,7 +1,5 @@
 #ifdef ENVMAP_TYPE_CUBE_UV
 
-#define cubeUV_textureSize (1024.0)
-
 int getFaceFromDirection(vec3 direction) {
 	vec3 absDirection = abs(direction);
 	int face = -1;
@@ -20,7 +18,6 @@ int getFaceFromDirection(vec3 direction) {
 	return face;
 }
 #define cubeUV_maxLods1  (log2(cubeUV_textureSize*0.25) - 1.0)
-#define cubeUV_rangeClamp (exp2((6.0 - 1.0) * 2.0))
 
 vec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {
 	float scale = exp2(cubeUV_maxLods1 - roughnessLevel);
@@ -30,7 +27,7 @@ vec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {
 	vec3 dy = dFdy( vec * scale * dyRoughness );
 	float d = max( dot( dx, dx ), dot( dy, dy ) );
 	// Clamp the value to the max mip level counts. hard coded to 6 mips
-	d = clamp(d, 1.0, cubeUV_rangeClamp);
+	d = clamp(d, 1.0, cubeUV_textureSize);
 	float mipLevel = 0.5 * log2(d);
 	return vec2(floor(mipLevel), fract(mipLevel));
 }
@@ -108,10 +105,10 @@ vec4 textureCubeUV(vec3 reflectedDirection, float roughness ) {
 	float s = mipInfo.y;
 	float level0 = mipInfo.x;
 	float level1 = level0 + 1.0;
-	level1 = level1 > 5.0 ? 5.0 : level1;
+	level1 = level1 > cubeUV_maxLods3 ? cubeUV_maxLods3 : level1;
 
 	// round to nearest mipmap if we are not interpolating.
-	level0 += min( floor( s + 0.5 ), 5.0 );
+	level0 += min( floor( s + 0.5 ), cubeUV_maxLods3 );
 
 	// Tri linear interpolation.
 	vec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);

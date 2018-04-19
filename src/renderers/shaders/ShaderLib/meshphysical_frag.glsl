@@ -1,4 +1,5 @@
 #define PHYSICAL
+#define USE_TRIPLANAR
 
 uniform vec3 diffuse;
 uniform vec3 emissive;
@@ -25,6 +26,7 @@ varying vec3 vViewPosition;
 #include <color_pars_fragment>
 #include <uv_pars_fragment>
 #include <uv2_pars_fragment>
+#include <triplanarprojection_pars_fragment>
 #include <map_pars_fragment>
 #include <alphamap_pars_fragment>
 #include <aomap_pars_fragment>

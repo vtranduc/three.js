@@ -9,6 +9,7 @@ export { UniformsLib } from './renderers/shaders/UniformsLib.js';
 export { UniformsUtils } from './renderers/shaders/UniformsUtils.js';
 export { ShaderChunk } from './renderers/shaders/ShaderChunk.js';
 export { FogExp2 } from './scenes/FogExp2.js';
+export { FogGround } from './scenes/FogGround.js';
 export { Fog } from './scenes/Fog.js';
 export { Scene } from './scenes/Scene.js';
 export { Sprite } from './objects/Sprite.js';

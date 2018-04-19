@@ -2111,6 +2111,16 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.fogDensity.value = fog.density;
 
+		} else if ( fog.isFogGround ) {
+
+			uniforms.fogOpacity.value = fog.opacity;
+			uniforms.fogHeightEnabled.value = fog.heightEnabled;
+			uniforms.fogDistanceEnabled.value = fog.distanceEnabled;
+			uniforms.fogDistanceNear.value = fog.distanceNear;
+			uniforms.fogDistanceFar.value = fog.distanceFar;
+			uniforms.fogHeightNear.value = fog.heightNear;
+			uniforms.fogHeightFar.value = fog.heightFar;
+
 		}
 
 	}
@@ -2224,12 +2234,25 @@ function WebGLRenderer( parameters ) {
 
 		}
 
+		if ( material.enableProjection ) {
+
+			uniforms.enableProjection.value = material.enableProjection;
+			uniforms.projectionSharpness.value = material.projectionSharpness;
+
+		}
+
 	}
 
 	function refreshUniformsPhysical( uniforms, material ) {
 
 		uniforms.clearCoat.value = material.clearCoat;
 		uniforms.clearCoatRoughness.value = material.clearCoatRoughness;
+
+		if ( material.envIrradianceMap ) {
+
+			uniforms.envIrradianceMap.value = material.envIrradianceMap;
+
+		}
 
 		refreshUniformsStandard( uniforms, material );
 

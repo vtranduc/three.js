@@ -1139,7 +1139,7 @@ THREE.GLTFLoader = ( function () {
 	 */
 	function createDefaultMaterial() {
 
-		return new THREE.MeshStandardMaterial( {
+		return new THREE.MeshPhysicalMaterial( {
 			color: 0xFFFFFF,
 			emissive: 0x000000,
 			metalness: 1,
@@ -1984,7 +1984,7 @@ THREE.GLTFLoader = ( function () {
 			// Specification:
 			// https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#metallic-roughness-material
 
-			materialType = THREE.MeshStandardMaterial;
+			materialType = THREE.MeshPhysicalMaterial;
 
 			var metallicRoughness = materialDef.pbrMetallicRoughness || {};
 

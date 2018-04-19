@@ -226,6 +226,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 	var envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
 	var envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
 	var envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+	var envMapCubeUVTextureSize = 1024.0
 
 	if ( parameters.envMap ) {
 
@@ -276,6 +277,8 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 				break;
 
 		}
+
+		if ( material.envMap.cubeUVTextureSize ) envMapCubeUVTextureSize = material.envMap.cubeUVTextureSize;
 
 	}
 
@@ -340,6 +343,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 			'#define MAX_BONES ' + parameters.maxBones,
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.envMap ? '#define USE_ENVMAP' : '',
@@ -444,12 +448,15 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.envMap ? '#define USE_ENVMAP' : '',
 			parameters.envMap ? '#define ' + envMapTypeDefine : '',
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
 			parameters.envMap ? '#define ' + envMapBlendingDefine : '',
+			parameters.envMap ? '#define cubeUV_textureSize (float(' + envMapCubeUVTextureSize + '))' : '',
+			parameters.envIrradianceMap ? '#define USE_IRRADIANCE_MAP' : '',
 			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
@@ -489,9 +496,10 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 			parameters.dithering ? '#define DITHERING' : '',
 
-			( parameters.outputEncoding || parameters.mapEncoding || parameters.envMapEncoding || parameters.emissiveMapEncoding ) ? ShaderChunk[ 'encodings_pars_fragment' ] : '', // this code is required here because it is used by the various encoding/decoding function defined below
+			( parameters.outputEncoding || parameters.mapEncoding || parameters.envMapEncoding || parameters.emissiveMapEncoding || params.envIrradianceMapEncoding ) ? ShaderChunk[ 'encodings_pars_fragment' ] : '', // this code is required here because it is used by the various encoding/decoding function defined below
 			parameters.mapEncoding ? getTexelDecodingFunction( 'mapTexelToLinear', parameters.mapEncoding ) : '',
 			parameters.envMapEncoding ? getTexelDecodingFunction( 'envMapTexelToLinear', parameters.envMapEncoding ) : '',
+			parameters.envIrradianceMapEncoding ? getTexelDecodingFunction( 'envIrradianceMapTexelToLinear', parameters.envIrradianceMapEncoding ) : '',
 			parameters.emissiveMapEncoding ? getTexelDecodingFunction( 'emissiveMapTexelToLinear', parameters.emissiveMapEncoding ) : '',
 			parameters.outputEncoding ? getTexelEncodingFunction( 'linearToOutputTexel', parameters.outputEncoding ) : '',
 

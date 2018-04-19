@@ -39,6 +39,7 @@ THREE.PMREMCubeUVPacker = function ( cubeTextureLods ) {
 	this.CubeUVRenderTarget = new THREE.WebGLRenderTarget( size, size, params );
 	this.CubeUVRenderTarget.texture.name = "PMREMCubeUVPacker.cubeUv";
 	this.CubeUVRenderTarget.texture.mapping = THREE.CubeUVReflectionMapping;
+	this.CubeUVRenderTarget.texture.cubeUVTextureSize = cubeTextureLods[ 0 ].width * 4;
 	this.camera = new THREE.OrthographicCamera( - size * 0.5, size * 0.5, - size * 0.5, size * 0.5, 0, 1 ); // top and bottom are swapped for some reason?
 
 	this.scene = new THREE.Scene();
