@@ -414,11 +414,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function dollyIn( dollyScale ) {
 
-		if ( scope.object.isPerspectiveCamera ) {
 
-			scale /= dollyScale;
-
-		} else if ( scope.object.isOrthographicCamera ) {
+		if ( scope.object.isOrthographicCamera ) {
 
 			scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom * dollyScale ) );
 			scope.object.updateProjectionMatrix();
@@ -426,8 +423,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		} else {
 
-			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
-			scope.enableZoom = false;
+			scale /= dollyScale;
 
 		}
 
@@ -435,11 +431,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function dollyOut( dollyScale ) {
 
-		if ( scope.object.isPerspectiveCamera ) {
 
-			scale *= dollyScale;
-
-		} else if ( scope.object.isOrthographicCamera ) {
+	 	if ( scope.object.isOrthographicCamera ) {
 
 			scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom / dollyScale ) );
 			scope.object.updateProjectionMatrix();
@@ -447,8 +440,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		} else {
 
-			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
-			scope.enableZoom = false;
+			scale *= dollyScale;
 
 		}
 
