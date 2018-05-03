@@ -93,11 +93,11 @@ Object.assign( Raycaster.prototype, {
 
 	},
 
-	intersectObject: function ( object, recursive, allowInvisible ) {
+	intersectObject: function ( object, recursive, allowInvisible, optionalTarget ) {
 
-		var intersects = [];
+		var intersects = optionalTarget || [];
 
-		intersectObject( object, this, intersects, recursive, allowInvisible );
+		intersectObject( object, this, intersects, recursive, allowInvisible, optionalTarget );
 
 		intersects.sort( ascSort );
 
@@ -105,9 +105,9 @@ Object.assign( Raycaster.prototype, {
 
 	},
 
-	intersectObjects: function ( objects, recursive, allowInvisible ) {
+	intersectObjects: function ( objects, recursive, allowInvisible, optionalTarget ) {
 
-		var intersects = [];
+		var intersects = optionalTarget || [];
 
 		if ( Array.isArray( objects ) === false ) {
 
