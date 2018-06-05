@@ -23662,9 +23662,10 @@
 
 			}
 
+			uniforms.enableProjection.value = material.enableProjection;
+
 			if ( material.enableProjection ) {
 
-				uniforms.enableProjection.value = material.enableProjection;
 				uniforms.projectionSharpness.value = material.projectionSharpness;
 
 			}
