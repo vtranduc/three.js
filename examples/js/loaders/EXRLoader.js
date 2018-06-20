@@ -389,7 +389,7 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 
 			var s = outBuffer[ outBufferOffset.value - 1 ];
 
-			while ( cs -- > 0 ) {
+			while ( cs-- > 0 ) {
 
 				outBuffer[ outBufferOffset.value ++ ] = s;
 
