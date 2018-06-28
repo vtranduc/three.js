@@ -24254,9 +24254,9 @@
 
 		},
 
-		copy: function ( source ) {
+		copy: function ( source, recursive ) {
 
-			Object3D.prototype.copy.call( this, source );
+			Object3D.prototype.copy.call( this, source, recursive );
 
 			if ( source.center !== undefined ) this.center.copy( source.center );
 
@@ -33556,9 +33556,9 @@
 
 		isLight: true,
 
-		copy: function ( source ) {
+		copy: function ( source, recursive ) {
 
-			Object3D.prototype.copy.call( this, source );
+			Object3D.prototype.copy.call( this, source, recursive );
 
 			this.color.copy( source.color );
 			this.intensity = source.intensity;
