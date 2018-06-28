@@ -65,9 +65,9 @@ Sprite.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 	},
 
-	copy: function ( source ) {
+	copy: function ( source, recursive ) {
 
-		Object3D.prototype.copy.call( this, source );
+		Object3D.prototype.copy.call( this, source, recursive );
 
 		if ( source.center !== undefined ) this.center.copy( source.center );
 
