@@ -14381,6 +14381,7 @@
 		}() ),
 
 		clone: function (recursive) {
+
 			return new this.constructor( this.geometry, this.material ).copy( this, recursive );
 
 		}

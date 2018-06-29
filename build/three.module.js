@@ -14375,6 +14375,7 @@ Mesh.prototype = Object.assign( Object.create( Object3D.prototype ), {
 	}() ),
 
 	clone: function (recursive) {
+
 		return new this.constructor( this.geometry, this.material ).copy( this, recursive );
 
 	}
