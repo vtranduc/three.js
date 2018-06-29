@@ -14380,9 +14380,8 @@
 
 		}() ),
 
-		clone: function () {
-
-			return new this.constructor( this.geometry, this.material ).copy( this );
+		clone: function (recursive) {
+			return new this.constructor( this.geometry, this.material ).copy( this, recursive );
 
 		}
 
