@@ -818,12 +818,20 @@ Object.assign( ObjectLoader.prototype, {
 		if ( data.receiveShadow !== undefined ) object.receiveShadow = data.receiveShadow;
 
 		if ( data.shadow ) {
-
 			if ( data.shadow.bias !== undefined ) object.shadow.bias = data.shadow.bias;
 			if ( data.shadow.radius !== undefined ) object.shadow.radius = data.shadow.radius;
 			if ( data.shadow.mapSize !== undefined ) object.shadow.mapSize.fromArray( data.shadow.mapSize );
 			if ( data.shadow.camera !== undefined ) object.shadow.camera = this.parseObject( data.shadow.camera );
 
+		}
+
+		if ( data.shadowCascade ) {
+			data.shadowCascade.forEach( _.bind( function ( element, i ) {
+				if ( element.bias !== undefined ) object.shadowCascade[i].bias = element.bias;
+				if ( element.radius !== undefined ) object.shadowCascade[i].radius = element.radius;
+				if ( element.mapSize !== undefined ) object.shadowCascade[i].mapSize.fromArray( element.mapSize );
+				if ( element.camera !== undefined ) object.shadowCascade[i].camera = this.parseObject( element.camera );
+			}, this));
 		}
 
 		if ( data.visible !== undefined ) object.visible = data.visible;

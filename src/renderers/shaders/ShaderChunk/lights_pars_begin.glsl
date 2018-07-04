@@ -15,6 +15,8 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 }
 
 #if NUM_DIR_LIGHTS > 0
+	uniform float zNear;
+	uniform float zFar;
 
 	struct DirectionalLight {
 		vec3 direction;
