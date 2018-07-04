@@ -3,8 +3,8 @@ export default /* glsl */`
 
 	#if NUM_DIR_LIGHT_SHADOWS > 0
 
-		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];
-		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];
+		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS * 3 ];
+		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS * 3 ];
 
 	#endif
 

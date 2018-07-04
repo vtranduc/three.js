@@ -50,7 +50,10 @@ import { Color } from '../math/Color.js';
  *
  *  skinning: <bool>,
  *  morphTargets: <bool>,
- *  morphNormals: <bool>
+ *  morphNormals: <bool>,
+ *
+ *  zNear: <float>,
+ *  zFar: <float>,
  * }
  */
 
@@ -104,6 +107,9 @@ function MeshPhongMaterial( parameters ) {
 	this.skinning = false;
 	this.morphTargets = false;
 	this.morphNormals = false;
+
+	this.zNear = 0.1;
+	this.zFar = 10000;
 
 	this.setValues( parameters );
 
@@ -162,6 +168,9 @@ MeshPhongMaterial.prototype.copy = function ( source ) {
 	this.skinning = source.skinning;
 	this.morphTargets = source.morphTargets;
 	this.morphNormals = source.morphNormals;
+
+	this.zNear = source.zNear;
+	this.zFar = source.zFar;
 
 	return this;
 

@@ -1901,6 +1901,13 @@ function WebGLRenderer( parameters ) {
 				m_uniforms.color.value.copy( material.color );
 				m_uniforms.opacity.value = material.opacity;
 
+				if ( material.zNear ) {
+					uniforms.zNear.value = material.zNear;
+				}
+				if ( material.zFar ) {
+					uniforms.zFar.value = material.zFar;
+				}
+
 			}
 
 			// RectAreaLight Texture
@@ -2166,6 +2173,13 @@ function WebGLRenderer( parameters ) {
 
 		}
 
+		if ( material.zNear ) {
+			uniforms.zNear.value = material.zNear;
+		}
+		if ( material.zFar ) {
+			uniforms.zFar.value = material.zFar;
+		}
+
 	}
 
 	function refreshUniformsPhong( uniforms, material ) {
@@ -2201,6 +2215,13 @@ function WebGLRenderer( parameters ) {
 			uniforms.displacementScale.value = material.displacementScale;
 			uniforms.displacementBias.value = material.displacementBias;
 
+		}
+
+		if ( material.zNear ) {
+			uniforms.zNear.value = material.zNear;
+		}
+		if ( material.zFar ) {
+			uniforms.zFar.value = material.zFar;
 		}
 
 	}
@@ -2277,6 +2298,13 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.projectionSharpness.value = material.projectionSharpness;
 
+		}
+
+		if ( material.zNear ) {
+			uniforms.zNear.value = material.zNear;
+		}
+		if ( material.zFar ) {
+			uniforms.zFar.value = material.zFar;
 		}
 
 	}

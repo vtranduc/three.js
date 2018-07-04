@@ -4,7 +4,7 @@ export default /* glsl */`
 	#if NUM_DIR_LIGHT_SHADOWS > 0
 
 	#pragma unroll_loop
-	for ( int i = 0; i < NUM_DIR_LIGHT_SHADOWS; i ++ ) {
+	for ( int i = 0; i < NUM_DIR_LIGHTS * 3; i ++ ) {
 
 		vDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;
 
