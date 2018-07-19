@@ -173,16 +173,23 @@ function WebGLLights() {
 
 				if ( light.castShadow ) {
 
-					var shadow = light.shadow;
+					var shadow = light.shadowCascade[0];
 
 					uniforms.shadowBias = shadow.bias;
 					uniforms.shadowRadius = shadow.radius;
 					uniforms.shadowMapSize = shadow.mapSize;
 
 				}
+				var shadowCascade1 = ( light.shadowCascade && light.shadowCascade[0].map ) ? light.shadowCascade[0].map.texture : null;
+				var shadowCascade2 = ( light.shadowCascade && light.shadowCascade[1].map ) ? light.shadowCascade[1].map.texture : null;
+				var shadowCascade3 = ( light.shadowCascade && light.shadowCascade[2].map ) ? light.shadowCascade[2].map.texture : null;
 
-				state.directionalShadowMap[ directionalLength ] = shadowMap;
-				state.directionalShadowMatrix[ directionalLength ] = light.shadow.matrix;
+				state.directionalShadowMap[ directionalLength * 3 ] = shadowCascade1;
+				state.directionalShadowMap[ directionalLength * 3 + 1 ] = shadowCascade2;
+				state.directionalShadowMap[ directionalLength * 3 + 2 ] = shadowCascade3;
+				state.directionalShadowMatrix[ directionalLength * 3 ] = light.shadowCascade[0].matrix;
+				state.directionalShadowMatrix[ directionalLength * 3 + 1 ] = light.shadowCascade[1].matrix;
+				state.directionalShadowMatrix[ directionalLength * 3 + 2 ] = light.shadowCascade[2].matrix;
 				state.directional[ directionalLength ] = uniforms;
 
 				directionalLength ++;
