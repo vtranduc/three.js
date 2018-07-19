@@ -2173,8 +2173,8 @@
 
 		if ( 'PreRotation' in modelNode ) {
 
-		  var preRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
-		  preRotation[ 3 ] = 'ZYX';
+			var preRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
+			preRotation[ 3 ] = 'ZYX';
 			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( preRotation ) ) );
 
 		}
@@ -2189,9 +2189,9 @@
 
 		if ( 'PostRotation' in modelNode ) {
 
-		  var postRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
-		  postRotation[ 3 ] = 'ZYX';
-		  baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( postRotation ) ) );
+			var postRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
+			postRotation[ 3 ] = 'ZYX';
+			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( postRotation ) ) );
 
 		}
 
@@ -2213,7 +2213,7 @@
 
 		if ( 'Lcl_Scaling' in modelNode ) {
 
-		  const lclScalingVal = modelNode.Lcl_Scaling.value;
+			const lclScalingVal = modelNode.Lcl_Scaling.value;
 			baseMat.multiply( new THREE.Matrix4().makeScale( lclScalingVal[ 0 ], lclScalingVal[ 1 ], lclScalingVal[ 2 ] ) );
 
 		}
