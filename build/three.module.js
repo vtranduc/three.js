@@ -6004,7 +6004,7 @@ var shadowmap_pars_fragment = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\
 
 var shadowmap_pars_vertex = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\t\tuniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHTS * 3 ];\n\t\tvarying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS * 3 ];\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\t\tuniform mat4 spotShadowMatrix[ NUM_SPOT_LIGHTS ];\n\t\tvarying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHTS ];\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\t\tuniform mat4 pointShadowMatrix[ NUM_POINT_LIGHTS ];\n\t\tvarying vec4 vPointShadowCoord[ NUM_POINT_LIGHTS ];\n\t#endif\n#endif\n";
 
-var shadowmap_vertex = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS * 3; i ++ ) {\n\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tvSpotShadowCoord[ i ] = spotShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n#endif\n";
+var shadowmap_vertex = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS * 3; i ++ ) {\n\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tvSpotShadowCoord[ i ] = spotShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n#endif\n";
 
 var shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n\t#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\tDirectionalLight directionalLight;\n\tfloat linDepth = 2.0 * zNear / (zFar + zNear - (2.0 * gl_FragCoord.z - 1.0) * (zFar - zNear));\n\tfloat d1 = .01;\n\tfloat d2 = .1;\n\tfloat olap = 0.001;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight = directionalLights[ i ];\n\t\tif (linDepth > d2) shadow *= bool( directionalLight.shadow ) ?\n\t\t\tgetShadow( directionalShadowMap[( i ) * 3 + 2],\n\t\t\t \t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\tvDirectionalShadowCoord[( i ) * 3 + 2] ) :\n\t\t\t1.0;\n\t\telse if (linDepth > d2-olap) shadow *= bool( directionalLight.shadow ) ?\n\t\t\tmix(\n\t\t\t\tgetShadow( directionalShadowMap[ ( i ) * 3 + 1 ],\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\t\tvDirectionalShadowCoord[ ( i ) * 3 + 1 ] ),\n\t\t\t\tgetShadow( directionalShadowMap[ ( i ) * 3 + 2 ],\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\t\tvDirectionalShadowCoord[ ( i ) * 3 + 2 ] ),\n\t\t\t\tclamp((linDepth - (d2-olap))/olap , 0.0, 1.0)) :\n\t\t\t1.0;\n\t\telse if (linDepth > d1)\tshadow *= bool( directionalLight.shadow ) ?\n\t\t\tgetShadow( directionalShadowMap[( i ) * 3 + 1],\n\t\t\t\t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\tvDirectionalShadowCoord[( i ) * 3 + 1] ) :\n\t\t\t1.0;\n\t\telse if (linDepth > d1-olap) shadow *= bool( directionalLight.shadow ) ?\n\t\t\tmix(\n\t\t\t\tgetShadow( directionalShadowMap[ ( i ) * 3 + 0 ],\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\t\tvDirectionalShadowCoord[ ( i ) * 3 + 0 ] ),\n\t\t\t\tgetShadow( directionalShadowMap[ ( i ) * 3 + 1 ],\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\t\tvDirectionalShadowCoord[ ( i ) * 3 + 1 ] ),\n\t\t\t\tclamp((linDepth - (d1-olap))/olap , 0.0, 1.0)) :\n\t\t\t1.0;\n\t\telse if (linDepth <= d1-olap) shadow *= bool( directionalLight.shadow ) ?\n\t\t\tgetShadow( directionalShadowMap[( i ) * 3],\n\t\t\t \t\t\t\t\tdirectionalLight.shadowMapSize,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowBias,\n\t\t\t\t\t\t\t\tdirectionalLight.shadowRadius,\n\t\t\t\t\t\t\t\tvDirectionalShadowCoord[( i ) * 3] ) :\n\t\t\t1.0;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight = spotLights[ i ];\n\t\tshadow *= bool( spotLight.shadow ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight = pointLights[ i ];\n\t\tshadow *= bool( pointLight.shadow ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t}\n\t#endif\n\t#endif\n\treturn shadow;\n}\n";
 
@@ -33760,12 +33760,6 @@ Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
 		if ( this.penumbra !== undefined ) data.object.penumbra = this.penumbra;
 
 		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
-		if ( this.shadowCascade !== undefined ) {
-			data.object.shadowCascade = [];
-			this.shadowCascade.forEach( function ( element ) {
-				data.object.shadowCascade.push(element.toJSON());
-			});
-		}
 
 		if ( this.width !== undefined ) data.object.width = this.width;
 		if ( this.height !== undefined ) data.object.height = this.height;
@@ -37879,15 +37873,6 @@ Object.assign( ObjectLoader.prototype, {
 			if ( data.shadow.mapSize !== undefined ) object.shadow.mapSize.fromArray( data.shadow.mapSize );
 			if ( data.shadow.camera !== undefined ) object.shadow.camera = this.parseObject( data.shadow.camera );
 
-		}
-
-		if ( data.shadowCascade ) {
-			data.shadowCascade.forEach( _.bind( function ( element, i ) {
-				if ( element.bias !== undefined ) object.shadowCascade[i].bias = element.bias;
-				if ( element.radius !== undefined ) object.shadowCascade[i].radius = element.radius;
-				if ( element.mapSize !== undefined ) object.shadowCascade[i].mapSize.fromArray( element.mapSize );
-				if ( element.camera !== undefined ) object.shadowCascade[i].camera = this.parseObject( element.camera );
-			}, this));
 		}
 
 		if ( data.visible !== undefined ) object.visible = data.visible;

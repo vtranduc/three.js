@@ -929,15 +929,6 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 		}
 
-		if ( data.shadowCascade ) {
-			data.shadowCascade.forEach( _.bind( function ( element, i ) {
-				if ( element.bias !== undefined ) object.shadowCascade[i].bias = element.bias;
-				if ( element.radius !== undefined ) object.shadowCascade[i].radius = element.radius;
-				if ( element.mapSize !== undefined ) object.shadowCascade[i].mapSize.fromArray( element.mapSize );
-				if ( element.camera !== undefined ) object.shadowCascade[i].camera = this.parseObject( element.camera );
-			}, this));
-		}
-
 		if ( data.visible !== undefined ) object.visible = data.visible;
 		if ( data.frustumCulled !== undefined ) object.frustumCulled = data.frustumCulled;
 		if ( data.renderOrder !== undefined ) object.renderOrder = data.renderOrder;
