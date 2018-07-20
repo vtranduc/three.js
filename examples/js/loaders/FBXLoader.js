@@ -2189,7 +2189,7 @@
 
 		if ( 'PostRotation' in modelNode ) {
 
-			var postRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
+			var postRotation = modelNode.PostRotation.value.map( THREE.Math.degToRad );
 			postRotation[ 3 ] = 'ZYX';
 			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( postRotation ) ) );
 
