@@ -2144,9 +2144,38 @@
 
 		}
 
+		// diverged from original below, dealing with transformation matrices here
+
+		var baseMat = new THREE.Matrix4();
+		var invRotPiv = new THREE.Matrix4();
+		var invScaPiv = new THREE.Matrix4();
+
+
 		if ( 'Lcl_Translation' in modelNode ) {
 
-			model.position.fromArray( modelNode.Lcl_Translation.value );
+			baseMat.multiply( new THREE.Matrix4().setPosition( new THREE.Vector3().fromArray( modelNode.Lcl_Translation.value ) ) );
+
+		}
+
+		if ( 'RotationOffset' in modelNode ) {
+
+			baseMat.multiply( new THREE.Matrix4().setPosition( new THREE.Vector3().fromArray( modelNode.RotationOffset.value ) ) );
+
+		}
+
+		if ( 'RotationPivot' in modelNode ) {
+
+			const mat = new THREE.Matrix4().setPosition( new THREE.Vector3().fromArray( modelNode.RotationPivot.value ) )
+			baseMat.multiply( mat );
+			invRotPiv.getInverse( mat );
+
+		}
+
+		if ( 'PreRotation' in modelNode ) {
+
+			var preRotation = modelNode.PreRotation.value.map( THREE.Math.degToRad );
+			preRotation[ 3 ] = 'ZYX';
+			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( preRotation ) ) );
 
 		}
 
@@ -2154,27 +2183,50 @@
 
 			var rotation = modelNode.Lcl_Rotation.value.map( THREE.Math.degToRad );
 			rotation.push( 'ZYX' );
-			model.quaternion.setFromEuler( new THREE.Euler().fromArray( rotation ) );
+			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( rotation ) ) );
+
+		}
+
+		if ( 'PostRotation' in modelNode ) {
+
+			var postRotation = modelNode.PostRotation.value.map( THREE.Math.degToRad );
+			postRotation[ 3 ] = 'ZYX';
+			baseMat.multiply( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( postRotation ) ) );
+
+		}
+
+		baseMat.multiply( invRotPiv );
+
+		if ( 'ScalingOffset' in modelNode ) {
+
+			baseMat.multiply( new THREE.Matrix4().setPosition( new THREE.Vector3().fromArray( modelNode.ScalingOffset.value ) ) );
+
+		}
+
+		if ( 'ScalingPivot' in modelNode ) {
+
+			const mat = new THREE.Matrix4().setPosition( new THREE.Vector3().fromArray( modelNode.ScalingPivot.value ) )
+			baseMat.multiply( mat );
+			invScaPiv.getInverse( mat );
 
 		}
 
 		if ( 'Lcl_Scaling' in modelNode ) {
 
-			model.scale.fromArray( modelNode.Lcl_Scaling.value );
+			const lclScalingVal = modelNode.Lcl_Scaling.value;
+			baseMat.multiply( new THREE.Matrix4().makeScale( lclScalingVal[ 0 ], lclScalingVal[ 1 ], lclScalingVal[ 2 ] ) );
 
 		}
 
-		if ( 'PreRotation' in modelNode ) {
+		baseMat.multiply( invScaPiv );
 
-			var array = modelNode.PreRotation.value.map( THREE.Math.degToRad );
-			array[ 3 ] = 'ZYX';
+		model.applyMatrix(baseMat);
 
-			var preRotations = new THREE.Euler().fromArray( array );
+		// formula can be cound here:
+		// http://download.autodesk.com/us/fbx/20112/FBX_SDK_HELP/
+		// index.html?url=WS1a9193826455f5ff1f92379812724681e696651.htm,topicNumber=d0e7429
 
-			preRotations = new THREE.Quaternion().setFromEuler( preRotations );
-			model.quaternion.premultiply( preRotations );
-
-		}
+		// https://developer.blender.org/diffusion/BA/browse/master/io_scene_fbx/import_fbx.py
 
 	}
 

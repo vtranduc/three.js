@@ -818,7 +818,6 @@ Object.assign( ObjectLoader.prototype, {
 		if ( data.receiveShadow !== undefined ) object.receiveShadow = data.receiveShadow;
 
 		if ( data.shadow ) {
-
 			if ( data.shadow.bias !== undefined ) object.shadow.bias = data.shadow.bias;
 			if ( data.shadow.radius !== undefined ) object.shadow.radius = data.shadow.radius;
 			if ( data.shadow.mapSize !== undefined ) object.shadow.mapSize.fromArray( data.shadow.mapSize );

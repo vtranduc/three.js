@@ -1,6 +1,6 @@
 uniform bool enableProjection;
 uniform float projectionSharpness;
-uniform vec4 offsetRepeat;
+uniform mat3 uvTransform;
 varying vec3 vProjectionPosition;
 varying vec3 vProjectionNormal;
 
@@ -16,9 +16,13 @@ vec4 GetTexelColorFromProjection( sampler2D _map, vec3 _projectionPosition ) {
   weightVec /= weightSum;
 
   // fetch color from texture for each plane
-  vec4 mapXtexel = texture2D( _map, vec2( fract( abs( _projectionPosition.y ) * offsetRepeat.z ), fract( abs( _projectionPosition.z ) * offsetRepeat.w ) ) );
-  vec4 mapYtexel = texture2D( _map, vec2( fract( abs( _projectionPosition.x ) * offsetRepeat.z ), fract( abs( _projectionPosition.z ) * offsetRepeat.w ) ) );
-  vec4 mapZtexel = texture2D( _map, vec2( fract( abs( _projectionPosition.x ) * offsetRepeat.z ), fract( abs( _projectionPosition.y ) * offsetRepeat.w ) ) );
+  vec2 mapXuv = ( uvTransform * vec3( fract( abs( _projectionPosition.y ) ), fract( abs( _projectionPosition.z ) ), 1.0 ) ).xy;
+  vec2 mapYuv = ( uvTransform * vec3( fract( abs( _projectionPosition.x ) ), fract( abs( _projectionPosition.z ) ), 1.0 ) ).xy;
+  vec2 mapZuv = ( uvTransform * vec3( fract( abs( _projectionPosition.x ) ), fract( abs( _projectionPosition.y ) ), 1.0 ) ).xy;
+
+  vec4 mapXtexel = texture2D( _map, mapXuv );
+  vec4 mapYtexel = texture2D( _map, mapYuv );
+  vec4 mapZtexel = texture2D( _map, mapZuv );
 
   // texel blending from all three planes
   return weightVec.x * mapXtexel + weightVec.y * mapYtexel + weightVec.z * mapZtexel;
