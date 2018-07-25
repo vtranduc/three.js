@@ -31236,7 +31236,17 @@
 
 			loader.load( url, function ( buffer ) {
 
-				var texData = scope._parser( buffer );
+				var texData;
+
+				try {
+
+					texData = scope._parser( buffer );
+
+				} catch (e) {
+
+					onError(e);
+
+				}
 
 				if ( ! texData ) return;
 
