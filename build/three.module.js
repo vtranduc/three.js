@@ -23374,6 +23374,8 @@ function WebGLRenderer( parameters ) {
 
 				refreshUniformsCommon( m_uniforms, material );
 				refreshUniformsLambert( m_uniforms, material );
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 			} else if ( material.isMeshPhongMaterial ) {
 
@@ -23387,11 +23389,16 @@ function WebGLRenderer( parameters ) {
 
 					refreshUniformsPhong( m_uniforms, material );
 
+					m_uniforms.zNear.value = camera.near;
+					m_uniforms.zFar.value = camera.far;
+
 				}
 
 			} else if ( material.isMeshStandardMaterial ) {
 
 				refreshUniformsCommon( m_uniforms, material );
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 				if ( material.isMeshPhysicalMaterial ) {
 
@@ -23436,13 +23443,8 @@ function WebGLRenderer( parameters ) {
 
 				m_uniforms.color.value = material.color;
 				m_uniforms.opacity.value = material.opacity;
-
-				if ( material.zNear ) {
-					uniforms.zNear.value = material.zNear;
-				}
-				if ( material.zFar ) {
-					uniforms.zFar.value = material.zFar;
-				}
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 			}
 
@@ -23682,13 +23684,6 @@ function WebGLRenderer( parameters ) {
 
 		}
 
-		if ( material.zNear ) {
-			uniforms.zNear.value = material.zNear;
-		}
-		if ( material.zFar ) {
-			uniforms.zFar.value = material.zFar;
-		}
-
 	}
 
 	function refreshUniformsPhong( uniforms, material ) {
@@ -23722,13 +23717,6 @@ function WebGLRenderer( parameters ) {
 			uniforms.displacementScale.value = material.displacementScale;
 			uniforms.displacementBias.value = material.displacementBias;
 
-		}
-
-		if ( material.zNear ) {
-			uniforms.zNear.value = material.zNear;
-		}
-		if ( material.zFar ) {
-			uniforms.zFar.value = material.zFar;
 		}
 
 	}
@@ -23803,13 +23791,6 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.projectionSharpness.value = material.projectionSharpness;
 
-		}
-
-		if ( material.zNear ) {
-			uniforms.zNear.value = material.zNear;
-		}
-		if ( material.zFar ) {
-			uniforms.zFar.value = material.zFar;
 		}
 
 	}
@@ -30023,9 +30004,6 @@ var Geometries = /*#__PURE__*/Object.freeze({
  *
  * parameters = {
  *  color: <THREE.Color>
- *
- *  zNear: <float>,
- *  zFar: <float>,
  * }
  */
 
@@ -30037,9 +30015,6 @@ function ShadowMaterial( parameters ) {
 
 	this.color = new Color( 0x000000 );
 	this.transparent = true;
-
-	this.zNear = 0.1;
-	this.zFar = 10000;
 
 	this.setValues( parameters );
 
@@ -30055,9 +30030,6 @@ ShadowMaterial.prototype.copy = function ( source ) {
 	Material.prototype.copy.call( this, source );
 
 	this.color.copy( source.color );
-
-	this.zNear = source.zNear;
-	this.zFar = source.zFar;
 
 	return this;
 
@@ -30128,9 +30100,6 @@ RawShaderMaterial.prototype.isRawShaderMaterial = true;
  *  skinning: <bool>,
  *  morphTargets: <bool>,
  *  morphNormals: <bool>,
- *
- *  zNear: <float>,
- *  zFar: <float>
  * }
  */
 
@@ -30190,9 +30159,6 @@ function MeshStandardMaterial( parameters ) {
 
 	this.enableProjection = false;
   this.projectionSharpness = 2.0;
-
-	this.zNear = 0.1;
-	this.zFar = 10000;
 
 	this.setValues( parameters );
 
@@ -30257,9 +30223,6 @@ MeshStandardMaterial.prototype.copy = function ( source ) {
 
 	this.enableProjection = source.enableProjection;
 	this.projectionSharpness = source.projectionSharpness;
-
-	this.zNear = source.zNear;
-	this.zFar = source.zFar;
 
 	return this;
 
@@ -30361,9 +30324,6 @@ MeshPhysicalMaterial.prototype.copy = function ( source ) {
  *  skinning: <bool>,
  *  morphTargets: <bool>,
  *  morphNormals: <bool>,
- *
- *  zNear: <float>,
- *  zFar: <float>,
  * }
  */
 
@@ -30416,9 +30376,6 @@ function MeshPhongMaterial( parameters ) {
 	this.skinning = false;
 	this.morphTargets = false;
 	this.morphNormals = false;
-
-	this.zNear = 0.1;
-	this.zFar = 10000;
 
 	this.setValues( parameters );
 
@@ -30476,9 +30433,6 @@ MeshPhongMaterial.prototype.copy = function ( source ) {
 	this.skinning = source.skinning;
 	this.morphTargets = source.morphTargets;
 	this.morphNormals = source.morphNormals;
-
-	this.zNear = source.zNear;
-	this.zFar = source.zFar;
 
 	return this;
 
@@ -30642,9 +30596,6 @@ MeshNormalMaterial.prototype.copy = function ( source ) {
  *  skinning: <bool>,
  *  morphTargets: <bool>,
  *  morphNormals: <bool>
- *
- *  zNear: <float>,
- *  zFar: <float>,
  * }
  */
 
@@ -30685,9 +30636,6 @@ function MeshLambertMaterial( parameters ) {
 	this.skinning = false;
 	this.morphTargets = false;
 	this.morphNormals = false;
-
-	this.zNear = 0.1;
-	this.zFar = 10000;
 
 	this.setValues( parameters );
 
@@ -30733,9 +30681,6 @@ MeshLambertMaterial.prototype.copy = function ( source ) {
 	this.skinning = source.skinning;
 	this.morphTargets = source.morphTargets;
 	this.morphNormals = source.morphNormals;
-
-	this.zNear = source.zNear;
-	this.zFar = source.zFar;
 
 	return this;
 
