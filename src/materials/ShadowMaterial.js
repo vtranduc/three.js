@@ -3,9 +3,6 @@
  *
  * parameters = {
  *  color: <THREE.Color>
- *
- *  zNear: <float>,
- *  zFar: <float>,
  * }
  */
 
@@ -21,9 +18,6 @@ function ShadowMaterial( parameters ) {
 	this.color = new Color( 0x000000 );
 	this.transparent = true;
 
-	this.zNear = 0.1;
-	this.zFar = 10000;
-
 	this.setValues( parameters );
 
 }
@@ -38,9 +32,6 @@ ShadowMaterial.prototype.copy = function ( source ) {
 	Material.prototype.copy.call( this, source );
 
 	this.color.copy( source.color );
-
-	this.zNear = source.zNear;
-	this.zFar = source.zFar;
 
 	return this;
 
