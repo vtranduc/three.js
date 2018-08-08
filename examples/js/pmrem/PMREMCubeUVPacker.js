@@ -52,10 +52,10 @@ THREE.PMREMCubeUVPacker = ( function () {
 		var geometry = new THREE.PlaneBufferGeometry( 1, 1 );
 
 		var faceOffsets = [];
-		faceOffsets.push( new THREE.Vector2( 0, 0 ) );
+		faceOffsets.push( new THREE.Vector2( 0, flip ? 1 : 0 ) );
 		faceOffsets.push( new THREE.Vector2( 1, 0 ) );
 		faceOffsets.push( new THREE.Vector2( 2, 0 ) );
-		faceOffsets.push( new THREE.Vector2( 0, 1 ) );
+		faceOffsets.push( new THREE.Vector2( 0, flip ? 0 : 1 ) );
 		faceOffsets.push( new THREE.Vector2( 1, 1 ) );
 		faceOffsets.push( new THREE.Vector2( 2, 1 ) );
 
@@ -91,6 +91,7 @@ THREE.PMREMCubeUVPacker = ( function () {
 					planeMesh.position.y = faceOffsets[ k ].y * mipSize - offset1 + offset2 + mipOffsetY;
 					planeMesh.material.side = THREE.BackSide;
 					planeMesh.scale.setScalar( mipSize );
+					if (flip) planeMesh.scale.x *= -1;
 					this.objects.push( planeMesh );
 
 				}
