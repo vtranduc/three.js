@@ -157,8 +157,11 @@ Object.assign( MaterialLoader.prototype, {
 
 		if ( json.reflectivity !== undefined ) material.reflectivity = json.reflectivity;
 
-		if ( json.lightMap !== undefined ) material.lightMap = getTexture( json.lightMap );
-		if ( json.lightMapIntensity !== undefined ) material.lightMapIntensity = json.lightMapIntensity;
+		if ( json.directLightMap !== undefined ) material.directLightMap = getTexture( json.directLightMap );
+		if ( json.directLightMapIntensity !== undefined ) material.directLightMapIntensity = json.directLightMapIntensity;
+
+		if ( json.indirectLightMap !== undefined ) material.indirectLightMap = getTexture( json.indirectLightMap );
+		if ( json.indirectLightMapIntensity !== undefined ) material.indirectLightMapIntensity = json.indirectLightMapIntensity;
 
 		if ( json.aoMap !== undefined ) material.aoMap = getTexture( json.aoMap );
 		if ( json.aoMapIntensity !== undefined ) material.aoMapIntensity = json.aoMapIntensity;

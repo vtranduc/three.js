@@ -29,6 +29,7 @@ function UniformsCache() {
 					uniforms = {
 						direction: new Vector3(),
 						color: new Color(),
+						isDynamicLight: true,
 
 						shadow: false,
 						shadowBias: 0,
@@ -42,6 +43,7 @@ function UniformsCache() {
 						position: new Vector3(),
 						direction: new Vector3(),
 						color: new Color(),
+						isDynamicLight: true,
 						distance: 0,
 						coneCos: 0,
 						penumbraCos: 0,
@@ -58,6 +60,7 @@ function UniformsCache() {
 					uniforms = {
 						position: new Vector3(),
 						color: new Color(),
+						isDynamicLight: true,
 						distance: 0,
 						decay: 0,
 
@@ -83,6 +86,7 @@ function UniformsCache() {
 						color: new Color(),
 						position: new Vector3(),
 						halfWidth: new Vector3(),
+						isDynamicLight: true,
 						halfHeight: new Vector3()
 						// TODO (abelnation): set RectAreaLight shadow uniforms
 					};
@@ -150,6 +154,7 @@ function WebGLLights() {
 			var color = light.color;
 			var intensity = light.intensity;
 			var distance = light.distance;
+			var isDynamicLight = light.isDynamicLight;
 
 			var shadowMap = ( light.shadow && light.shadow.map ) ? light.shadow.map.texture : null;
 
@@ -170,6 +175,7 @@ function WebGLLights() {
 				uniforms.direction.transformDirection( viewMatrix );
 
 				uniforms.shadow = light.castShadow;
+				uniforms.isDynamicLight = isDynamicLight;
 
 				if ( light.castShadow ) {
 
@@ -203,6 +209,7 @@ function WebGLLights() {
 
 				uniforms.color.copy( color ).multiplyScalar( intensity );
 				uniforms.distance = distance;
+				uniforms.isDynamicLight = isDynamicLight;
 
 				uniforms.direction.setFromMatrixPosition( light.matrixWorld );
 				vector3.setFromMatrixPosition( light.target.matrixWorld );
@@ -240,6 +247,7 @@ function WebGLLights() {
 
 				// (b) intensity is the brightness of the light
 				uniforms.color.copy( color ).multiplyScalar( intensity );
+				uniforms.isDynamicLight = isDynamicLight;
 
 				uniforms.position.setFromMatrixPosition( light.matrixWorld );
 				uniforms.position.applyMatrix4( viewMatrix );
@@ -275,6 +283,7 @@ function WebGLLights() {
 				uniforms.decay = ( light.distance === 0 ) ? 0.0 : light.decay;
 
 				uniforms.shadow = light.castShadow;
+				uniforms.isDynamicLight = isDynamicLight;
 
 				if ( light.castShadow ) {
 

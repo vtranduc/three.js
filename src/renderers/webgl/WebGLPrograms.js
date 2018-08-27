@@ -27,7 +27,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 
 	var parameterNames = [
 		"precision", "supportsVertexTextures", "map", "mapEncoding", "envMap", "envIrradianceMap", "envMapMode", "envMapEncoding", "envIrradianceMapEncoding",
-		"lightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
+		"directLightMap", "indirectLightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
 		"roughnessMap", "metalnessMap", "gradientMap",
 		"alphaMap", "combine", "vertexColors", "fog", "useFog", "fogExp", "fogGround",
 		"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
@@ -150,7 +150,8 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 			envIrradianceMapEncoding: getTextureEncodingFromMap ( material.envIrradianceMap, renderer.gammaInput ),
 			envMapCubeUV: ( !! material.envMap ) && ( ( material.envMap.mapping === CubeUVReflectionMapping ) || ( material.envMap.mapping === CubeUVRefractionMapping ) ),
 			envIrradianceMap: !! material.envIrradianceMap,
-			lightMap: !! material.lightMap,
+			directLightMap: !! material.directLightMap,
+			indirectLightMap: !! material.indirectLightMap,
 			aoMap: !! material.aoMap,
 			emissiveMap: !! material.emissiveMap,
 			emissiveMapEncoding: getTextureEncodingFromMap( material.emissiveMap, renderer.gammaInput ),
