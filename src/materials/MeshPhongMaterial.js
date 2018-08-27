@@ -15,8 +15,11 @@ import { Color } from '../math/Color.js';
  *
  *  map: new THREE.Texture( <Image> ),
  *
- *  lightMap: new THREE.Texture( <Image> ),
- *  lightMapIntensity: <float>
+ *  directLightMap: new THREE.Texture( <Image> ),
+ *  directLightMapIntensity: <float>
+ *
+ *  indirectLightMap: new THREE.Texture( <Image> ),
+ *  indirectLightMapIntensity: <float>
  *
  *  aoMap: new THREE.Texture( <Image> ),
  *  aoMapIntensity: <float>
@@ -66,8 +69,11 @@ function MeshPhongMaterial( parameters ) {
 
 	this.map = null;
 
-	this.lightMap = null;
-	this.lightMapIntensity = 1.0;
+	this.directLightMap = null;
+	this.directLightMapIntensity = 1.0;
+
+	this.indirectLightMap = null;
+	this.indirectLightMapIntensity = 1.0;
 
 	this.aoMap = null;
 	this.aoMapIntensity = 1.0;
@@ -124,8 +130,11 @@ MeshPhongMaterial.prototype.copy = function ( source ) {
 
 	this.map = source.map;
 
-	this.lightMap = source.lightMap;
-	this.lightMapIntensity = source.lightMapIntensity;
+	this.directLightMap = source.directLightMap;
+	this.directLightMapIntensity = source.directLightMapIntensity;
+
+	this.indirectLightMap = source.indirectLightMap;
+	this.indirectLightMapIntensity = source.indirectLightMapIntensity;
 
 	this.aoMap = source.aoMap;
 	this.aoMapIntensity = source.aoMapIntensity;

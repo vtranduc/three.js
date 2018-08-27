@@ -33,14 +33,25 @@ vec3 directLightColor_Diffuse;
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
 
-		vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+		#ifdef USE_DIRECT_LIGHTMAP
 
-		#ifdef DOUBLE_SIDED
+			if (pointLights[ i ].isDynamicLight) vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
 
-			vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+			#ifdef DOUBLE_SIDED
 
+				if (pointLights[ i ].isDynamicLight) vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+
+			#endif
+		#else
+
+			vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+
+			#ifdef DOUBLE_SIDED
+
+				vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+
+			#endif
 		#endif
-
 	}
 
 #endif
@@ -55,12 +66,23 @@ vec3 directLightColor_Diffuse;
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
 
-		vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+		#ifdef USE_DIRECT_LIGHTMAP
+			if (spotLights[ i ].isDynamicLight) vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
 
-		#ifdef DOUBLE_SIDED
+			#ifdef DOUBLE_SIDED
 
-			vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+				if (spotLights[ i ].isDynamicLight) vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
 
+			#endif
+		#else
+
+			vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+
+			#ifdef DOUBLE_SIDED
+
+				vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+
+			#endif
 		#endif
 	}
 
@@ -88,12 +110,22 @@ vec3 directLightColor_Diffuse;
 		dotNL = dot( geometry.normal, directLight.direction );
 		directLightColor_Diffuse = PI * directLight.color;
 
-		vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+		#ifdef USE_DIRECT_LIGHTMAP
+			if (directionalLights[ i ].isDynamicLight) vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
 
-		#ifdef DOUBLE_SIDED
+			#ifdef DOUBLE_SIDED
 
-			vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+				if (directionalLights[ i ].isDynamicLight) vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
 
+			#endif
+		#else
+			vLightFront += saturate( dotNL ) * directLightColor_Diffuse;
+
+			#ifdef DOUBLE_SIDED
+
+				vLightBack += saturate( -dotNL ) * directLightColor_Diffuse;
+
+			#endif
 		#endif
 
 	}

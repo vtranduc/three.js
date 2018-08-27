@@ -28,8 +28,13 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 	};
 
 	var parameterNames = [
+<<<<<<< HEAD
 		"precision", "supportsVertexTextures", "map", "mapEncoding", "matcap", "matcapEncoding", "envMap", "envIrradianceMap", "envMapMode", "envMapEncoding", "envIrradianceMapEncoding",
 		"lightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "objectSpaceNormalMap", "tangentSpaceNormalMap", "clearcoatNormalMap", "displacementMap", "specularMap",
+=======
+		"precision", "supportsVertexTextures", "map", "mapEncoding", "envMap", "envIrradianceMap", "envMapMode", "envMapEncoding", "envIrradianceMapEncoding",
+		"directLightMap", "indirectLightMap", "aoMap", "emissiveMap", "emissiveMapEncoding", "bumpMap", "normalMap", "displacementMap", "specularMap",
+>>>>>>> Adds support for direct light maps
 		"roughnessMap", "metalnessMap", "gradientMap",
 		"alphaMap", "combine", "vertexColors", "vertexTangents", "fog", "useFog", "fogExp2", "fogGround",
 		"flatShading", "sizeAttenuation", "logarithmicDepthBuffer", "skinning",
@@ -155,7 +160,8 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 			envIrradianceMapEncoding: getTextureEncodingFromMap ( material.envIrradianceMap, renderer.gammaInput ),
 			envMapCubeUV: ( !! material.envMap ) && ( ( material.envMap.mapping === CubeUVReflectionMapping ) || ( material.envMap.mapping === CubeUVRefractionMapping ) ),
 			envIrradianceMap: !! material.envIrradianceMap,
-			lightMap: !! material.lightMap,
+			directLightMap: !! material.directLightMap,
+			indirectLightMap: !! material.indirectLightMap,
 			aoMap: !! material.aoMap,
 			emissiveMap: !! material.emissiveMap,
 			emissiveMapEncoding: getTextureEncodingFromMap( material.emissiveMap, renderer.gammaInput ),
