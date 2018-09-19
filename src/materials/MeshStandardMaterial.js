@@ -14,8 +14,11 @@ import { Color } from '../math/Color.js';
  *
  *  map: new THREE.Texture( <Image> ),
  *
- *  lightMap: new THREE.Texture( <Image> ),
- *  lightMapIntensity: <float>
+ *  directLightMap: new THREE.Texture( <Image> ),
+ *  directLightMapIntensity: <float>
+ *
+ *  indirectLightMap: new THREE.Texture( <Image> ),
+ *  indirectLightMapIntensity: <float>
  *
  *  aoMap: new THREE.Texture( <Image> ),
  *  aoMapIntensity: <float>
@@ -51,7 +54,7 @@ import { Color } from '../math/Color.js';
  *
  *  skinning: <bool>,
  *  morphTargets: <bool>,
- *  morphNormals: <bool>
+ *  morphNormals: <bool>,
  * }
  */
 
@@ -69,8 +72,11 @@ function MeshStandardMaterial( parameters ) {
 
 	this.map = null;
 
-	this.lightMap = null;
-	this.lightMapIntensity = 1.0;
+	this.directLightMap = null;
+	this.directLightMapIntensity = 1.0;
+
+	this.indirectLightMap = null;
+	this.indirectLightMapIntensity = 1.0;
 
 	this.aoMap = null;
 	this.aoMapIntensity = 1.0;
@@ -110,6 +116,9 @@ function MeshStandardMaterial( parameters ) {
 	this.morphTargets = false;
 	this.morphNormals = false;
 
+	this.enableProjection = false;
+  this.projectionSharpness = 2.0;
+
 	this.setValues( parameters );
 
 }
@@ -131,8 +140,11 @@ MeshStandardMaterial.prototype.copy = function ( source ) {
 
 	this.map = source.map;
 
-	this.lightMap = source.lightMap;
-	this.lightMapIntensity = source.lightMapIntensity;
+	this.directLightMap = source.directLightMap;
+	this.directLightMapIntensity = source.directLightMapIntensity;
+
+	this.indirectLightMap = source.indirectLightMap;
+	this.indirectLightMapIntensity = source.indirectLightMapIntensity;
 
 	this.aoMap = source.aoMap;
 	this.aoMapIntensity = source.aoMapIntensity;
@@ -171,6 +183,9 @@ MeshStandardMaterial.prototype.copy = function ( source ) {
 	this.skinning = source.skinning;
 	this.morphTargets = source.morphTargets;
 	this.morphNormals = source.morphNormals;
+
+	this.enableProjection = source.enableProjection;
+	this.projectionSharpness = source.projectionSharpness;
 
 	return this;
 

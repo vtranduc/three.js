@@ -13,7 +13,7 @@
  * The arrangement of the faces is fixed, as assuming this arrangement, the sampling function has been written.
  */
 
-THREE.PMREMCubeUVPacker = function ( cubeTextureLods ) {
+THREE.PMREMCubeUVPacker = function ( cubeTextureLods, flip ) {
 
 	this.cubeLods = cubeTextureLods;
 	var size = cubeTextureLods[ 0 ].width * 4;
@@ -39,6 +39,7 @@ THREE.PMREMCubeUVPacker = function ( cubeTextureLods ) {
 	this.CubeUVRenderTarget = new THREE.WebGLRenderTarget( size, size, params );
 	this.CubeUVRenderTarget.texture.name = "PMREMCubeUVPacker.cubeUv";
 	this.CubeUVRenderTarget.texture.mapping = THREE.CubeUVReflectionMapping;
+	this.CubeUVRenderTarget.texture.cubeUVTextureSize = cubeTextureLods[ 0 ].width * 4;
 	this.camera = new THREE.OrthographicCamera( - size * 0.5, size * 0.5, - size * 0.5, size * 0.5, 0, 1 ); // top and bottom are swapped for some reason?
 
 	this.scene = new THREE.Scene();
@@ -48,10 +49,10 @@ THREE.PMREMCubeUVPacker = function ( cubeTextureLods ) {
 	var geometry = new THREE.PlaneBufferGeometry( 1, 1 );
 
 	var faceOffsets = [];
-	faceOffsets.push( new THREE.Vector2( 0, 0 ) );
+	faceOffsets.push( new THREE.Vector2( 0, flip ? 1 : 0 ) );
 	faceOffsets.push( new THREE.Vector2( 1, 0 ) );
 	faceOffsets.push( new THREE.Vector2( 2, 0 ) );
-	faceOffsets.push( new THREE.Vector2( 0, 1 ) );
+	faceOffsets.push( new THREE.Vector2( 0, flip ? 0 : 1 ) );
 	faceOffsets.push( new THREE.Vector2( 1, 1 ) );
 	faceOffsets.push( new THREE.Vector2( 2, 1 ) );
 
@@ -87,6 +88,7 @@ THREE.PMREMCubeUVPacker = function ( cubeTextureLods ) {
 				planeMesh.position.y = faceOffsets[ k ].y * mipSize - offset1 + offset2 + mipOffsetY;
 				planeMesh.material.side = THREE.BackSide;
 				planeMesh.scale.setScalar( mipSize );
+				if (flip) planeMesh.scale.x *= -1;
 				this.scene.add( planeMesh );
 				this.objects.push( planeMesh );
 

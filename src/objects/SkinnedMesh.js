@@ -150,6 +150,8 @@ SkinnedMesh.prototype = Object.assign( Object.create( Mesh.prototype ), {
 
 			var skinWeight = this.geometry.attributes.skinWeight;
 
+			if ( !skinWeight ) return;
+
 			for ( i = 0; i < skinWeight.count; i ++ ) {
 
 				vec.x = skinWeight.getX( i );

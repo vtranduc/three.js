@@ -303,50 +303,34 @@ Object3D.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 
 	lookAt: function () {
 
-		// This method does not support objects having non-uniformly-scaled parent(s)
+		// This method does not support objects with rotated and/or translated parent(s)
 
-		var q1 = new Quaternion();
 		var m1 = new Matrix4();
-		var target = new Vector3();
-		var position = new Vector3();
+		var vector = new Vector3();
 
 		return function lookAt( x, y, z ) {
 
 			if ( x.isVector3 ) {
 
-				target.copy( x );
+				vector.copy( x );
 
 			} else {
 
-				target.set( x, y, z );
+				vector.set( x, y, z );
 
 			}
 
-			var parent = this.parent;
-
-			this.updateWorldMatrix( true, false );
-
-			position.setFromMatrixPosition( this.matrixWorld );
-
 			if ( this.isCamera ) {
 
-				m1.lookAt( position, target, this.up );
+				m1.lookAt( this.position, vector, this.up );
 
 			} else {
 
-				m1.lookAt( target, position, this.up );
+				m1.lookAt( vector, this.position, this.up );
 
 			}
 
 			this.quaternion.setFromRotationMatrix( m1 );
-
-			if ( parent ) {
-
-				m1.extractRotation( parent.matrixWorld );
-				q1.setFromRotationMatrix( m1 );
-				this.quaternion.premultiply( q1.inverse() );
-
-			}
 
 		};
 
