@@ -12617,6 +12617,8 @@
 			if ( this.directLightMapIntensity !== undefined ) data.directLightMapIntensity = this.directLightMapIntensity;
 			if ( this.indirectLightMap && this.indirectLightMap.isTexture ) data.indirectLightMap = this.indirectLightMap.toJSON( meta ).uuid;
 			if ( this.indirectLightMapIntensity !== undefined ) data.indirectLightMapIntensity = this.indirectLightMapIntensity;
+			if ( this.lightMap && this.lightMap.isTexture ) data.indirectLightMap = this.lightMap.toJSON( meta ).uuid;
+	 		if ( this.lightMapIntensity !== undefined ) data.indirectLightMapIntensity = this.lightMapIntensity;
 			if ( this.aoMap && this.aoMap.isTexture ) data.aoMap = this.aoMap.toJSON( meta ).uuid;
 			if ( this.aoMapIntensity !== undefined ) data.aoMapIntensity = this.aoMapIntensity;
 			if ( this.bumpMap && this.bumpMap.isTexture ) {
@@ -36113,6 +36115,9 @@
 
 			if ( json.indirectLightMap !== undefined ) material.indirectLightMap = getTexture( json.indirectLightMap );
 			if ( json.indirectLightMapIntensity !== undefined ) material.indirectLightMapIntensity = json.indirectLightMapIntensity;
+
+			if ( json.lightMap !== undefined ) material.indirectLightMap = getTexture( json.lightMap );
+	 		if ( json.lightMapIntensity !== undefined ) material.indirectLightMapIntensity = json.lightMapIntensity;
 
 			if ( json.aoMap !== undefined ) material.aoMap = getTexture( json.aoMap );
 			if ( json.aoMapIntensity !== undefined ) material.aoMapIntensity = json.aoMapIntensity;
