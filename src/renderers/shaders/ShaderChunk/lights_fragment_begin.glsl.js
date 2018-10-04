@@ -28,7 +28,7 @@ geometry.viewDir = normalize( vViewPosition );
 
 IncidentLight directLight;
 #ifdef USE_DIRECT_LIGHTMAP
-	reflectedLight.directDiffuse += PI * texture2D( directLightMap, vUv2 ).xyz * directLightMapIntensity;
+	reflectedLight.directDiffuse += texture2D( directLightMap, vUv2 ).xyz * diffuseColor.rgb * directLightMapIntensity;
 #endif
 
 #if ( NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )
