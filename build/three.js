@@ -22090,6 +22090,8 @@
 
 		};
 
+		this.resetViewport = function () {};
+
 	}
 
 	/**
@@ -22384,6 +22386,18 @@
 		};
 
 		this.submitFrame = function () {};
+
+		this.resetViewport = function () {
+
+			var cameras = cameraVR.cameras;
+
+			for ( var i = 0; i < cameras.length; i ++ ) {
+
+				cameras[ i ].viewport.set(0, 0, 0, 0);
+
+			}
+
+		};
 
 	}
 

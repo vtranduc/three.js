@@ -393,6 +393,8 @@ function WebVRManager( renderer ) {
 
 	};
 
+	this.resetViewport = function () {};
+
 }
 
 export { WebVRManager };
