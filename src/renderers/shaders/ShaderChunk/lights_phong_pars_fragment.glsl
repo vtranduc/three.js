@@ -16,7 +16,7 @@ struct BlinnPhongMaterial {
 
 };
 
-void RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {
+void RE_Direct_BlinnPhong(const in bool isDynamicLight, const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {
 
 	#ifdef TOON
 
@@ -35,7 +35,11 @@ void RE_Direct_BlinnPhong( const in IncidentLight directLight, const in Geometri
 
 	#endif
 
+	#ifdef USE_DIRECT_LIGHTMAP
+	if (isDynamicLight) reflectedLight.directDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );
+	#else
 	reflectedLight.directDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );
+	#endif
 
 	reflectedLight.directSpecular += irradiance * BRDF_Specular_BlinnPhong( directLight, geometry, material.specularColor, material.specularShininess ) * material.specularStrength;
 

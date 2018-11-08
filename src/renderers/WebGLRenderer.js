@@ -1841,6 +1841,8 @@ function WebGLRenderer( parameters ) {
 
 				refreshUniformsCommon( m_uniforms, material );
 				refreshUniformsLambert( m_uniforms, material );
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 			} else if ( material.isMeshPhongMaterial ) {
 
@@ -1854,11 +1856,16 @@ function WebGLRenderer( parameters ) {
 
 					refreshUniformsPhong( m_uniforms, material );
 
+					m_uniforms.zNear.value = camera.near;
+					m_uniforms.zFar.value = camera.far;
+
 				}
 
 			} else if ( material.isMeshStandardMaterial ) {
 
 				refreshUniformsCommon( m_uniforms, material );
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 				if ( material.isMeshPhysicalMaterial ) {
 
@@ -1907,6 +1914,8 @@ function WebGLRenderer( parameters ) {
 
 				m_uniforms.color.value = material.color;
 				m_uniforms.opacity.value = material.opacity;
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 			}
 
@@ -1996,10 +2005,17 @@ function WebGLRenderer( parameters ) {
 
 		}
 
-		if ( material.lightMap ) {
+		if ( material.directLightMap ) {
 
-			uniforms.lightMap.value = material.lightMap;
-			uniforms.lightMapIntensity.value = material.lightMapIntensity;
+			uniforms.directLightMap.value = material.directLightMap;
+			uniforms.directLightMapIntensity.value = material.directLightMapIntensity;
+
+		}
+
+		if ( material.indirectLightMap ) {
+
+			uniforms.indirectLightMap.value = material.indirectLightMap;
+			uniforms.indirectLightMapIntensity.value = material.indirectLightMapIntensity;
 
 		}
 
@@ -2151,6 +2167,16 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.fogDensity.value = fog.density;
 
+		} else if ( fog.isFogGround ) {
+
+			uniforms.fogOpacity.value = fog.opacity;
+			uniforms.fogHeightEnabled.value = fog.heightEnabled;
+			uniforms.fogDistanceEnabled.value = fog.distanceEnabled;
+			uniforms.fogDistanceNear.value = fog.distanceNear;
+			uniforms.fogDistanceFar.value = fog.distanceFar;
+			uniforms.fogHeightNear.value = fog.heightNear;
+			uniforms.fogHeightFar.value = fog.heightFar;
+
 		}
 
 	}
@@ -2268,16 +2294,30 @@ function WebGLRenderer( parameters ) {
 
 		}
 
+		uniforms.enableProjection.value = material.enableProjection;
+
+		if ( material.enableProjection ) {
+
+			uniforms.projectionSharpness.value = material.projectionSharpness;
+
+		}
+
 	}
 
 	function refreshUniformsPhysical( uniforms, material ) {
-
-		refreshUniformsStandard( uniforms, material );
 
 		uniforms.reflectivity.value = material.reflectivity; // also part of uniforms common
 
 		uniforms.clearCoat.value = material.clearCoat;
 		uniforms.clearCoatRoughness.value = material.clearCoatRoughness;
+
+		if ( material.envIrradianceMap ) {
+
+			uniforms.envIrradianceMap.value = material.envIrradianceMap;
+
+		}
+
+		refreshUniformsStandard( uniforms, material );
 
 	}
 

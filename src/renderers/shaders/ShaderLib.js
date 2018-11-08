@@ -19,7 +19,8 @@ var ShaderLib = {
 			UniformsLib.specularmap,
 			UniformsLib.envmap,
 			UniformsLib.aomap,
-			UniformsLib.lightmap,
+			UniformsLib.directLightmap,
+			UniformsLib.indirectLightmap,
 			UniformsLib.fog
 		] ),
 
@@ -35,11 +36,14 @@ var ShaderLib = {
 			UniformsLib.specularmap,
 			UniformsLib.envmap,
 			UniformsLib.aomap,
-			UniformsLib.lightmap,
+			UniformsLib.directLightmap,
+			UniformsLib.indirectLightmap,
 			UniformsLib.emissivemap,
 			UniformsLib.fog,
 			UniformsLib.lights,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) }
 			}
 		] ),
@@ -56,7 +60,8 @@ var ShaderLib = {
 			UniformsLib.specularmap,
 			UniformsLib.envmap,
 			UniformsLib.aomap,
-			UniformsLib.lightmap,
+			UniformsLib.directLightmap,
+			UniformsLib.indirectLightmap,
 			UniformsLib.emissivemap,
 			UniformsLib.bumpmap,
 			UniformsLib.normalmap,
@@ -65,6 +70,8 @@ var ShaderLib = {
 			UniformsLib.fog,
 			UniformsLib.lights,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) },
 				specular: { value: new Color( 0x111111 ) },
 				shininess: { value: 30 }
@@ -82,7 +89,8 @@ var ShaderLib = {
 			UniformsLib.common,
 			UniformsLib.envmap,
 			UniformsLib.aomap,
-			UniformsLib.lightmap,
+			UniformsLib.directLightmap,
+			UniformsLib.indirectLightmap,
 			UniformsLib.emissivemap,
 			UniformsLib.bumpmap,
 			UniformsLib.normalmap,
@@ -91,7 +99,10 @@ var ShaderLib = {
 			UniformsLib.metalnessmap,
 			UniformsLib.fog,
 			UniformsLib.lights,
+			UniformsLib.projection,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) },
 				roughness: { value: 0.5 },
 				metalness: { value: 0.5 },
@@ -225,6 +236,8 @@ var ShaderLib = {
 			UniformsLib.lights,
 			UniformsLib.fog,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				color: { value: new Color( 0x00000 ) },
 				opacity: { value: 1.0 }
 			},
@@ -244,6 +257,9 @@ ShaderLib.physical = {
 		{
 			clearCoat: { value: 0 },
 			clearCoatRoughness: { value: 0 }
+		},
+		{
+			envIrradianceMap: { value: null }
 		}
 	] ),
 

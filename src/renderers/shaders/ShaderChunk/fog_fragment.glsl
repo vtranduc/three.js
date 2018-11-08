@@ -4,6 +4,12 @@
 
 		float fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );
 
+	#elif defined( FOG_GROUND )
+
+		float distanceFactor = fogDistanceEnabled ? smoothstep ( fogDistanceNear, fogDistanceFar, fogDepth ) : 0.0;
+		float heightFactor = fogHeightEnabled ? 1.0 - smoothstep( fogHeightNear, fogHeightFar, fogHeight ) : 0.0;
+		float fogFactor = fogOpacity * max( distanceFactor, heightFactor );
+
 	#else
 
 		float fogFactor = smoothstep( fogNear, fogFar, fogDepth );

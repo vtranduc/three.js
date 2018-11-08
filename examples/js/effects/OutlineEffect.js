@@ -6,15 +6,15 @@
  * // How to set default outline parameters
  * new THREE.OutlineEffect( renderer, {
  * 	defaultThickNess: 0.01,
- * 	defaultColor: [ 0, 0, 0 ],
+ * 	defaultColor: new THREE.Color( 0x888888 ),
  * 	defaultAlpha: 0.8,
  * 	defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
  * } );
  *
  * // How to set outline parameters for each material
- * material.userData.outlineParameters = {
+ * material.outlineParameters = {
  * 	thickNess: 0.01,
- * 	color: [ 0, 0, 0 ]
+ * 	color: new THREE.Color( 0x888888 ),
  * 	alpha: 0.8,
  * 	visible: true,
  * 	keepAlive: true
@@ -31,7 +31,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	this.enabled = true;
 
 	var defaultThickness = parameters.defaultThickness !== undefined ? parameters.defaultThickness : 0.003;
-	var defaultColor = new THREE.Color().fromArray( parameters.defaultColor !== undefined ? parameters.defaultColor : [ 0, 0, 0 ] );
+	var defaultColor = parameters.defaultColor !== undefined ? parameters.defaultColor : new THREE.Color( 0x000000 );
 	var defaultAlpha = parameters.defaultAlpha !== undefined ? parameters.defaultAlpha : 1.0;
 	var defaultKeepAlive = parameters.defaultKeepAlive !== undefined ? parameters.defaultKeepAlive : false;
 
@@ -73,8 +73,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 	var vertexShaderChunk = [
 
-		"#include <fog_pars_vertex>",
-
 		"uniform float outlineThickness;",
 
 		"vec4 calculateOutline( vec4 pos, vec3 objectNormal, vec4 skinned ) {",
@@ -106,16 +104,13 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		"	vec3 transformed = vec3( position );",
 		"#endif",
 
-		"gl_Position = calculateOutline( gl_Position, objectNormal, vec4( transformed, 1.0 ) );",
-
-		"#include <fog_vertex>"
+		"gl_Position = calculateOutline( gl_Position, objectNormal, vec4( transformed, 1.0 ) );"
 
 	].join( "\n" );
 
 	var fragmentShader = [
 
 		"#include <common>",
-		"#include <fog_pars_fragment>",
 
 		"uniform vec3 outlineColor;",
 		"uniform float outlineAlpha;",
@@ -123,8 +118,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		"void main() {",
 
 		"	gl_FragColor = vec4( outlineColor, outlineAlpha );",
-
-		"	#include <fog_fragment>",
 
 		"}"
 
@@ -140,7 +133,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 		var shaderID = shaderIDs[ originalMaterial.type ];
 		var originalUniforms, originalVertexShader;
-		var outlineParameters = originalMaterial.userData.outlineParameters;
+		var outlineParameters = originalMaterial.outlineParameters;
 
 		if ( shaderID !== undefined ) {
 
@@ -244,7 +237,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 	function setOutlineMaterial( object ) {
 
-		if ( object.material === undefined ) return;
+		if ( object.material === undefined || object.isSprite ) return;
 
 		if ( Array.isArray( object.material ) ) {
 
@@ -267,7 +260,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 	function restoreOriginalMaterial( object ) {
 
-		if ( object.material === undefined ) return;
+		if ( object.material === undefined || object.isSprite ) return;
 
 		if ( Array.isArray( object.material ) ) {
 
@@ -300,14 +293,14 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 	function updateUniforms( material, originalMaterial ) {
 
-		var outlineParameters = originalMaterial.userData.outlineParameters;
+		var outlineParameters = originalMaterial.outlineParameters;
 
 		material.uniforms.outlineAlpha.value = originalMaterial.opacity;
 
 		if ( outlineParameters !== undefined ) {
 
 			if ( outlineParameters.thickness !== undefined ) material.uniforms.outlineThickness.value = outlineParameters.thickness;
-			if ( outlineParameters.color !== undefined ) material.uniforms.outlineColor.value.fromArray( outlineParameters.color );
+			if ( outlineParameters.color !== undefined ) material.uniforms.outlineColor.value.copy( outlineParameters.color );
 			if ( outlineParameters.alpha !== undefined ) material.uniforms.outlineAlpha.value = outlineParameters.alpha;
 
 		}
@@ -318,7 +311,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 		if ( material.name === 'invisible' ) return;
 
-		var outlineParameters = originalMaterial.userData.outlineParameters;
+		var outlineParameters = originalMaterial.outlineParameters;
 
 		material.skinning = originalMaterial.skinning;
 		material.morphTargets = originalMaterial.morphTargets;
@@ -344,7 +337,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		} else {
 
 			material.transparent = originalMaterial.transparent;
-			material.visible = originalMaterial.visible;
+			material.visible = false;
 
 		}
 
@@ -448,7 +441,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	 * The following property copies and wrapper methods enable
 	 * THREE.OutlineEffect to be called from other *Effect, like
 	 *
-	 * effect = new THREE.StereoEffect( new THREE.OutlineEffect( renderer ) );
+	 * effect = new THREE.VREffect( new THREE.OutlineEffect( renderer ) );
 	 *
 	 * function render () {
 	 *

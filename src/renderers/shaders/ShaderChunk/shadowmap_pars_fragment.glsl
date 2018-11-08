@@ -2,8 +2,8 @@
 
 	#if NUM_DIR_LIGHTS > 0
 
-		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS ];
-		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];
+		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS * 3 ];
+		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS * 3 ];
 
 	#endif
 
