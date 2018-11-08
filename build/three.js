@@ -20857,7 +20857,7 @@
 
 				if ( image === undefined ) {
 
-					console.warn( 'THREE.WebGLRenderer: Texture marked for update but image is undefined' );
+					if ( texture.mapping !== THREE.CubeUVReflectionMapping ) console.warn( 'THREE.WebGLRenderer: Texture marked for update but image is undefined' );
 
 				} else if ( image.complete === false ) {
 
