@@ -7,14 +7,14 @@ THREE.EquirectangularToCubeGenerator = function ( sourceTexture, options ) {
 	this.sourceTexture = sourceTexture;
 	this.resolution = options.resolution || 512;
 
- 	this.views = [
-		{ t: [ 1, 0, 0 ], u: [ 0, - 1, 0 ] },
-		{ t: [ - 1, 0, 0 ], u: [ 0, - 1, 0 ] },
-		{ t: [ 0, 1, 0 ], u: [ 0, 0, 1 ] },
-		{ t: [ 0, - 1, 0 ], u: [ 0, 0, - 1 ] },
-		{ t: [ 0, 0, 1 ], u: [ 0, - 1, 0 ] },
-		{ t: [ 0, 0, - 1 ], u: [ 0, - 1, 0 ] },
-	];
+	this.views = [
+	{ t: [ - 1, 0, 0 ], u: [ 0, - 1, 0 ] },
+	{ t: [ 1, 0, 0 ], u: [ 0, - 1, 0 ] },
+	{ t: [ 0, 1, 0 ], u: [ 0, 0, - 1 ] },
+	{ t: [ 0, - 1, 0 ], u: [ 0, 0, 1 ] },
+	{ t: [ 0, 0, - 1 ], u: [ 0, - 1, 0 ] },
+	{ t: [ 0, 0, 1 ], u: [ 0, - 1, 0 ] },
+];
 
 	this.camera = new THREE.PerspectiveCamera( 90, 1, 0.1, 10 );
 	this.boxMesh = new THREE.Mesh( new THREE.BoxBufferGeometry( 1, 1, 1 ), this.getShader() );
