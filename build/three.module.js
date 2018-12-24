@@ -22283,7 +22283,7 @@ function WebXRManager( renderer ) {
 
 	function onAnimationFrame( time, frame ) {
 
-		pose = frame.getDevicePose( frameOfReference );
+		pose = frame.getViewerPose ? frame.getViewerPose( frameOfReference ) : frame.getDevicePose( frameOfReference );
 
 		if ( pose !== null ) {
 
