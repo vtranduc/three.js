@@ -9,24 +9,24 @@ vec4 GetTexelColorFromProjection( sampler2D _map, vec3 _projectionPosition ) {
 
   // Triplanar projection, in future other types of projections can be added
   // calculate weight for each plane depending on surface normal for blending
-  vec3 weightVec = abs( normalize( vProjectionNormal ) );
-  weightVec.x = pow( weightVec.x, projectionSharpness );
-  weightVec.y = pow( weightVec.y, projectionSharpness );
-  weightVec.z = pow( weightVec.z, projectionSharpness );
-  float weightSum = max( weightVec.x + weightVec.y + weightVec.z, 0.00001 );
-  weightVec /= weightSum;
+  vec3 blending = abs( vProjectionNormal );
+  blending = normalize( max( blending, 0.00001 ) );
+  blending.x = pow ( blending.x, projectionSharpness );
+  blending.y = pow ( blending.y, projectionSharpness );
+  blending.z = pow ( blending.z, projectionSharpness );
+  float sum = ( blending.x + blending.y + blending.z );
+  blending /= vec3( sum, sum, sum );
 
   // fetch color from texture for each plane
-  vec2 mapXuv = ( uvTransform * vec3( fract( abs( _projectionPosition.y ) ), fract( abs( _projectionPosition.z ) ), 1.0 ) ).xy;
-  vec2 mapYuv = ( uvTransform * vec3( fract( abs( _projectionPosition.x ) ), fract( abs( _projectionPosition.z ) ), 1.0 ) ).xy;
-  vec2 mapZuv = ( uvTransform * vec3( fract( abs( _projectionPosition.x ) ), fract( abs( _projectionPosition.y ) ), 1.0 ) ).xy;
-
-  vec4 mapXtexel = texture2D( _map, mapXuv );
-  vec4 mapYtexel = texture2D( _map, mapYuv );
-  vec4 mapZtexel = texture2D( _map, mapZuv );
+  vec2 xUV = (uvTransform * vec3( _projectionPosition.yz, 1.0 ) ).xy;
+  vec2 yUV = (uvTransform * vec3( _projectionPosition.xz, 1.0 ) ).xy;
+  vec2 zUV = (uvTransform * vec3( _projectionPosition.xy, 1.0 ) ).xy;
+  vec4 xTexel = texture2D( _map, xUV );
+  vec4 yTexel = texture2D( _map, yUV );
+  vec4 zTexel = texture2D( _map, zUV );
 
   // texel blending from all three planes
-  return weightVec.x * mapXtexel + weightVec.y * mapYtexel + weightVec.z * mapZtexel;
+  return blending.x * xTexel + blending.y * yTexel + blending.z * zTexel;
 
 }
 `;
