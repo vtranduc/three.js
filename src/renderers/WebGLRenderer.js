@@ -1334,7 +1334,9 @@ function WebGLRenderer( parameters ) {
 
 			var object = renderItem.object;
 			var geometry = renderItem.geometry;
-			var material = overrideMaterial === undefined ? renderItem.material : overrideMaterial;
+			var material = overrideMaterial === undefined ? renderItem.material : overrideMaterial.clone();
+			material.skinning = renderItem.material.skinning;
+			material.morphTargets = renderItem.material.morphTargets;
 			var group = renderItem.group;
 
 			if ( camera.isArrayCamera ) {
