@@ -77,7 +77,7 @@ THREE.EditorControls = function ( object, domElement ) {
 		object.position.add( delta );
 		center.add( delta );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent({type: 'change', action: 'pan'});
 
 	};
 
@@ -93,7 +93,7 @@ THREE.EditorControls = function ( object, domElement ) {
 
 		object.position.add( delta );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent({type: 'change', action: 'zoom'});
 
 	};
 
@@ -114,7 +114,7 @@ THREE.EditorControls = function ( object, domElement ) {
 
 		object.lookAt( center );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent({type: 'change', action: 'rotate'});
 
 	};
 
