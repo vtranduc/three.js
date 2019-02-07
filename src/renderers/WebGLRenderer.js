@@ -192,7 +192,8 @@ function WebGLRenderer( parameters ) {
 			antialias: _antialias,
 			premultipliedAlpha: _premultipliedAlpha,
 			preserveDrawingBuffer: _preserveDrawingBuffer,
-			powerPreference: _powerPreference
+			powerPreference: _powerPreference,
+			xrCompatible: true
 		};
 
 		// event listeners must be registered before WebGL context is created, see #12753
