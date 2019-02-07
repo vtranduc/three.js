@@ -19,13 +19,8 @@ function WebXRManager( renderer, gl ) {
 
 	var framebufferScaleFactor = 1.0;
 
-<<<<<<< HEAD
 	var referenceSpace = null;
 	var referenceSpaceType = 'local-floor';
-=======
-	var frameOfReference = null;
-	var frameOfReferenceType = 'stage';
->>>>>>> update xr manager to match new spec.
 
 	var pose = null;
 
@@ -100,22 +95,12 @@ function WebXRManager( renderer, gl ) {
 
 	}
 
-<<<<<<< HEAD
 	function onRequestReferenceSpace( value ) {
 
 		referenceSpace = value;
 
 		animation.setContext( session );
 		animation.start();
-=======
-	this.setFramebufferScaleFactor = function ( value ) {
-
-		framebufferScaleFactor = value;
-
-	};
-
-	this.setFrameOfReferenceType = function ( value ) {
->>>>>>> update xr manager to match new spec.
 
 		scope.dispatchEvent( { type: 'sessionstart' } );
 
@@ -156,7 +141,6 @@ function WebXRManager( renderer, gl ) {
 			session.addEventListener( 'selectend', onSessionEvent );
 			session.addEventListener( 'end', onSessionEnd );
 
-<<<<<<< HEAD
 			session.updateRenderState( { baseLayer: new XRWebGLLayer( session, gl ) } );
 
 			session.requestReferenceSpace( referenceSpaceType ).then( onRequestReferenceSpace );
@@ -178,12 +162,6 @@ function WebXRManager( renderer, gl ) {
 				}
 
 			} );
-=======
-			renderer.setFramebuffer( session.baseLayer.framebuffer );
-
-			animation.setContext( session );
-			animation.start();
->>>>>>> update xr manager to match new spec.
 
 		}
 
@@ -250,7 +228,6 @@ function WebXRManager( renderer, gl ) {
 
 	function onAnimationFrame( time, frame ) {
 
-<<<<<<< HEAD
 		pose = frame.getViewerPose( referenceSpace );
 
 		if ( pose !== null ) {
@@ -259,14 +236,6 @@ function WebXRManager( renderer, gl ) {
 			var baseLayer = session.renderState.baseLayer;
 
 			renderer.setFramebuffer( baseLayer.framebuffer );
-=======
-		pose = frame.getViewerPose( frameOfReference );
-
-		if ( pose !== null ) {
-
-			var layer = session.baseLayer;
-			var views = pose.views;
->>>>>>> update xr manager to match new spec.
 
 			for ( var i = 0; i < views.length; i ++ ) {
 
@@ -275,7 +244,7 @@ function WebXRManager( renderer, gl ) {
 				var viewMatrix = view.transform.inverse.matrix;
 
 				var camera = cameraVR.cameras[ i ];
-				camera.matrix.fromArray( viewMatrix ).getInverse( camera.matrix );
+				camera.matrix.fromArray( view.viewMatrix ).getInverse( camera.matrix );
 				camera.projectionMatrix.fromArray( view.projectionMatrix );
 				camera.viewport.set( viewport.x, viewport.y, viewport.width, viewport.height );
 
