@@ -22089,6 +22089,69 @@ function WebVRManager( renderer ) {
 }
 
 /**
+ * @author jsantell / https://www.jsantell.com/
+ * @author mrdoob / http://mrdoob.com/
+ */
+
+var cameraLPos = new Vector3();
+var cameraRPos = new Vector3();
+
+/**
+ * Assumes 2 cameras that are parallel and share an X-axis, and that
+ * the cameras' projection and world matrices have already been set.
+ * And that near and far planes are identical for both cameras.
+ * Visualization of this technique: https://computergraphics.stackexchange.com/a/4765
+ */
+function setProjectionFromUnion( camera, cameraL, cameraR ) {
+
+	cameraLPos.setFromMatrixPosition( cameraL.matrixWorld );
+	cameraRPos.setFromMatrixPosition( cameraR.matrixWorld );
+
+	var ipd = cameraLPos.distanceTo( cameraRPos );
+
+	var projL = cameraL.projectionMatrix.elements;
+	var projR = cameraR.projectionMatrix.elements;
+
+	// VR systems will have identical far and near planes, and
+	// most likely identical top and bottom frustum extents.
+	// Use the left camera for these values.
+	var near = projL[ 14 ] / ( projL[ 10 ] - 1 );
+	var far = projL[ 14 ] / ( projL[ 10 ] + 1 );
+	var topFov = ( projL[ 9 ] + 1 ) / projL[ 5 ];
+	var bottomFov = ( projL[ 9 ] - 1 ) / projL[ 5 ];
+
+	var leftFov = ( projL[ 8 ] - 1 ) / projL[ 0 ];
+	var rightFov = ( projR[ 8 ] + 1 ) / projR[ 0 ];
+	var left = near * leftFov;
+	var right = near * rightFov;
+
+	// Calculate the new camera's position offset from the
+	// left camera. xOffset should be roughly half `ipd`.
+	var zOffset = ipd / ( - leftFov + rightFov );
+	var xOffset = zOffset * - leftFov;
+
+	// TODO: Better way to apply this offset?
+	cameraL.matrixWorld.decompose( camera.position, camera.quaternion, camera.scale );
+	camera.translateX( xOffset );
+	camera.translateZ( zOffset );
+	camera.matrixWorld.compose( camera.position, camera.quaternion, camera.scale );
+	camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+	// Find the union of the frustum values of the cameras and scale
+	// the values so that the near plane's position does not change in world space,
+	// although must now be relative to the new union camera.
+	var near2 = near + zOffset;
+	var far2 = far + zOffset;
+	var left2 = left - xOffset;
+	var right2 = right + ( ipd - xOffset );
+	var top2 = topFov * far / far2 * near2;
+	var bottom2 = bottomFov * far / far2 * near2;
+
+	camera.projectionMatrix.makePerspective( left2, right2, top2, bottom2, near2, far2 );
+
+}
+
+/**
  * @author mrdoob / http://mrdoob.com/
  */
 
@@ -22100,7 +22163,6 @@ function WebXRManager( renderer ) {
 	var session = null;
 
 	var frameOfReference = null;
-	var frameOfReferenceType = 'stage';
 
 	var pose = null;
 
@@ -22178,9 +22240,17 @@ function WebXRManager( renderer ) {
 
 	}
 
+	this.setFramebufferScaleFactor = function ( value ) {
+
+	};
+
 	this.setFrameOfReferenceType = function ( value ) {
 
-		frameOfReferenceType = value;
+	};
+
+	this.setFrameOfReference = function ( value ) {
+
+		frameOfReference = value;
 
 	};
 
@@ -22195,28 +22265,10 @@ function WebXRManager( renderer ) {
 			session.addEventListener( 'selectend', onSessionEvent );
 			session.addEventListener( 'end', onSessionEnd );
 
-			session.baseLayer = new XRWebGLLayer( session, gl );
-			session.requestFrameOfReference( frameOfReferenceType ).then( function ( value ) {
+			renderer.setFramebuffer( session.baseLayer.framebuffer );
 
-				frameOfReference = value;
-
-				renderer.setFramebuffer( session.baseLayer.framebuffer );
-
-				animation.setContext( session );
-				animation.start();
-
-			} );
-
-			//
-
-			inputSources = session.getInputSources();
-
-			session.addEventListener( 'inputsourceschange', function () {
-
-				inputSources = session.getInputSources();
-				console.log( inputSources );
-
-			} );
+			animation.setContext( session );
+			animation.start();
 
 		}
 
@@ -22245,8 +22297,6 @@ function WebXRManager( renderer ) {
 			var parent = camera.parent;
 			var cameras = cameraVR.cameras;
 
-			// apply camera.parent to cameraVR
-
 			updateCamera( cameraVR, parent );
 
 			for ( var i = 0; i < cameras.length; i ++ ) {
@@ -22267,6 +22317,8 @@ function WebXRManager( renderer ) {
 
 			}
 
+			setProjectionFromUnion( cameraVR, cameraL, cameraR );
+
 			return cameraVR;
 
 		}
@@ -22283,32 +22335,26 @@ function WebXRManager( renderer ) {
 
 	function onAnimationFrame( time, frame ) {
 
-		pose = frame.getViewerPose ? frame.getViewerPose( frameOfReference ) : frame.getDevicePose( frameOfReference );
+		pose = frame.getViewerPose( frameOfReference );
 
 		if ( pose !== null ) {
 
 			var layer = session.baseLayer;
-			var views = frame.views;
+			var views = pose.views;
 
 			for ( var i = 0; i < views.length; i ++ ) {
 
 				var view = views[ i ];
 				var viewport = layer.getViewport( view );
-				var viewMatrix = pose.getViewMatrix( view );
 
 				var camera = cameraVR.cameras[ i ];
-				camera.matrix.fromArray( viewMatrix ).getInverse( camera.matrix );
+				camera.matrix.fromArray( view.viewMatrix ).getInverse( camera.matrix );
 				camera.projectionMatrix.fromArray( view.projectionMatrix );
 				camera.viewport.set( viewport.x, viewport.y, viewport.width, viewport.height );
 
 				if ( i === 0 ) {
 
 					cameraVR.matrix.copy( camera.matrix );
-
-					// HACK (mrdoob)
-					// https://github.com/w3c/webvr/issues/203
-
-					cameraVR.projectionMatrix.copy( camera.projectionMatrix );
 
 				}
 
@@ -22380,18 +22426,6 @@ function WebXRManager( renderer ) {
 	};
 
 	this.submitFrame = function () {};
-
-	this.resetViewport = function () {
-
-		var cameras = cameraVR.cameras;
-
-		for ( var i = 0; i < cameras.length; i ++ ) {
-
-			cameras[ i ].viewport.set(0, 0, 0, 0);
-
-		}
-
-	};
 
 }
 
@@ -22544,7 +22578,8 @@ function WebGLRenderer( parameters ) {
 			antialias: _antialias,
 			premultipliedAlpha: _premultipliedAlpha,
 			preserveDrawingBuffer: _preserveDrawingBuffer,
-			powerPreference: _powerPreference
+			powerPreference: _powerPreference,
+			xrCompatible: true
 		};
 
 		// event listeners must be registered before WebGL context is created, see #12753
