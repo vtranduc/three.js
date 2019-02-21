@@ -255,10 +255,10 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 		var cameraFrusta = [];
 		for (var i = 0; i <= 2; i++) {
 			cameraFrusta[i] = [
-				new THREE.Vector3(planeDims[i].x, planeDims[i].y, -planeDims[i].z),
-				new THREE.Vector3(-planeDims[i].x, planeDims[i].y, -planeDims[i].z),
-				new THREE.Vector3(-planeDims[i].x, -planeDims[i].y, -planeDims[i].z),
-				new THREE.Vector3(planeDims[i].x, -planeDims[i].y, -planeDims[i].z),
+				new THREE.Vector3(planeDims[0].x, planeDims[0].y, -planeDims[0].z),
+				new THREE.Vector3(-planeDims[0].x, planeDims[0].y, -planeDims[0].z),
+				new THREE.Vector3(-planeDims[0].x, -planeDims[0].y, -planeDims[0].z),
+				new THREE.Vector3(planeDims[0].x, -planeDims[0].y, -planeDims[0].z),
 				new THREE.Vector3(planeDims[i + 1].x, planeDims[i + 1].y, -planeDims[i + 1].z),
 				new THREE.Vector3(-planeDims[i + 1].x, planeDims[i + 1].y, -planeDims[i + 1].z),
 				new THREE.Vector3(-planeDims[i + 1].x, -planeDims[i + 1].y, -planeDims[i + 1].z),
