@@ -16065,10 +16065,10 @@
 			var cameraFrusta = [];
 			for (var i = 0; i <= 2; i++) {
 				cameraFrusta[i] = [
-					new THREE.Vector3(planeDims[i].x, planeDims[i].y, -planeDims[i].z),
-					new THREE.Vector3(-planeDims[i].x, planeDims[i].y, -planeDims[i].z),
-					new THREE.Vector3(-planeDims[i].x, -planeDims[i].y, -planeDims[i].z),
-					new THREE.Vector3(planeDims[i].x, -planeDims[i].y, -planeDims[i].z),
+					new THREE.Vector3(planeDims[0].x, planeDims[0].y, -planeDims[0].z),
+					new THREE.Vector3(-planeDims[0].x, planeDims[0].y, -planeDims[0].z),
+					new THREE.Vector3(-planeDims[0].x, -planeDims[0].y, -planeDims[0].z),
+					new THREE.Vector3(planeDims[0].x, -planeDims[0].y, -planeDims[0].z),
 					new THREE.Vector3(planeDims[i + 1].x, planeDims[i + 1].y, -planeDims[i + 1].z),
 					new THREE.Vector3(-planeDims[i + 1].x, planeDims[i + 1].y, -planeDims[i + 1].z),
 					new THREE.Vector3(-planeDims[i + 1].x, -planeDims[i + 1].y, -planeDims[i + 1].z),
@@ -35417,23 +35417,37 @@
 				cameraFrustumVerts.map( function ( frustumVert ) {
 					frustumVert.applyMatrix4(inv);
 					if (min) {
-						min.x = Math.min(frustumVert.x, min.x);
-						min.y = Math.min(frustumVert.y, min.y);
-						max.x = Math.max(frustumVert.x, max.x);
-						max.y = Math.max(frustumVert.y, max.y);
+						min.min(frustumVert);
+						min.min(frustumVert);
+						max.max(frustumVert);
+						max.max(frustumVert);
 					} else {
 						min = new THREE.Vector2(frustumVert.x, frustumVert.y);
 						max = new THREE.Vector2(frustumVert.x, frustumVert.y);
 					}
 				});
-
 				// We limit our shadow cam to fit the scene or to the calculated frustum, whichever is a tighter bound.
 				transformedBox.applyMatrix4(inv);
-				this.shadowCascade[index].camera.left = Math.max(min.x, transformedBox.min.x);
-				this.shadowCascade[index].camera.bottom = Math.max(min.y, transformedBox.min.y);
-				this.shadowCascade[index].camera.right = Math.min(max.x, transformedBox.max.x);
-				this.shadowCascade[index].camera.top = Math.min(max.y, transformedBox.max.y);
+				min.max(transformedBox.min);
+				max.min(transformedBox.max);
 
+				// Perform rounding to reduce shimmer
+				var unitsPerTexel = new THREE.Vector2().subVectors(max, min);
+				unitsPerTexel.divideScalar(this.shadowCascade[index].mapSize.width);
+
+				min.divide(unitsPerTexel);
+				min.floor();
+				min.multiply(unitsPerTexel);
+
+				max.divide(unitsPerTexel);
+				max.floor();
+				max.multiply(unitsPerTexel);
+
+				// Update frusta for real
+				this.shadowCascade[index].camera.left = min.x;
+				this.shadowCascade[index].camera.bottom = min.y;
+				this.shadowCascade[index].camera.right = max.x;
+				this.shadowCascade[index].camera.top = max.y;
 				this.shadowCascade[index].camera.far = Math.max(0, -transformedBox.min.z);
 				this.shadowCascade[index].camera.updateProjectionMatrix();
 			}, this));
