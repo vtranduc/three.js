@@ -9,7 +9,6 @@ import { Vector4 } from '../../math/Vector4.js';
 import { ArrayCamera } from '../../cameras/ArrayCamera.js';
 import { PerspectiveCamera } from '../../cameras/PerspectiveCamera.js';
 import { WebGLAnimation } from '../webgl/WebGLAnimation.js';
-import { setProjectionFromUnion } from './WebVRUtils.js';
 
 function WebXRManager( renderer, gl ) {
 
@@ -124,12 +123,6 @@ function WebXRManager( renderer, gl ) {
 
 	};
 
-	this.setFrameOfReference = function ( value ) {
-
-		frameOfReference = value;
-
-	};
-
 	this.setSession = function ( value ) {
 
 		session = value;
@@ -190,6 +183,8 @@ function WebXRManager( renderer, gl ) {
 			var parent = camera.parent;
 			var cameras = cameraVR.cameras;
 
+			// apply camera.parent to cameraVR
+
 			updateCamera( cameraVR, parent );
 
 			for ( var i = 0; i < cameras.length; i ++ ) {
@@ -209,8 +204,6 @@ function WebXRManager( renderer, gl ) {
 				children[ i ].updateMatrixWorld( true );
 
 			}
-
-			setProjectionFromUnion( cameraVR, cameraL, cameraR );
 
 			return cameraVR;
 
@@ -251,6 +244,11 @@ function WebXRManager( renderer, gl ) {
 				if ( i === 0 ) {
 
 					cameraVR.matrix.copy( camera.matrix );
+
+					// HACK (mrdoob)
+					// https://github.com/w3c/webvr/issues/203
+
+					cameraVR.projectionMatrix.copy( camera.projectionMatrix );
 
 				}
 
@@ -329,6 +327,18 @@ function WebXRManager( renderer, gl ) {
 	};
 
 	this.submitFrame = function () {};
+
+	this.resetViewport = function () {
+
+		var cameras = cameraVR.cameras;
+
+		for ( var i = 0; i < cameras.length; i ++ ) {
+
+			cameras[ i ].viewport.set(0, 0, 0, 0)
+
+		}
+
+	}
 
 }
 
