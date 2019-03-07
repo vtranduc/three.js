@@ -207,9 +207,10 @@ function WebXRManager( renderer ) {
 
 				var view = views[ i ];
 				var viewport = layer.getViewport( view );
+				var viewMatrix = pose.getViewMatrix( view );
 
 				var camera = cameraVR.cameras[ i ];
-				camera.matrix.fromArray( view.viewMatrix ).getInverse( camera.matrix );
+				camera.matrix.fromArray( viewMatrix ).getInverse( camera.matrix );
 				camera.projectionMatrix.fromArray( view.projectionMatrix );
 				camera.viewport.set( viewport.x, viewport.y, viewport.width, viewport.height );
 
