@@ -100,9 +100,10 @@ function WebXRManager( renderer ) {
 
 	};
 
-	this.setSession = function ( value ) {
+	this.setSession = function ( value, refSpace ) {
 
 		session = value;
+		setFrameOfReference = refSpace;
 
 		if ( session !== null ) {
 
@@ -111,28 +112,10 @@ function WebXRManager( renderer ) {
 			session.addEventListener( 'selectend', onSessionEvent );
 			session.addEventListener( 'end', onSessionEnd );
 
-			session.baseLayer = new XRWebGLLayer( session, gl );
-			session.requestFrameOfReference( frameOfReferenceType ).then( function ( value ) {
+			renderer.setFramebuffer( session.renderState.baseLayer.framebuffer );
 
-				frameOfReference = value;
-
-				renderer.setFramebuffer( session.baseLayer.framebuffer );
-
-				animation.setContext( session );
-				animation.start();
-
-			} );
-
-			//
-
-			inputSources = session.getInputSources();
-
-			session.addEventListener( 'inputsourceschange', function () {
-
-				inputSources = session.getInputSources();
-				console.log( inputSources );
-
-			} );
+			animation.setContext( session );
+			animation.start();
 
 		}
 
@@ -203,14 +186,14 @@ function WebXRManager( renderer ) {
 
 		if ( pose !== null ) {
 
-			var layer = session.baseLayer;
-			var views = frame.views;
+			var layer = session.renderState.baseLayer;
+			var views = pose.views;
 
 			for ( var i = 0; i < views.length; i ++ ) {
 
 				var view = views[ i ];
-				var viewport = layer.getViewport( view );
-				var viewMatrix = pose.getViewMatrix( view );
+				var viewport = view.viewport;
+				var viewMatrix = view.viewMatrix;
 
 				var camera = cameraVR.cameras[ i ];
 				camera.matrix.fromArray( viewMatrix ).getInverse( camera.matrix );
