@@ -22199,7 +22199,7 @@
 				session.addEventListener( 'selectend', onSessionEvent );
 				session.addEventListener( 'end', onSessionEnd );
 
-				renderer.setFramebuffer( session.baseLayer.framebuffer );
+				renderer.setFramebuffer( session.renderState.baseLayer.framebuffer );
 
 				animation.setContext( session );
 				animation.start();
