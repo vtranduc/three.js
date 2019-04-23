@@ -103,7 +103,7 @@ function WebXRManager( renderer ) {
 	this.setSession = function ( value, refSpace ) {
 
 		session = value;
-		setFrameOfReference = refSpace;
+		frameOfReference = refSpace;
 
 		if ( session !== null ) {
 
