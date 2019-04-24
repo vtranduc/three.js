@@ -1156,7 +1156,7 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 
 				} else {
 
-					throw 'EXRLoader._parser: unsupported pixelType ' + EXRHeader.channels[ channelID ].pixelType + '. Only pixelType is 1 (HALF) is supported.';
+					throw {message: 'Only supported pixel format is HALF', error: 'dataType'};
 
 				}
 
