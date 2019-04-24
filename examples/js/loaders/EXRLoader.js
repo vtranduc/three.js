@@ -1109,7 +1109,7 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 
 				} else {
 
-					throw 'Only supported pixel format is HALF';
+					throw {message: 'Only supported pixel format is HALF', error: 'dataType'};
 
 				}
 
