@@ -779,9 +779,9 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 		var uintBuffer = new Uint8Array( buffer );
 		var endOffset = 0;
 
-		while ( uintBuffer[ offset.value + endOffset ] != 0 ) {
+		while ( uintBuffer[ offset.value + endOffset ] != 0 && offset.value + endOffset < uintBuffer.length ) {
 
-			endOffset += 1;
+		endOffset += 1;
 
 		}
 
@@ -1211,7 +1211,7 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 
 					} else {
 
-						throw 'EXRLoader._parser: unsupported pixelType ' + EXRHeader.channels[ channelID ].pixelType + '. Only pixelType is 1 (HALF) is supported.';
+						throw {message: 'Only supported pixel format is HALF', error: 'dataType'};
 
 					}
 
@@ -1223,7 +1223,7 @@ THREE.EXRLoader.prototype._parser = function ( buffer ) {
 
 	} else {
 
-		throw 'EXRLoader._parser: ' + EXRHeader.compression + ' is unsupported';
+		throw {message: 'Cannot decompress unsupported compression', error: 'compression'};
 
 	}
 
