@@ -112,7 +112,7 @@ function WebXRManager( renderer ) {
 			session.addEventListener( 'selectend', onSessionEvent );
 			session.addEventListener( 'end', onSessionEnd );
 
-			renderer.setFramebuffer( session.renderState.baseLayer.framebuffer );
+			// renderer.setFramebuffer( session.renderState.baseLayer.framebuffer );
 
 			animation.setContext( session );
 			animation.start();
@@ -182,12 +182,16 @@ function WebXRManager( renderer ) {
 
 	function onAnimationFrame( time, frame ) {
 
+		session = frame.session;
 		pose = frame.getViewerPose ? frame.getViewerPose( frameOfReference ) : frame.getDevicePose( frameOfReference );
+
 
 		if ( pose !== null ) {
 
 			var layer = session.renderState.baseLayer;
 			var views = pose.views;
+
+			renderer.setFramebuffer(session.renderState.baseLayer.framebuffer);
 
 			for ( var i = 0; i < views.length; i ++ ) {
 
