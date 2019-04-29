@@ -22193,7 +22193,7 @@ function WebXRManager( renderer ) {
 			session.addEventListener( 'selectend', onSessionEvent );
 			session.addEventListener( 'end', onSessionEnd );
 
-			renderer.setFramebuffer( session.baseLayer.framebuffer );
+			renderer.setFramebuffer( session.renderState.baseLayer.framebuffer );
 
 			animation.setContext( session );
 			animation.start();
@@ -22267,7 +22267,7 @@ function WebXRManager( renderer ) {
 
 		if ( pose !== null ) {
 
-			var layer = session.baseLayer;
+			var layer = session.renderState.baseLayer;
 			var views = pose.views;
 
 			for ( var i = 0; i < views.length; i ++ ) {
