@@ -15627,7 +15627,7 @@
 
 			var influences = influencesList[ geometry.id ];
 
-			if ( influences === undefined ) {
+			if ( influences === undefined || influences.length !== length ) {
 
 				// initialise list
 
