@@ -257,6 +257,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters,
 		switch ( material.envMap.mapping ) {
 
 			case CubeRefractionMapping:
+			case CubeUVRefractionMapping:
 			case EquirectangularRefractionMapping:
 				envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
 				break;
