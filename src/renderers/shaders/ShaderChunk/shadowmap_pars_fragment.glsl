@@ -87,6 +87,7 @@
 			}
 			return sum / ( 2.0 * float( PCF_NUM_SAMPLES ) );
 		}
+
 	#endif
 
 	float texture2DCompare( sampler2D depths, vec2 uv, float compare ) {
@@ -277,6 +278,42 @@
 
 	}
 
+	#if defined( SHADOWMAP_TYPE_PCSS )
+		float findPointBlocker( sampler2D shadowMap, const in vec3 bd3D, const in float zReceiver, float texelSize ) {
+			// This uses similar triangles to compute what
+			// area of the shadow map we should search
+			float searchRadius = texelSize *.25 * ( zReceiver - NEAR_PLANE ) / zReceiver;
+			float blockerDepthSum = 0.0;
+			int numBlockers = 0;
+			for( int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; i++ ) {
+				vec2 offset = poissonDisk[i] * searchRadius;
+				vec2 uv = cubeToUV( bd3D + offset.xyx, texelSize );
+				float shadowMapDepth = unpackRGBAToDepth(texture2D(shadowMap, uv));
+				if ( shadowMapDepth < zReceiver ) {
+					blockerDepthSum += shadowMapDepth;
+					numBlockers ++;
+				}
+			}
+			if( numBlockers == 0 ) return -1.0;
+			return blockerDepthSum / float( numBlockers );
+		}
+
+		float Point_PCF_Filter(sampler2D shadowMap, vec3 bd3D, float zReceiver, float filterRadius, float texelSize ) {
+			float sum = 0.0;
+			for( int i = 0; i < PCF_NUM_SAMPLES; i ++ ) {
+				vec2 offset = poissonDisk[i] * filterRadius;
+				float d1 = unpackRGBAToDepth( texture2D( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize ) ));
+				if( zReceiver <= d1 ) sum += 1.0;
+			}
+			for( int i = 0; i < PCF_NUM_SAMPLES; i ++ ) {
+				vec2 offset = poissonDisk[i].yx * filterRadius;
+				float d2 = unpackRGBAToDepth( texture2D( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize ) ));
+				if( zReceiver <= d2 ) sum += 1.0;
+			}
+			return sum / ( 2.0 * float( PCF_NUM_SAMPLES ) );
+		}
+	#endif
+
 	float getPointShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {
 
 		vec2 texelSize = vec2( 1.0 ) / ( shadowMapSize * vec2( 4.0, 2.0 ) );
@@ -292,7 +329,22 @@
 		// bd3D = base direction 3D
 		vec3 bd3D = normalize( lightToPosition );
 
-		#if defined( SHADOWMAP_TYPE_PCSS ) || defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT )
+		#if defined( SHADOWMAP_TYPE_PCSS )
+
+			vec2 uv = cubeToUV( bd3D, texelSize.y );
+			float zReceiver = dp; // Assumed to be eye-space z in this code
+			initPoissonSamples( uv );
+			// STEP 1: blocker search
+			float avgBlockerDepth = findPointBlocker( shadowMap, bd3D, zReceiver, texelSize.y );
+			//There are no occluders so early out (this saves filtering)
+			if( avgBlockerDepth == -1.0 ) return 1.0;
+			// STEP 2: penumbra size
+			float penumbraRatio = penumbraSize( zReceiver, avgBlockerDepth );
+			float filterRadius = penumbraRatio * texelSize.y * .25 * NEAR_PLANE / zReceiver;
+			// STEP 3: filtering
+			//return avgBlockerDepth;
+			return Point_PCF_Filter( shadowMap, bd3D, zReceiver, filterRadius, texelSize.y );
+		#elif defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT )
 
 			vec2 offset = vec2( - 1, 1 ) * shadowRadius * texelSize.y;
 
