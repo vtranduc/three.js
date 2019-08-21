@@ -233,9 +233,9 @@ THREE.GLTFLoader = ( function () {
 	/**
 	 * DDS Texture Extension
 	 *
-	 * Specification: 
+	 * Specification:
 	 * https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/MSFT_texture_dds
-	 * 
+	 *
 	 */
 	function GLTFTextureDDSExtension() {
 
@@ -1849,25 +1849,33 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		var sourceURI = source.uri;
 		var isObjectURL = false;
 
-		if ( source.bufferView !== undefined ) {
+		function getSourceURI () {
 
-			// Load binary image data from bufferView, if provided.
+			return new Promise(function (resolve, reject) {
 
-			sourceURI = parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+		 	if ( source.bufferView === undefined ) return resolve(source.uri)
 
-				isObjectURL = true;
+		 	// Load binary image data from bufferView, if provided.
+
+		 	parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+
 				var blob = new Blob( [ bufferView ], { type: source.mimeType } );
-				sourceURI = URL.createObjectURL( blob );
-				return sourceURI;
+		    var reader = new FileReader();
+		    reader.onload = function (e) {
+		       resolve(e.target.result);
+		    }
+		    reader.readAsDataURL(blob);
 
-			} );
+		 		} );
+
+			})
 
 		}
 
-		return Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+		return getSourceURI()
+		.then( function ( sourceURI ) {
 
 			// Load Texture resource.
 
@@ -1893,7 +1901,7 @@ THREE.GLTFLoader = ( function () {
 
 			if ( isObjectURL === true ) {
 
-				URL.revokeObjectURL( sourceURI );
+				// URL.revokeObjectURL( sourceURI );
 
 			}
 
@@ -1901,21 +1909,12 @@ THREE.GLTFLoader = ( function () {
 
 			if ( textureDef.name !== undefined ) texture.name = textureDef.name;
 
-			// .format of dds texture is set in DDSLoader
-			if ( ! textureExtensions[ EXTENSIONS.MSFT_TEXTURE_DDS ] ) {
+			// Ignore unknown mime types, like DDS files.
+			if ( source.mimeType in MIME_TYPE_FORMATS ) {
 
-				texture.format = textureDef.format !== undefined ? WEBGL_TEXTURE_FORMATS[ textureDef.format ] : THREE.RGBAFormat;
-
-			}
-
-			if ( textureDef.internalFormat !== undefined && texture.format !== WEBGL_TEXTURE_FORMATS[ textureDef.internalFormat ] ) {
-
-				console.warn( 'THREE.GLTFLoader: Three.js does not support texture internalFormat which is different from texture format. ' +
-											'internalFormat will be forced to be the same value as format.' );
+				texture.format = MIME_TYPE_FORMATS[ source.mimeType ];
 
 			}
-
-			texture.type = textureDef.type !== undefined ? WEBGL_TEXTURE_DATATYPES[ textureDef.type ] : THREE.UnsignedByteType;
 
 			var samplers = json.samplers || {};
 			var sampler = samplers[ textureDef.sampler ] || {};
