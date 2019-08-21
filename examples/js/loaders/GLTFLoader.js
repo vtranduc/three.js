@@ -2015,25 +2015,33 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		var sourceURI = source.uri;
 		var isObjectURL = false;
 
-		if ( source.bufferView !== undefined ) {
+		function getSourceURI () {
 
-			// Load binary image data from bufferView, if provided.
+			return new Promise(function (resolve, reject) {
 
-			sourceURI = parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+		 	if ( source.bufferView === undefined ) return resolve(source.uri)
 
-				isObjectURL = true;
+		 	// Load binary image data from bufferView, if provided.
+
+		 	parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+
 				var blob = new Blob( [ bufferView ], { type: source.mimeType } );
-				sourceURI = URL.createObjectURL( blob );
-				return sourceURI;
+		    var reader = new FileReader();
+		    reader.onload = function (e) {
+		       resolve(e.target.result);
+		    }
+		    reader.readAsDataURL(blob);
 
-			} );
+		 		} );
+
+			})
 
 		}
 
-		return Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+		return getSourceURI()
+		.then( function ( sourceURI ) {
 
 			// Load Texture resource.
 
@@ -2059,7 +2067,7 @@ THREE.GLTFLoader = ( function () {
 
 			if ( isObjectURL === true ) {
 
-				URL.revokeObjectURL( sourceURI );
+				// URL.revokeObjectURL( sourceURI );
 
 			}
 
