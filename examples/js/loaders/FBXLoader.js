@@ -73,7 +73,7 @@ THREE.FBXLoader = ( function () {
 
 		},
 
-		parse: function ( FBXBuffer, resourceDirectory, onTextureLoad ) {
+		parse: function ( FBXBuffer, resourceDirectory ) {
 
 			if ( isFbxFormatBinary( FBXBuffer ) ) {
 
@@ -103,7 +103,7 @@ THREE.FBXLoader = ( function () {
 
 			var textureLoader = new THREE.TextureLoader( this.manager ).setPath( resourceDirectory ).setCrossOrigin( this.crossOrigin );
 
-			return new FBXTreeParser( textureLoader ).parse( fbxTree, onTextureLoad );
+			return new FBXTreeParser( textureLoader ).parse( fbxTree );
 
 		}
 
@@ -120,12 +120,12 @@ THREE.FBXLoader = ( function () {
 
 		constructor: FBXTreeParser,
 
-		parse: function (fbxTree, onTextureLoad) {
+		parse: function (fbxTree) {
 
 			connections = this.parseConnections();
 
 			var images = this.parseImages();
-			var textures = this.parseTextures( images, onTextureLoad );
+			var textures = this.parseTextures( images );
 			var materials = this.parseMaterials( textures );
 			var deformers = this.parseDeformers();
 			var geometryMap = new GeometryParser().parse( deformers );
@@ -312,7 +312,7 @@ THREE.FBXLoader = ( function () {
 		// Parse nodes in FBXTree.Objects.Texture
 		// These contain details such as UV scaling, cropping, rotation etc and are connected
 		// to images in FBXTree.Objects.Video
-		parseTextures: function ( images, onTextureLoad ) {
+		parseTextures: function ( images ) {
 
 			var textureMap = new Map();
 
@@ -321,7 +321,7 @@ THREE.FBXLoader = ( function () {
 				var textureNodes = fbxTree.Objects.Texture;
 				for ( var nodeID in textureNodes ) {
 
-					var texture = this.parseTexture( textureNodes[ nodeID ], images, onTextureLoad );
+					var texture = this.parseTexture( textureNodes[ nodeID ], images );
 					textureMap.set( parseInt( nodeID ), texture );
 
 				}
@@ -333,9 +333,9 @@ THREE.FBXLoader = ( function () {
 		},
 
 		// Parse individual node in FBXTree.Objects.Texture
-		parseTexture: function ( textureNode, images, onTextureLoad ) {
+		parseTexture: function ( textureNode, images ) {
 
-			var texture = this.loadTexture( textureNode, images, onTextureLoad );
+			var texture = this.loadTexture( textureNode, images );
 
 			texture.ID = textureNode.id;
 
@@ -367,7 +367,7 @@ THREE.FBXLoader = ( function () {
 		},
 
 		// load a texture specified as a blob or data URI, or via an external URL using THREE.TextureLoader
-		loadTexture: function ( textureNode, images, onTextureLoad ) {
+		loadTexture: function ( textureNode, images ) {
 
 			var fileName;
 
@@ -411,12 +411,7 @@ THREE.FBXLoader = ( function () {
 				texture = new THREE.Texture();
 
 			} else {
-				texture = this.textureLoader.load(
-					fileName,
-					tex => {
-						onTextureLoad(tex)
-					}
-				);
+				texture = this.textureLoader.load( fileName );
 
 			}
 
