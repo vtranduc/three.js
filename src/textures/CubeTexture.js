@@ -9,7 +9,7 @@ import { CubeCamera } from '../cameras/CubeCamera';
 import { MeshBasicMaterial } from '../materials/MeshBasicMaterial';
 import { BackSide, RepeatWrapping } from '../constants';
 import { Mesh } from '../objects/Mesh';
-import { SphereBufferGeometry } from '../geometries/SphereBufferGeometry';
+import { SphereBufferGeometry } from '../geometries/SphereGeometry';
 
 function CubeTexture( images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding ) {
 

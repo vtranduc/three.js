@@ -7,16 +7,22 @@ import { FrontSide, BackSide, DoubleSide, RGBAFormat, NearestFilter, PCFShadowMa
 import { WebGLRenderTarget } from '../WebGLRenderTarget.js';
 import { MeshDepthMaterial } from '../../materials/MeshDepthMaterial.js';
 import { MeshDistanceMaterial } from '../../materials/MeshDistanceMaterial.js';
+import { Matrix4 } from '../../math/Matrix4.js';
 import { Vector4 } from '../../math/Vector4.js';
+import { Vector3 } from '../../math/Vector3.js';
 import { Vector2 } from '../../math/Vector2.js';
 import { Frustum } from '../../math/Frustum.js';
 
 function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 
 	var _frustum = new Frustum(),
+		_projScreenMatrix = new Matrix4(),
 
 		_shadowMapSize = new Vector2(),
 		_viewportSize = new Vector2(),
+
+		_lookTarget = new Vector3(),
+		_lightPositionWorld = new Vector3(),
 
 		_viewport = new Vector4(),
 
@@ -31,6 +37,21 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 		_materialCache = {};
 
 	var shadowSide = { 0: BackSide, 1: FrontSide, 2: DoubleSide };
+
+	var cubeDirections = [
+		new Vector3( 1, 0, 0 ), new Vector3( - 1, 0, 0 ), new Vector3( 0, 0, 1 ),
+		new Vector3( 0, 0, - 1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, - 1, 0 )
+	];
+
+	var cubeUps = [
+		new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ),
+		new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, - 1 )
+	];
+
+	var cube2DViewPorts = [
+		new Vector4(), new Vector4(), new Vector4(),
+		new Vector4(), new Vector4(), new Vector4()
+	];
 
 	// init
 
@@ -91,6 +112,8 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 
 		// render depth map
 
+		var faceCount;
+
 		for ( var i = 0, il = lights.length; i < il; i ++ ) {
 
 			var light = lights[ i ];
@@ -99,7 +122,9 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 			var isDirectionalLight = light && light.isDirectionalLight;
 
 			if (isDirectionalLight) {
-			  light.shadowCascade.forEach( _.bind( function ( shadow ) {
+
+			  light.shadowCascade.forEach( function ( shadow ) {
+
 					if ( shadow === undefined ) {
 
 						console.warn( 'THREE.WebGLShadowMap:', light, 'has no shadow.' );
@@ -110,7 +135,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 					var shadowCamera = shadow.camera;
 
 					_shadowMapSize.copy( shadow.mapSize );
-					_shadowMapSize.min( _maxShadowMapSize );
+					_shadowMapSize.min( maxTextureSize );
 
 					if ( shadow.map === null ) {
 
@@ -164,8 +189,11 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 						renderObject( scene, camera, shadowCamera, isPointLight );
 
 					}
-				}, this));
+
+				});
+
 			} else {
+
 				if ( shadow === undefined ) {
 
 					console.warn( 'THREE.WebGLShadowMap:', light, 'has no shadow.' );
@@ -176,7 +204,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 				var shadowCamera = shadow.camera;
 
 				_shadowMapSize.copy( shadow.mapSize );
-				_shadowMapSize.min( _maxShadowMapSize );
+				_shadowMapSize.min( maxTextureSize );
 
 				if ( isPointLight ) {
 
@@ -237,7 +265,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 				_lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
 				shadowCamera.position.copy( _lightPositionWorld );
 
-			for ( var vp = 0; vp < viewportCount; vp ++ ) {
+				if ( isPointLight ) {
 
 					faceCount = 6;
 
@@ -301,6 +329,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 				}
 
 			}
+
 		}
 
 		scope.needsUpdate = false;

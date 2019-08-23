@@ -265,11 +265,12 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 				new THREE.Vector3(planeDims[i + 1].x, -planeDims[i + 1].y, -planeDims[i + 1].z)];
 		}
 
-		cameraFrusta.map( _.bind( function ( cameraFrustumVerts ) {
-			cameraFrustumVerts.map( _.bind( function ( frustumVert ) {
-				frustumVert.applyMatrix4(this.matrixWorld);
-			}, this));
-		}, this));
+		var matrixWorld = this.matrixWorld;
+		cameraFrusta.forEach( function ( cameraFrustumVerts ) {
+			cameraFrustumVerts.forEach( function ( frustumVert ) {
+				frustumVert.applyMatrix4(matrixWorld);
+			});
+		});
 
 		return cameraFrusta;
 	}

@@ -30,13 +30,18 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 	isDirectionalLight: true,
 
 	updateCascades: function ( cameraFrusta, sceneBoundingBox ) {
+
 		// Update our shadow camera frustum to fit the viewing frustum
-		cameraFrusta.map( _.bind( function ( cameraFrustumVerts, index ) {
+
+		var shadowCascade = this.shadowCascade;
+
+		cameraFrusta.forEach( function ( cameraFrustumVerts, index ) {
+
 			var transformedBox = sceneBoundingBox.clone();
 			var min = null;
 			var max = null;
-			this.shadowCascade[index].camera.updateMatrixWorld()
-			var inv = new THREE.Matrix4().getInverse(this.shadowCascade[index].camera.matrixWorld);
+			shadowCascade[index].camera.updateMatrixWorld()
+			var inv = new THREE.Matrix4().getInverse(shadowCascade[index].camera.matrixWorld);
 			cameraFrustumVerts.map( function ( frustumVert ) {
 				frustumVert.applyMatrix4(inv);
 				if (min) {
@@ -56,7 +61,7 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 			// Perform rounding to reduce shimmer
 			var unitsPerTexel = new THREE.Vector2().subVectors(max, min);
-			unitsPerTexel.divideScalar(this.shadowCascade[index].mapSize.width);
+			unitsPerTexel.divideScalar(shadowCascade[index].mapSize.width);
 
 			min.divide(unitsPerTexel);
 			min.floor();
@@ -67,14 +72,17 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 			max.multiply(unitsPerTexel);
 
 			// Update frusta for real
-			this.shadowCascade[index].camera.left = min.x;
-			this.shadowCascade[index].camera.bottom = min.y;
-			this.shadowCascade[index].camera.right = max.x;
-			this.shadowCascade[index].camera.top = max.y;
-			this.shadowCascade[index].camera.far = Math.max(0, -transformedBox.min.z);
-			this.shadowCascade[index].camera.updateProjectionMatrix();
-		}, this));
+			shadowCascade[index].camera.left = min.x;
+			shadowCascade[index].camera.bottom = min.y;
+			shadowCascade[index].camera.right = max.x;
+			shadowCascade[index].camera.top = max.y;
+			shadowCascade[index].camera.far = Math.max(0, -transformedBox.min.z);
+			shadowCascade[index].camera.updateProjectionMatrix();
+
+		});
+
 		this.shadow = this.shadowCascade[2];
+
 	},
 
 	copy: function ( source ) {
