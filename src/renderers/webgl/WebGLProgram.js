@@ -377,6 +377,20 @@ function generateEnvMapBlendingDefine( parameters ) {
 
 }
 
+function generateEnvMapCubeUVTextureSize( parameters ) {
+
+	var envMapCubeUVTextureSize = 1024.0;
+
+	if ( parameters.envMap && parameters.envMap.cubeUVTextureSize ) {
+
+		envMapCubeUVTextureSize = parameters.envMap.cubeUVTextureSize
+
+	}
+
+	return envMapCubeUVTextureSize;
+
+}
+
 function WebGLProgram( renderer, extensions, cacheKey, material, shader, parameters ) {
 
 	var gl = renderer.getContext();
@@ -389,6 +403,7 @@ function WebGLProgram( renderer, extensions, cacheKey, material, shader, paramet
 	var envMapTypeDefine = generateEnvMapTypeDefine( parameters );
 	var envMapModeDefine = generateEnvMapModeDefine( parameters );
 	var envMapBlendingDefine = generateEnvMapBlendingDefine( parameters );
+	var envMapCubeUVTextureSize = generateEnvMapCubeUVTextureSize( parameters );
 
 
 	var gammaFactorDefine = ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : 1.0;
@@ -579,6 +594,7 @@ function WebGLProgram( renderer, extensions, cacheKey, material, shader, paramet
 			parameters.envMap ? '#define ' + envMapTypeDefine : '',
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
 			parameters.envMap ? '#define ' + envMapBlendingDefine : '',
+			parameters.envMap ? '#define cubeUV_textureSize (float(' + envMapCubeUVTextureSize + '))' : '',
 			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
