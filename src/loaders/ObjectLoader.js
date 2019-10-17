@@ -35,6 +35,7 @@ import { SkinnedMesh } from '../objects/SkinnedMesh.js';
 import { Shape } from '../extras/core/Shape.js';
 import { Fog } from '../scenes/Fog.js';
 import { FogExp2 } from '../scenes/FogExp2.js';
+import { FogGround } from '../scenes/FogGround';
 import { HemisphereLight } from '../lights/HemisphereLight.js';
 import { SpotLight } from '../lights/SpotLight.js';
 import { PointLight } from '../lights/PointLight.js';
@@ -772,6 +773,10 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 					} else if ( data.fog.type === 'FogExp2' ) {
 
 						object.fog = new FogExp2( data.fog.color, data.fog.density );
+
+					} else if ( data.fog.type === 'FogGround' ) {
+
+ 						object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceEnabled,  data.fog.distanceNear, data.fog.distanceFar, data.fog.heightEnabled, data.fog.heightNear, data.fog.heightFar );
 
 					}
 
