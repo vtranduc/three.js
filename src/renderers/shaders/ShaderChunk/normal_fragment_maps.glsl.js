@@ -20,7 +20,16 @@ export default /* glsl */`
 
 #elif defined( TANGENTSPACE_NORMALMAP )
 
-	vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;
+	#ifdef USE_TRIPLANAR
+
+		vec3 mapN = (enableProjection ? GetTexelColorFromProjection(normalMap, vProjectionPosition).xyz : texture2D( normalMap, vUv ).xyz) * 2.0 - 1.0;
+
+	#else
+
+		vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;
+
+	#endif
+
 	mapN.xy *= normalScale;
 
 	#ifdef USE_TANGENT
