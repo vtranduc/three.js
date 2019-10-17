@@ -1,5 +1,6 @@
 export default /* glsl */`
 #define STANDARD
+#define USE_TRIPLANAR
 
 varying vec3 vViewPosition;
 
@@ -27,6 +28,7 @@ varying vec3 vViewPosition;
 #include <shadowmap_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+#include <triplanarprojection_pars_vertex>
 
 void main() {
 
@@ -53,6 +55,7 @@ void main() {
 
 #endif
 
+	#include <triplanarprojection_vertex>
 	#include <begin_vertex>
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
