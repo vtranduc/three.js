@@ -2342,6 +2342,14 @@ function WebGLRenderer( parameters ) {
 
 		}
 
+		uniforms.enableProjection.value = material.enableProjection;
+
+		if ( material.enableProjection ) {
+
+			uniforms.projectionSharpness.value = material.projectionSharpness;
+
+		}
+
 	}
 
 	function refreshUniformsPhysical( uniforms, material ) {

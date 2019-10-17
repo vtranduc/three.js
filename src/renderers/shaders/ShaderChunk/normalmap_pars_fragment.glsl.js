@@ -32,7 +32,15 @@ export default /* glsl */`
 		vec3 T = normalize( ( - q0 * st1.s + q1 * st0.s ) * scale );
 		vec3 N = normalize( surf_norm );
 
-		vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;
+		#ifdef USE_TRIPLANAR
+
+			vec3 mapN = (enableProjection ? GetTexelColorFromProjection(normalMap, vProjectionPosition).xyz : texture2D( normalMap, vUv ).xyz) * 2.0 - 1.0;
+
+		#else
+
+			vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;
+
+		#endif
 
 		mapN.xy *= normalScale;
 

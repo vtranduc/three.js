@@ -293,6 +293,13 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 
 		if ( this.toneMapped === false ) data.toneMapped = false;
 
+		if ( this.enableProjection !== undefined ) {
+
+ 			data.enableProjection = this.enableProjection;
+			data.projectionSharpness = this.projectionSharpness;
+
+		}
+
 		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
 
 		// TODO: Copied from Object3D.toJSON
