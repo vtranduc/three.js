@@ -56,16 +56,25 @@
  * };
  */
 
-THREE.OutlineEffect = function ( renderer, parameters ) {
-
+THREE.OutlineEffect = function (renderer, parameters) {
 	parameters = parameters || {};
 
 	this.enabled = true;
 
-	var defaultThickness = parameters.defaultThickness !== undefined ? parameters.defaultThickness : 0.003;
-	var defaultColor = parameters.defaultColor !== undefined ? parameters.defaultColor : new THREE.Color( 0x000000 );
-	var defaultAlpha = parameters.defaultAlpha !== undefined ? parameters.defaultAlpha : 1.0;
-	var defaultKeepAlive = parameters.defaultKeepAlive !== undefined ? parameters.defaultKeepAlive : false;
+	var defaultThickness =
+		parameters.defaultThickness !== undefined
+			? parameters.defaultThickness
+			: 0.003;
+	var defaultColor =
+		parameters.defaultColor !== undefined
+			? parameters.defaultColor
+			: new THREE.Color(0x000000);
+	var defaultAlpha =
+		parameters.defaultAlpha !== undefined ? parameters.defaultAlpha : 1.0;
+	var defaultKeepAlive =
+		parameters.defaultKeepAlive !== undefined
+			? parameters.defaultKeepAlive
+			: false;
 
 	// object.material.uuid -> outlineMaterial or
 	// object.material[ n ].uuid -> outlineMaterial
@@ -90,7 +99,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	var uniformsOutline = {
 		outlineThickness: { value: defaultThickness },
 		outlineColor: { value: defaultColor },
-		outlineAlpha: { value: defaultAlpha }
+		outlineAlpha: { value: defaultAlpha },
 	};
 
 	var vertexShader = [
@@ -133,20 +142,11 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 		"	gl_Position = calculateOutline( gl_Position, outlineNormal, vec4( transformed, 1.0 ) );",
 
-		"	#include <logdepthbuf_vertex>",
-		"	#include <clipping_planes_vertex>",
-		"	#include <fog_vertex>",
-
 		"}",
-
-	].join( "\n" );
+	].join("\n");
 
 	var fragmentShader = [
-
 		"#include <common>",
-		"#include <fog_pars_fragment>",
-		"#include <logdepthbuf_pars_fragment>",
-		"#include <clipping_planes_pars_fragment>",
 
 		"uniform vec3 outlineColor;",
 		"uniform float outlineAlpha;",
@@ -158,172 +158,136 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 		"	gl_FragColor = vec4( outlineColor, outlineAlpha );",
 
-		"	#include <tonemapping_fragment>",
-		"	#include <encodings_fragment>",
-		"	#include <fog_fragment>",
-		"	#include <premultiplied_alpha_fragment>",
-
-		"}"
-
-	].join( "\n" );
+		"}",
+	].join("\n");
 
 	function createMaterial() {
-
-		return new THREE.ShaderMaterial( {
-			type: 'OutlineEffect',
-			uniforms: THREE.UniformsUtils.merge( [
-				THREE.UniformsLib[ 'fog' ],
-				THREE.UniformsLib[ 'displacementmap' ],
-				uniformsOutline
-			] ),
+		return new THREE.ShaderMaterial({
+			type: "OutlineEffect",
+			uniforms: THREE.UniformsUtils.merge([
+				THREE.UniformsLib["fog"],
+				THREE.UniformsLib["displacementmap"],
+				uniformsOutline,
+			]),
 			vertexShader: vertexShader,
 			fragmentShader: fragmentShader,
-			side: THREE.BackSide
-		} );
-
+			side: THREE.BackSide,
+		});
 	}
 
-	function getOutlineMaterialFromCache( originalMaterial ) {
+	function getOutlineMaterialFromCache(originalMaterial) {
+		var data = cache[originalMaterial.uuid];
 
-		var data = cache[ originalMaterial.uuid ];
-
-		if ( data === undefined ) {
-
+		if (data === undefined) {
 			data = {
 				material: createMaterial(),
 				used: true,
 				keepAlive: defaultKeepAlive,
-				count: 0
+				count: 0,
 			};
 
-			cache[ originalMaterial.uuid ] = data;
-
+			cache[originalMaterial.uuid] = data;
 		}
 
 		data.used = true;
 
 		return data.material;
-
 	}
 
-	function getOutlineMaterial( originalMaterial ) {
+	function getOutlineMaterial(originalMaterial) {
+		var outlineMaterial = getOutlineMaterialFromCache(originalMaterial);
 
-		var outlineMaterial = getOutlineMaterialFromCache( originalMaterial );
+		originalMaterials[outlineMaterial.uuid] = originalMaterial;
 
-		originalMaterials[ outlineMaterial.uuid ] = originalMaterial;
-
-		updateOutlineMaterial( outlineMaterial, originalMaterial );
+		updateOutlineMaterial(outlineMaterial, originalMaterial);
 
 		return outlineMaterial;
-
 	}
 
-	function isCompatible( object ) {
-
+	function isCompatible(object) {
 		var geometry = object.geometry;
 		var hasNormals = false;
 
-		if ( object.geometry !== undefined ) {
-
-			if ( geometry.isBufferGeometry ) {
-
+		if (object.geometry !== undefined) {
+			if (geometry.isBufferGeometry) {
 				hasNormals = geometry.attributes.normal !== undefined;
-
 			} else {
-
 				hasNormals = true; // the renderer always produces a normal attribute for Geometry
-
 			}
-
 		}
 
-		return ( object.isMesh === true && object.material !== undefined && hasNormals === true && !object.isSprite );
-
+		return (
+			object.isMesh === true &&
+			object.material !== undefined &&
+			hasNormals === true &&
+			!object.isSprite
+		);
 	}
 
-	function setOutlineMaterial( object ) {
+	function setOutlineMaterial(object) {
+		if (isCompatible(object) === false) return;
 
-		if ( isCompatible( object ) === false ) return;
-
-		if ( Array.isArray( object.material ) ) {
-
-			for ( var i = 0, il = object.material.length; i < il; i ++ ) {
-
-				object.material[ i ] = getOutlineMaterial( object.material[ i ] );
-
+		if (Array.isArray(object.material)) {
+			for (var i = 0, il = object.material.length; i < il; i++) {
+				object.material[i] = getOutlineMaterial(object.material[i]);
 			}
-
 		} else {
-
-			object.material = getOutlineMaterial( object.material );
-
+			object.material = getOutlineMaterial(object.material);
 		}
 
-		originalOnBeforeRenders[ object.uuid ] = object.onBeforeRender;
+		originalOnBeforeRenders[object.uuid] = object.onBeforeRender;
 		object.onBeforeRender = onBeforeRender;
-
 	}
 
-	function restoreOriginalMaterial( object ) {
+	function restoreOriginalMaterial(object) {
+		if (isCompatible(object) === false) return;
 
-		if ( isCompatible( object ) === false ) return;
-
-		if ( Array.isArray( object.material ) ) {
-
-			for ( var i = 0, il = object.material.length; i < il; i ++ ) {
-
-				object.material[ i ] = originalMaterials[ object.material[ i ].uuid ];
-
+		if (Array.isArray(object.material)) {
+			for (var i = 0, il = object.material.length; i < il; i++) {
+				object.material[i] = originalMaterials[object.material[i].uuid];
 			}
-
 		} else {
-
-			object.material = originalMaterials[ object.material.uuid ];
-
+			object.material = originalMaterials[object.material.uuid];
 		}
 
-		object.onBeforeRender = originalOnBeforeRenders[ object.uuid ];
-
+		object.onBeforeRender = originalOnBeforeRenders[object.uuid];
 	}
 
-	function onBeforeRender( renderer, scene, camera, geometry, material ) {
-
-		var originalMaterial = originalMaterials[ material.uuid ];
+	function onBeforeRender(renderer, scene, camera, geometry, material) {
+		var originalMaterial = originalMaterials[material.uuid];
 
 		// just in case
-		if ( originalMaterial === undefined ) return;
+		if (originalMaterial === undefined) return;
 
-		updateUniforms( material, originalMaterial );
-
+		updateUniforms(material, originalMaterial);
 	}
 
-	function updateUniforms( material, originalMaterial ) {
-
+	function updateUniforms(material, originalMaterial) {
 		var outlineParameters = originalMaterial.outlineParameters;
 
 		material.uniforms.outlineAlpha.value = originalMaterial.opacity;
 
-		if ( outlineParameters !== undefined ) {
-
-			if ( outlineParameters.thickness !== undefined ) material.uniforms.outlineThickness.value = outlineParameters.thickness;
-			if ( outlineParameters.color !== undefined ) material.uniforms.outlineColor.value.copy( outlineParameters.color );
-			if ( outlineParameters.alpha !== undefined ) material.uniforms.outlineAlpha.value = outlineParameters.alpha;
-
+		if (outlineParameters !== undefined) {
+			if (outlineParameters.thickness !== undefined)
+				material.uniforms.outlineThickness.value = outlineParameters.thickness;
+			if (outlineParameters.color !== undefined)
+				material.uniforms.outlineColor.value.copy(outlineParameters.color);
+			if (outlineParameters.alpha !== undefined)
+				material.uniforms.outlineAlpha.value = outlineParameters.alpha;
 		}
 
-		if ( originalMaterial.displacementMap ) {
-
-			material.uniforms.displacementMap.value = originalMaterial.displacementMap;
-			material.uniforms.displacementScale.value = originalMaterial.displacementScale;
-			material.uniforms.displacementBias.value = originalMaterial.displacementBias;
-
+		if (originalMaterial.displacementMap) {
+			material.uniforms.displacementMap.value =
+				originalMaterial.displacementMap;
+			material.uniforms.displacementScale.value =
+				originalMaterial.displacementScale;
+			material.uniforms.displacementBias.value =
+				originalMaterial.displacementBias;
 		}
-
 	}
 
-	function updateOutlineMaterial( material, originalMaterial ) {
-
-		if ( material.name === 'invisible' ) return;
+	function updateOutlineMaterial(material, originalMaterial) {
+		if (material.name === "invisible") return;
 
 		var outlineParameters = originalMaterial.outlineParameters;
 
@@ -335,138 +299,122 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		material.premultipliedAlpha = originalMaterial.premultipliedAlpha;
 		material.displacementMap = originalMaterial.displacementMap;
 
-		if ( outlineParameters !== undefined ) {
-
-			if ( originalMaterial.visible === false ) {
-
+		if (outlineParameters !== undefined) {
+			if (originalMaterial.visible === false) {
 				material.visible = false;
-
 			} else {
-
-				material.visible = ( outlineParameters.visible !== undefined ) ? outlineParameters.visible : true;
-
+				material.visible =
+					outlineParameters.visible !== undefined
+						? outlineParameters.visible
+						: true;
 			}
 
-			material.transparent = ( outlineParameters.alpha !== undefined && outlineParameters.alpha < 1.0 ) ? true : originalMaterial.transparent;
+			material.transparent =
+				outlineParameters.alpha !== undefined && outlineParameters.alpha < 1.0
+					? true
+					: originalMaterial.transparent;
 
-			if ( outlineParameters.keepAlive !== undefined ) cache[ originalMaterial.uuid ].keepAlive = outlineParameters.keepAlive;
-
+			if (outlineParameters.keepAlive !== undefined)
+				cache[originalMaterial.uuid].keepAlive = outlineParameters.keepAlive;
 		} else {
-
 			material.transparent = originalMaterial.transparent;
 			material.visible = false;
-
 		}
 
-		if ( originalMaterial.wireframe === true || originalMaterial.depthTest === false ) material.visible = false;
+		if (
+			originalMaterial.wireframe === true ||
+			originalMaterial.depthTest === false
+		)
+			material.visible = false;
 
-		if ( originalMaterial.clippingPlanes ) {
-
+		if (originalMaterial.clippingPlanes) {
 			material.clipping = true;
 
 			material.clippingPlanes = originalMaterial.clippingPlanes;
 			material.clipIntersection = originalMaterial.clipIntersection;
 			material.clipShadows = originalMaterial.clipShadows;
-
 		}
 
 		material.version = originalMaterial.version; // update outline material if necessary
-
 	}
 
 	function cleanupCache() {
-
 		var keys;
 
 		// clear originialMaterials
-		keys = Object.keys( originalMaterials );
+		keys = Object.keys(originalMaterials);
 
-		for ( var i = 0, il = keys.length; i < il; i ++ ) {
-
-			originalMaterials[ keys[ i ] ] = undefined;
-
+		for (var i = 0, il = keys.length; i < il; i++) {
+			originalMaterials[keys[i]] = undefined;
 		}
 
 		// clear originalOnBeforeRenders
-		keys = Object.keys( originalOnBeforeRenders );
+		keys = Object.keys(originalOnBeforeRenders);
 
-		for ( var i = 0, il = keys.length; i < il; i ++ ) {
-
-			originalOnBeforeRenders[ keys[ i ] ] = undefined;
-
+		for (var i = 0, il = keys.length; i < il; i++) {
+			originalOnBeforeRenders[keys[i]] = undefined;
 		}
 
 		// remove unused outlineMaterial from cache
-		keys = Object.keys( cache );
+		keys = Object.keys(cache);
 
-		for ( var i = 0, il = keys.length; i < il; i ++ ) {
+		for (var i = 0, il = keys.length; i < il; i++) {
+			var key = keys[i];
 
-			var key = keys[ i ];
+			if (cache[key].used === false) {
+				cache[key].count++;
 
-			if ( cache[ key ].used === false ) {
-
-				cache[ key ].count ++;
-
-				if ( cache[ key ].keepAlive === false && cache[ key ].count > removeThresholdCount ) {
-
-					delete cache[ key ];
-
+				if (
+					cache[key].keepAlive === false &&
+					cache[key].count > removeThresholdCount
+				) {
+					delete cache[key];
 				}
-
 			} else {
-
-				cache[ key ].used = false;
-				cache[ key ].count = 0;
-
+				cache[key].used = false;
+				cache[key].count = 0;
 			}
-
 		}
-
 	}
 
-	this.render = function ( scene, camera ) {
-
+	this.render = function (scene, camera) {
 		var renderTarget;
 		var forceClear = false;
 
-		if ( arguments[ 2 ] !== undefined ) {
-
-			console.warn( 'THREE.OutlineEffect.render(): the renderTarget argument has been removed. Use .setRenderTarget() instead.' );
-			renderTarget = arguments[ 2 ];
-
+		if (arguments[2] !== undefined) {
+			console.warn(
+				"THREE.OutlineEffect.render(): the renderTarget argument has been removed. Use .setRenderTarget() instead."
+			);
+			renderTarget = arguments[2];
 		}
 
-		if ( arguments[ 3 ] !== undefined ) {
-
-			console.warn( 'THREE.OutlineEffect.render(): the forceClear argument has been removed. Use .clear() instead.' );
-			forceClear = arguments[ 3 ];
-
+		if (arguments[3] !== undefined) {
+			console.warn(
+				"THREE.OutlineEffect.render(): the forceClear argument has been removed. Use .clear() instead."
+			);
+			forceClear = arguments[3];
 		}
 
-		if ( renderTarget !== undefined ) renderer.setRenderTarget( renderTarget );
+		if (renderTarget !== undefined) renderer.setRenderTarget(renderTarget);
 
-		if ( forceClear ) renderer.clear();
+		if (forceClear) renderer.clear();
 
-		if ( this.enabled === false ) {
-
-			renderer.render( scene, camera );
+		if (this.enabled === false) {
+			renderer.render(scene, camera);
 			return;
-
 		}
 
 		var currentAutoClear = renderer.autoClear;
 		renderer.autoClear = this.autoClear;
 
-		renderer.render( scene, camera );
+		renderer.render(scene, camera);
 
 		renderer.autoClear = currentAutoClear;
 
-		this.renderOutline( scene, camera );
-
+		this.renderOutline(scene, camera);
 	};
 
-	this.renderOutline = function ( scene, camera ) {
-
+	this.renderOutline = function (scene, camera) {
 		var currentAutoClear = renderer.autoClear;
 		var currentSceneAutoUpdate = scene.autoUpdate;
 		var currentSceneBackground = scene.background;
@@ -477,11 +425,11 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		renderer.autoClear = false;
 		renderer.shadowMap.enabled = false;
 
-		scene.traverse( setOutlineMaterial );
+		scene.traverse(setOutlineMaterial);
 
-		renderer.render( scene, camera );
+		renderer.render(scene, camera);
 
-		scene.traverse( restoreOriginalMaterial );
+		scene.traverse(restoreOriginalMaterial);
 
 		cleanupCache();
 
@@ -489,7 +437,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		scene.background = currentSceneBackground;
 		renderer.autoClear = currentAutoClear;
 		renderer.shadowMap.enabled = currentShadowMapEnabled;
-
 	};
 
 	/*
@@ -502,7 +449,7 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	 *
 	 * function render () {
 	 *
- 	 * 	effect.render( scene, camera );
+	 * 	effect.render( scene, camera );
 	 *
 	 * }
 	 */
@@ -510,58 +457,39 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	this.domElement = renderer.domElement;
 	this.shadowMap = renderer.shadowMap;
 
-	this.clear = function ( color, depth, stencil ) {
-
-		renderer.clear( color, depth, stencil );
-
+	this.clear = function (color, depth, stencil) {
+		renderer.clear(color, depth, stencil);
 	};
 
 	this.getPixelRatio = function () {
-
 		return renderer.getPixelRatio();
-
 	};
 
-	this.setPixelRatio = function ( value ) {
-
-		renderer.setPixelRatio( value );
-
+	this.setPixelRatio = function (value) {
+		renderer.setPixelRatio(value);
 	};
 
-	this.getSize = function ( target ) {
-
-		return renderer.getSize( target );
-
+	this.getSize = function (target) {
+		return renderer.getSize(target);
 	};
 
-	this.setSize = function ( width, height, updateStyle ) {
-
-		renderer.setSize( width, height, updateStyle );
-
+	this.setSize = function (width, height, updateStyle) {
+		renderer.setSize(width, height, updateStyle);
 	};
 
-	this.setViewport = function ( x, y, width, height ) {
-
-		renderer.setViewport( x, y, width, height );
-
+	this.setViewport = function (x, y, width, height) {
+		renderer.setViewport(x, y, width, height);
 	};
 
-	this.setScissor = function ( x, y, width, height ) {
-
-		renderer.setScissor( x, y, width, height );
-
+	this.setScissor = function (x, y, width, height) {
+		renderer.setScissor(x, y, width, height);
 	};
 
-	this.setScissorTest = function ( boolean ) {
-
-		renderer.setScissorTest( boolean );
-
+	this.setScissorTest = function (boolean) {
+		renderer.setScissorTest(boolean);
 	};
 
-	this.setRenderTarget = function ( renderTarget ) {
-
-		renderer.setRenderTarget( renderTarget );
-
+	this.setRenderTarget = function (renderTarget) {
+		renderer.setRenderTarget(renderTarget);
 	};
-
 };

@@ -2295,6 +2295,16 @@ function WebGLRenderer( parameters ) {
 
 			uniforms.fogDensity.value = fog.density;
 
+		} else if ( fog.isFogGround ) {
+
+			uniforms.fogHeightEnabled.value = fog.heightEnabled;
+			uniforms.fogDistanceEnabled.value = fog.distanceEnabled;
+			uniforms.fogOpacity.value = fog.opacity;
+			uniforms.fogDistanceNear.value = fog.distanceNear;
+			uniforms.fogDistanceFar.value = fog.distanceFar;
+			uniforms.fogHeightNear.value = fog.heightNear;
+			uniforms.fogHeightFar.value = fog.heightFar;
+
 		}
 
 	}
