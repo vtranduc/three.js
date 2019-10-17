@@ -8,6 +8,17 @@ export default /* glsl */`
 
 		uniform float fogDensity;
 
+	#elif defined( FOG_GROUND )
+
+		varying float fogHeight;
+		uniform float fogOpacity;
+		uniform bool fogHeightEnabled;
+		uniform bool fogDistanceEnabled;
+		uniform float fogDistanceNear;
+		uniform float fogDistanceFar;
+		uniform float fogHeightNear;
+		uniform float fogHeightFar;
+
 	#else
 
 		uniform float fogNear;

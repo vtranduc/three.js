@@ -133,10 +133,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 
 		"	gl_Position = calculateOutline( gl_Position, outlineNormal, vec4( transformed, 1.0 ) );",
 
-		"	#include <logdepthbuf_vertex>",
-		"	#include <clipping_planes_vertex>",
-		"	#include <fog_vertex>",
-
 		"}",
 
 	].join( "\n" );
@@ -144,9 +140,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 	var fragmentShader = [
 
 		"#include <common>",
-		"#include <fog_pars_fragment>",
-		"#include <logdepthbuf_pars_fragment>",
-		"#include <clipping_planes_pars_fragment>",
 
 		"uniform vec3 outlineColor;",
 		"uniform float outlineAlpha;",
@@ -157,11 +150,6 @@ THREE.OutlineEffect = function ( renderer, parameters ) {
 		"	#include <logdepthbuf_fragment>",
 
 		"	gl_FragColor = vec4( outlineColor, outlineAlpha );",
-
-		"	#include <premultiplied_alpha_fragment>",
-		"	#include <tonemapping_fragment>",
-		"	#include <encodings_fragment>",
-		"	#include <fog_fragment>",
 
 		"}"
 
