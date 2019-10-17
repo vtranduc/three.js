@@ -51,7 +51,10 @@ import { Color } from '../math/Color.js';
  *
  *  skinning: <bool>,
  *  morphTargets: <bool>,
- *  morphNormals: <bool>
+ *  morphNormals: <bool>,
+ *
+ *	enableProjection: <bool>,
+ * 	projectionSharpness: <float>
  * }
  */
 
@@ -109,6 +112,9 @@ function MeshStandardMaterial( parameters ) {
 	this.skinning = false;
 	this.morphTargets = false;
 	this.morphNormals = false;
+
+	this.enableProjection = false;
+  this.projectionSharpness = 2.0;
 
 	this.setValues( parameters );
 
@@ -171,6 +177,9 @@ MeshStandardMaterial.prototype.copy = function ( source ) {
 	this.skinning = source.skinning;
 	this.morphTargets = source.morphTargets;
 	this.morphNormals = source.morphNormals;
+
+	this.enableProjection = source.enableProjection;
+  this.projectionSharpness = source.projectionSharpness;
 
 	return this;
 
