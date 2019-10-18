@@ -42,6 +42,8 @@ function MeshPhysicalMaterial( parameters ) {
 
 	this.transparency = 0.0;
 
+	this.envIrradianceMap = null;
+
 	this.setValues( parameters );
 
 }
@@ -74,6 +76,8 @@ MeshPhysicalMaterial.prototype.copy = function ( source ) {
 	this.clearcoatNormalScale.copy( source.clearcoatNormalScale );
 
 	this.transparency = source.transparency;
+
+	this.envIrradianceMap = source.envIrradianceMap;
 
 	return this;
 
