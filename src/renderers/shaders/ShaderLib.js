@@ -280,6 +280,7 @@ ShaderLib.physical = {
 			sheen: { value: new Color( 0x000000 ) },
 			clearcoatNormalScale: { value: new Vector2( 1, 1 ) },
 			clearcoatNormalMap: { value: null },
+			envIrradianceMap: { value: null },
 		}
 	] ),
 
