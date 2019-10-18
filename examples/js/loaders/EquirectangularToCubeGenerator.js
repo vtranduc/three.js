@@ -128,12 +128,12 @@ THREE.EquirectangularToCubeGenerator = ( function () {
 		this.resolution = options.resolution || 512;
 
 		this.views = [
-			{ t: [ 1, 0, 0 ], u: [ 0, - 1, 0 ] },
 			{ t: [ - 1, 0, 0 ], u: [ 0, - 1, 0 ] },
-			{ t: [ 0, 1, 0 ], u: [ 0, 0, 1 ] },
-			{ t: [ 0, - 1, 0 ], u: [ 0, 0, - 1 ] },
-			{ t: [ 0, 0, 1 ], u: [ 0, - 1, 0 ] },
+			{ t: [ 1, 0, 0 ], u: [ 0, - 1, 0 ] },
+			{ t: [ 0, 1, 0 ], u: [ 0, 0, - 1 ] },
+			{ t: [ 0, - 1, 0 ], u: [ 0, 0, 1 ] },
 			{ t: [ 0, 0, - 1 ], u: [ 0, - 1, 0 ] },
+			{ t: [ 0, 0, 1 ], u: [ 0, - 1, 0 ] },
 		];
 
 		var params = {
