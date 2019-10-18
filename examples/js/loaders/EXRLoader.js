@@ -1537,7 +1537,7 @@ THREE.EXRLoader.prototype = Object.assign( Object.create( THREE.DataTextureLoade
 			var uintBuffer = new Uint8Array( buffer );
 			var endOffset = 0;
 
-			while ( uintBuffer[ offset.value + endOffset ] != 0 ) {
+			while ( uintBuffer[ offset.value + endOffset ] != 0 && offset.value + endOffset < uintBuffer.length ) {
 
 				endOffset += 1;
 
@@ -1991,7 +1991,7 @@ THREE.EXRLoader.prototype = Object.assign( Object.create( THREE.DataTextureLoade
 
 		} else {
 
-			throw 'EXRLoader.parse: unsupported pixelType ' + pixelType + ' for ' + EXRHeader.compression + '.';
+			throw { message: 'Only supported pixel format is HALF', error: 'dataType' };
 
 		}
 

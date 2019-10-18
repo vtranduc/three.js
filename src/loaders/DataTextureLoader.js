@@ -32,7 +32,17 @@ DataTextureLoader.prototype = Object.assign( Object.create( Loader.prototype ), 
 		loader.setPath( this.path );
 		loader.load( url, function ( buffer ) {
 
-			var texData = scope.parse( buffer );
+			var texData;
+
+ 			try {
+
+ 				texData = scope._parser( buffer );
+
+ 			} catch ( e ) {
+
+ 				onError( e );
+
+ 			}
 
 			if ( ! texData ) return;
 
