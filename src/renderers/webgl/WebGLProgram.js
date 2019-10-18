@@ -237,6 +237,7 @@ function loopReplacer( match, start, end, snippet ) {
 
 		string += snippet
 			.replace( /\[ i \]/g, '[ ' + i + ' ]' )
+			.replace( /\( i \)/g, '(' + i + ')')
 			.replace( /UNROLLED_LOOP_INDEX/g, i );
 
 	}
@@ -461,11 +462,13 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 			'#define MAX_BONES ' + parameters.maxBones,
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp2 ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.envMap ? '#define USE_ENVMAP' : '',
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
-			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
+			parameters.directLightMap ? '#define USE_DIRECT_LIGHTMAP' : '',
+			parameters.indirectLightMap ? '#define USE_INDIRECT_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
 			parameters.bumpMap ? '#define USE_BUMPMAP' : '',
@@ -585,6 +588,7 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp2 ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.matcap ? '#define USE_MATCAP' : '',
@@ -593,7 +597,9 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
 			parameters.envMap ? '#define ' + envMapBlendingDefine : '',
 			parameters.envMap ? '#define cubeUV_textureSize (float(' + envMapCubeUVTextureSize + '))' : '',
-			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
+			parameters.envIrradianceMap ? '#define USE_IRRADIANCE_MAP' : '',
+			parameters.directLightMap ? '#define USE_DIRECT_LIGHTMAP' : '',
+			parameters.indirectLightMap ? '#define USE_INDIRECT_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
 			parameters.bumpMap ? '#define USE_BUMPMAP' : '',
@@ -642,13 +648,15 @@ function WebGLProgram( renderer, cacheKey, parameters ) {
 
 			parameters.dithering ? '#define DITHERING' : '',
 
-			( parameters.outputEncoding || parameters.mapEncoding || parameters.matcapEncoding || parameters.envMapEncoding || parameters.emissiveMapEncoding || parameters.lightMapEncoding ) ?
+			( parameters.outputEncoding || parameters.mapEncoding || parameters.matcapEncoding || parameters.envMapEncoding || parameters.envIrradianceMapEncoding || parameters.emissiveMapEncoding || parameters.DirectLightMapEncoding || parameters.IndirectLightMapEncoding ) ?
 				ShaderChunk[ 'encodings_pars_fragment' ] : '', // this code is required here because it is used by the various encoding/decoding function defined below
 			parameters.mapEncoding ? getTexelDecodingFunction( 'mapTexelToLinear', parameters.mapEncoding ) : '',
 			parameters.matcapEncoding ? getTexelDecodingFunction( 'matcapTexelToLinear', parameters.matcapEncoding ) : '',
 			parameters.envMapEncoding ? getTexelDecodingFunction( 'envMapTexelToLinear', parameters.envMapEncoding ) : '',
+			parameters.envIrradianceMapEncoding ? getTexelDecodingFunction( 'envIrradianceMapTexelToLinear', parameters.envIrradianceMapEncoding ) : '',
 			parameters.emissiveMapEncoding ? getTexelDecodingFunction( 'emissiveMapTexelToLinear', parameters.emissiveMapEncoding ) : '',
-			parameters.lightMapEncoding ? getTexelDecodingFunction( 'lightMapTexelToLinear', parameters.lightMapEncoding ) : '',
+			parameters.directLightMapEncoding ? getTexelDecodingFunction( 'directLightMapTexelToLinear', parameters.directLightMapEncoding ) : '',
+			parameters.indirectLightMapEncoding ? getTexelDecodingFunction( 'indirectLightMapTexelToLinear', parameters.indirectLightMapEncoding ) : '',
 			parameters.outputEncoding ? getTexelEncodingFunction( 'linearToOutputTexel', parameters.outputEncoding ) : '',
 
 			parameters.depthPacking ? '#define DEPTH_PACKING ' + parameters.depthPacking : '',
