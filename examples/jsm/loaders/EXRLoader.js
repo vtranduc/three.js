@@ -782,7 +782,7 @@ EXRLoader.prototype = Object.assign( Object.create( DataTextureLoader.prototype 
 			var uintBuffer = new Uint8Array( buffer );
 			var endOffset = 0;
 
-			while ( uintBuffer[ offset.value + endOffset ] != 0 ) {
+			while ( uintBuffer[ offset.value + endOffset ] != 0 && offset.value + endOffset < uintBuffer.length ) {
 
 				endOffset += 1;
 
@@ -1159,7 +1159,7 @@ EXRLoader.prototype = Object.assign( Object.create( DataTextureLoader.prototype 
 
 					} else {
 
-						throw 'EXRLoader._parser: unsupported pixelType ' + EXRHeader.channels[ channelID ].pixelType + '. Only pixelType is 1 (HALF) is supported.';
+						throw { message: 'Only supported pixel format is HALF', error: 'dataType' };
 
 					}
 
@@ -1214,7 +1214,7 @@ EXRLoader.prototype = Object.assign( Object.create( DataTextureLoader.prototype 
 
 						} else {
 
-							throw 'EXRLoader._parser: unsupported pixelType ' + EXRHeader.channels[ channelID ].pixelType + '. Only pixelType is 1 (HALF) is supported.';
+							throw { message: 'Only supported pixel format is HALF', error: 'dataType' };
 
 						}
 
@@ -1226,7 +1226,7 @@ EXRLoader.prototype = Object.assign( Object.create( DataTextureLoader.prototype 
 
 		} else {
 
-			throw 'EXRLoader._parser: ' + EXRHeader.compression + ' is unsupported';
+			throw { message: 'Cannot decompress unsupported compression', error: 'compression' };
 
 		}
 
