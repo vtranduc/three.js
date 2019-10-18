@@ -87,7 +87,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 
 	}
 
-	function getTextureEncodingFromMap( map, gammaOverrideLinear ) {
+	function getTextureEncodingFromMap( map, gammaOverrideLinear, forceLinear ) {
 
 		var encoding;
 
@@ -112,6 +112,12 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 			encoding = GammaEncoding;
 
 		}
+
+		if ( forceLinear ) {
+
+ 			encoding = LinearEncoding
+
+ 		}
 
 		return encoding;
 
@@ -151,9 +157,9 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 
 			instancing: object.isInstancedMesh === true,
 
-			supportsVertexTextures: vertexTextures,
+			supportsVertexTextures: capabilities.vertexTextures,
 			numMultiviewViews: numMultiviewViews,
-			outputEncoding: getTextureEncodingFromMap( ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput ),
+			outputEncoding: getTextureEncodingFromMap( ( ! currentRenderTarget ) ? null : currentRenderTarget.texture, renderer.gammaOutput, material.forceLinear ),
 			map: !! material.map,
 			mapEncoding: getTextureEncodingFromMap( material.map, renderer.gammaInput ),
 			matcap: !! material.matcap,
