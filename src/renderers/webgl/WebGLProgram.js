@@ -20,6 +20,7 @@ import {
 	PCFSoftShadowMap,
 	PCFShadowMap,
 	VSMShadowMap,
+	PCSShadowMap,
 	ACESFilmicToneMapping,
 	CineonToneMapping,
 	Uncharted2ToneMapping,
@@ -268,6 +269,7 @@ function loopReplacer(match, start, end, snippet) {
 	for (var i = parseInt(start); i < parseInt(end); i++) {
 		string += snippet
 			.replace(/\[ i \]/g, "[ " + i + " ]")
+			.replace(/\( i \)/g, "(" + i + ")")
 			.replace(/UNROLLED_LOOP_INDEX/g, i);
 	}
 
@@ -304,6 +306,8 @@ function generateShadowMapTypeDefine(parameters) {
 		shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF_SOFT";
 	} else if (parameters.shadowMapType === VSMShadowMap) {
 		shadowMapTypeDefine = "SHADOWMAP_TYPE_VSM";
+	} else if (parameters.shadowMapType === PCSShadowMap) {
+		shadowMapTypeDefine = "SHADOWMAP_TYPE_PCSS";
 	}
 
 	return shadowMapTypeDefine;
@@ -375,11 +379,11 @@ function generateEnvMapBlendingDefine(parameters) {
 	return envMapBlendingDefine;
 }
 
-function generateEnvMapCubeUVTextureSize(parameters) {
+function generateEnvMapCubeUVTextureSize(material) {
 	var envMapCubeUVTextureSize = 1024.0;
 
-	if (parameters.envMap && parameters.envMap.cubeUVTextureSize) {
-		envMapCubeUVTextureSize = parameters.envMap.cubeUVTextureSize;
+	if (material.envMap && material.envMap.cubeUVTextureSize) {
+		envMapCubeUVTextureSize = material.envMap.cubeUVTextureSize;
 	}
 
 	return envMapCubeUVTextureSize;
@@ -396,7 +400,8 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 	var envMapTypeDefine = generateEnvMapTypeDefine(parameters);
 	var envMapModeDefine = generateEnvMapModeDefine(parameters);
 	var envMapBlendingDefine = generateEnvMapBlendingDefine(parameters);
-	var envMapCubeUVTextureSize = generateEnvMapCubeUVTextureSize(parameters);
+
+	var envMapCubeUVTextureSize = generateEnvMapCubeUVTextureSize(material);
 
 	var gammaFactorDefine = renderer.gammaFactor > 0 ? renderer.gammaFactor : 1.0;
 
@@ -442,10 +447,12 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 			"#define MAX_BONES " + parameters.maxBones,
 			parameters.useFog && parameters.fog ? "#define USE_FOG" : "",
 			parameters.useFog && parameters.fogExp2 ? "#define FOG_EXP2" : "",
-
+			parameters.useFog && parameters.fogGround ? "#define FOG_GROUND" : "",
 			parameters.map ? "#define USE_MAP" : "",
 			parameters.envMap ? "#define USE_ENVMAP" : "",
 			parameters.envMap ? "#define " + envMapModeDefine : "",
+			parameters.directLightMap ? "#define USE_DIRECT_LIGHTMAP" : "",
+			parameters.indirectLightMap ? "#define USE_INDIRECT_LIGHTMAP" : "",
 			parameters.lightMap ? "#define USE_LIGHTMAP" : "",
 			parameters.aoMap ? "#define USE_AOMAP" : "",
 			parameters.emissiveMap ? "#define USE_EMISSIVEMAP" : "",
@@ -580,7 +587,7 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 
 			parameters.useFog && parameters.fog ? "#define USE_FOG" : "",
 			parameters.useFog && parameters.fogExp2 ? "#define FOG_EXP2" : "",
-
+			parameters.useFog && parameters.fogGround ? "#define FOG_GROUND" : "",
 			parameters.map ? "#define USE_MAP" : "",
 			parameters.matcap ? "#define USE_MATCAP" : "",
 			parameters.envMap ? "#define USE_ENVMAP" : "",
@@ -590,6 +597,11 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 			parameters.envMap
 				? "#define cubeUV_textureSize (float(" + envMapCubeUVTextureSize + "))"
 				: "",
+
+			parameters.envIrradianceMap ? "#define USE_IRRADIANCE_MAP" : "",
+			parameters.directLightMap ? "#define USE_DIRECT_LIGHTMAP" : "",
+			parameters.indirectLightMap ? "#define USE_INDIRECT_LIGHTMAP" : "",
+
 			parameters.lightMap ? "#define USE_LIGHTMAP" : "",
 			parameters.aoMap ? "#define USE_AOMAP" : "",
 			parameters.emissiveMap ? "#define USE_EMISSIVEMAP" : "",
@@ -658,8 +670,10 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 			parameters.mapEncoding ||
 			parameters.matcapEncoding ||
 			parameters.envMapEncoding ||
+			params.envIrradianceMapEncoding ||
 			parameters.emissiveMapEncoding ||
-			parameters.lightMapEncoding
+			parameters.DirectLightMapEncoding ||
+			parameters.IndirectLightMapEncoding
 				? ShaderChunk["encodings_pars_fragment"]
 				: "", // this code is required here because it is used by the various encoding/decoding function defined below
 			parameters.mapEncoding
@@ -677,10 +691,28 @@ function WebGLProgram(renderer, cacheKey, parameters) {
 						parameters.envMapEncoding
 				  )
 				: "",
+			parameters.envIrradianceMapEncoding
+				? getTexelDecodingFunction(
+						"envIrradianceMapTexelToLinear",
+						parameters.envIrradianceMapEncoding
+				  )
+				: "",
 			parameters.emissiveMapEncoding
 				? getTexelDecodingFunction(
 						"emissiveMapTexelToLinear",
 						parameters.emissiveMapEncoding
+				  )
+				: "",
+			parameters.directLightMapEncoding
+				? getTexelDecodingFunction(
+						"directLightMapTexelToLinear",
+						parameters.directLightMapEncoding
+				  )
+				: "",
+			parameters.indirectLightMapEncoding
+				? getTexelDecodingFunction(
+						"indirectLightMapTexelToLinear",
+						parameters.indirectLightMapEncoding
 				  )
 				: "",
 			parameters.lightMapEncoding

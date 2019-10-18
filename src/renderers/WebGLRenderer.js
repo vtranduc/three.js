@@ -2501,6 +2501,12 @@ function WebGLRenderer( parameters ) {
 
 		uniforms.transparency.value = material.transparency;
 
+		if ( material.envIrradianceMap ) {
+
+			uniforms.envIrradianceMap.value = material.envIrradianceMap;
+
+		}
+
 	}
 
 	function refreshUniformsMatcap( uniforms, material ) {
