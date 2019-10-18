@@ -10,6 +10,12 @@ export default /* glsl */`
 	#else
 		uniform sampler2D envMap;
 	#endif
-	
+
+	#ifdef USE_IRRADIANCE_MAP
+
+		uniform samplerCube envIrradianceMap;
+
+	#endif
+
 #endif
 `;
