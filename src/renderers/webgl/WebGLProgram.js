@@ -239,6 +239,7 @@ function loopReplacer( match, start, end, snippet ) {
 
 		string += snippet
 			.replace( /\[ i \]/g, '[ ' + i + ' ]' )
+			.replace( /\( i \)/g, '(' + i + ')')
 			.replace( /UNROLLED_LOOP_INDEX/g, i );
 
 	}
@@ -464,6 +465,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 			'#define MAX_BONES ' + parameters.maxBones,
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp2 ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.envMap ? '#define USE_ENVMAP' : '',
@@ -586,6 +588,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp2 ) ? '#define FOG_EXP2' : '',
+			( parameters.useFog && parameters.fogGround ) ? '#define FOG_GROUND' : '',
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.matcap ? '#define USE_MATCAP' : '',
@@ -594,6 +597,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 			parameters.envMap ? '#define ' + envMapModeDefine : '',
 			parameters.envMap ? '#define ' + envMapBlendingDefine : '',
 			parameters.envMap ? '#define cubeUV_textureSize (float(' + envMapCubeUVTextureSize + '))' : '',
+			parameters.envIrradianceMap ? '#define USE_IRRADIANCE_MAP' : '',
 			parameters.lightMap ? '#define USE_LIGHTMAP' : '',
 			parameters.aoMap ? '#define USE_AOMAP' : '',
 			parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
@@ -641,11 +645,12 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 			parameters.dithering ? '#define DITHERING' : '',
 
-			( parameters.outputEncoding || parameters.mapEncoding || parameters.matcapEncoding || parameters.envMapEncoding || parameters.emissiveMapEncoding ) ?
+			( parameters.outputEncoding || parameters.mapEncoding || parameters.matcapEncoding || parameters.envMapEncoding || params.envIrradianceMapEncoding || parameters.emissiveMapEncoding ) ?
 				ShaderChunk[ 'encodings_pars_fragment' ] : '', // this code is required here because it is used by the various encoding/decoding function defined below
 			parameters.mapEncoding ? getTexelDecodingFunction( 'mapTexelToLinear', parameters.mapEncoding ) : '',
 			parameters.matcapEncoding ? getTexelDecodingFunction( 'matcapTexelToLinear', parameters.matcapEncoding ) : '',
 			parameters.envMapEncoding ? getTexelDecodingFunction( 'envMapTexelToLinear', parameters.envMapEncoding ) : '',
+			parameters.envIrradianceMapEncoding ? getTexelDecodingFunction( 'envIrradianceMapTexelToLinear', parameters.envIrradianceMapEncoding ) : '',
 			parameters.emissiveMapEncoding ? getTexelDecodingFunction( 'emissiveMapTexelToLinear', parameters.emissiveMapEncoding ) : '',
 			parameters.outputEncoding ? getTexelEncodingFunction( 'linearToOutputTexel', parameters.outputEncoding ) : '',
 
