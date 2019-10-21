@@ -100,100 +100,116 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 		for ( var i = 0, il = lights.length; i < il; i ++ ) {
 
 			var light = lights[ i ];
-			var shadow = light.shadow;
+			var isDirectionalLight = light && light.isDirectionalLight;
+			var shadows = isDirectionalLight ? light.shadowCascade : [light.shadow];
 
-			if ( shadow === undefined ) {
+			for ( var j = 0, jl = shadows.length; j < jl; j++ ) {
 
-				console.warn( 'THREE.WebGLShadowMap:', light, 'has no shadow.' );
-				continue;
+				var shadow = shadows[j];
 
-			}
+				if ( shadow === undefined ) {
 
-			_shadowMapSize.copy( shadow.mapSize );
+					console.warn( 'THREE.WebGLShadowMap:', light, 'has no shadow.' );
 
-			var shadowFrameExtents = shadow.getFrameExtents();
+					if ( isDirectionalLight ) {
 
-			_shadowMapSize.multiply( shadowFrameExtents );
+						return;
 
-			_viewportSize.copy( shadow.mapSize );
+					} else {
 
-			if ( _shadowMapSize.x > maxTextureSize || _shadowMapSize.y > maxTextureSize ) {
+						continue;
 
-				console.warn( 'THREE.WebGLShadowMap:', light, 'has shadow exceeding max texture size, reducing' );
-
-				if ( _shadowMapSize.x > maxTextureSize ) {
-
-					_viewportSize.x = Math.floor( maxTextureSize / shadowFrameExtents.x );
-					_shadowMapSize.x = _viewportSize.x * shadowFrameExtents.x;
-					shadow.mapSize.x = _viewportSize.x;
+					}
 
 				}
 
-				if ( _shadowMapSize.y > maxTextureSize ) {
+				_shadowMapSize.copy( shadow.mapSize );
 
-					_viewportSize.y = Math.floor( maxTextureSize / shadowFrameExtents.y );
-					_shadowMapSize.y = _viewportSize.y * shadowFrameExtents.y;
-					shadow.mapSize.y = _viewportSize.y;
+				var shadowFrameExtents = shadow.getFrameExtents();
+
+				_shadowMapSize.multiply( shadowFrameExtents );
+
+				_viewportSize.copy( shadow.mapSize );
+
+				if ( _shadowMapSize.x > maxTextureSize || _shadowMapSize.y > maxTextureSize ) {
+
+					console.warn( 'THREE.WebGLShadowMap:', light, 'has shadow exceeding max texture size, reducing' );
+
+					if ( _shadowMapSize.x > maxTextureSize ) {
+
+						_viewportSize.x = Math.floor( maxTextureSize / shadowFrameExtents.x );
+						_shadowMapSize.x = _viewportSize.x * shadowFrameExtents.x;
+						shadow.mapSize.x = _viewportSize.x;
+
+					}
+
+					if ( _shadowMapSize.y > maxTextureSize ) {
+
+						_viewportSize.y = Math.floor( maxTextureSize / shadowFrameExtents.y );
+						_shadowMapSize.y = _viewportSize.y * shadowFrameExtents.y;
+						shadow.mapSize.y = _viewportSize.y;
+
+					}
 
 				}
 
-			}
+				if ( shadow.map === null && ! shadow.isPointLightShadow && this.type === VSMShadowMap ) {
 
-			if ( shadow.map === null && ! shadow.isPointLightShadow && this.type === VSMShadowMap ) {
+					var pars = { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBAFormat };
 
-				var pars = { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBAFormat };
+					shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
+					shadow.map.texture.name = light.name + ".shadowMap";
 
-				shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
-				shadow.map.texture.name = light.name + ".shadowMap";
+					shadow.mapPass = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
 
-				shadow.mapPass = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
+					shadow.camera.updateProjectionMatrix();
 
-				shadow.camera.updateProjectionMatrix();
+				}
 
-			}
+				if ( shadow.map === null ) {
 
-			if ( shadow.map === null ) {
+					var pars = { minFilter: NearestFilter, magFilter: NearestFilter, format: RGBAFormat };
 
-				var pars = { minFilter: NearestFilter, magFilter: NearestFilter, format: RGBAFormat };
+					shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
+					shadow.map.texture.name = light.name + ".shadowMap";
 
-				shadow.map = new WebGLRenderTarget( _shadowMapSize.x, _shadowMapSize.y, pars );
-				shadow.map.texture.name = light.name + ".shadowMap";
+					shadow.camera.updateProjectionMatrix();
 
-				shadow.camera.updateProjectionMatrix();
+				}
 
-			}
+				_renderer.setRenderTarget( shadow.map );
+				_renderer.clear();
 
-			_renderer.setRenderTarget( shadow.map );
-			_renderer.clear();
+				var viewportCount = shadow.getViewportCount();
 
-			var viewportCount = shadow.getViewportCount();
+				for ( var vp = 0; vp < viewportCount; vp ++ ) {
 
-			for ( var vp = 0; vp < viewportCount; vp ++ ) {
+					var viewport = shadow.getViewport( vp );
 
-				var viewport = shadow.getViewport( vp );
+					_viewport.set(
+						_viewportSize.x * viewport.x,
+						_viewportSize.y * viewport.y,
+						_viewportSize.x * viewport.z,
+						_viewportSize.y * viewport.w
+					);
 
-				_viewport.set(
-					_viewportSize.x * viewport.x,
-					_viewportSize.y * viewport.y,
-					_viewportSize.x * viewport.z,
-					_viewportSize.y * viewport.w
-				);
+					_state.viewport( _viewport );
 
-				_state.viewport( _viewport );
+					shadow.updateMatrices( light, vp );
 
-				shadow.updateMatrices( light, vp );
+					_frustum = shadow.getFrustum();
 
-				_frustum = shadow.getFrustum();
+					renderObject( scene, camera, shadow.camera, light, this.type );
 
-				renderObject( scene, camera, shadow.camera, light, this.type );
+				}
 
-			}
+				// do blur pass for VSM
 
-			// do blur pass for VSM
+				if ( ! shadow.isPointLightShadow && this.type === VSMShadowMap ) {
 
-			if ( ! shadow.isPointLightShadow && this.type === VSMShadowMap ) {
+					VSMPass( shadow, camera );
 
-				VSMPass( shadow, camera );
+				}
 
 			}
 
