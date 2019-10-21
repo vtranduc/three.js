@@ -36,8 +36,6 @@ var EditorControls = function ( object, domElement ) {
 
 	// events
 
-	var changeEvent = { type: 'change' };
-
 	this.focus = function ( target ) {
 
 		var distance;
@@ -64,7 +62,7 @@ var EditorControls = function ( object, domElement ) {
 
 		object.position.copy( center ).add( delta );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent( { type: 'change', action: 'focus' } );
 
 	};
 
@@ -78,7 +76,7 @@ var EditorControls = function ( object, domElement ) {
 		object.position.add( delta );
 		center.add( delta );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent( { type: 'change', action: 'pan' } );
 
 	};
 
@@ -94,7 +92,7 @@ var EditorControls = function ( object, domElement ) {
 
 		object.position.add( delta );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent( { type: 'change', action: 'zoom' } );
 
 	};
 
@@ -115,7 +113,7 @@ var EditorControls = function ( object, domElement ) {
 
 		object.lookAt( center );
 
-		scope.dispatchEvent( changeEvent );
+		scope.dispatchEvent( { type: 'change', action: 'rotate' } );
 
 	};
 
