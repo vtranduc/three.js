@@ -73,6 +73,10 @@ IncidentLight directLight;
 #if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )
 
 	DirectionalLight directionalLight;
+  float linDepth = 2.0 * zNear / (zFar + zNear - (2.0 * gl_FragCoord.z - 1.0) * (zFar - zNear));
+	float d1 = .01;
+	float d2 = .1;
+	float olap = 0.001;
 
 	#pragma unroll_loop
 	for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
@@ -82,7 +86,55 @@ IncidentLight directLight;
 		getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );
 
 		#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS )
-		directLight.color *= all( bvec3( directionalLight.shadow, directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;
+    if (linDepth > d2) directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
+		 	getShadow( directionalShadowMap[ ( i ) * 3 + 2 ],
+								directionalLight.shadowMapSize,
+								directionalLight.shadowBias,
+								directionalLight.shadowRadius,
+								vDirectionalShadowCoord[ ( i ) * 3 + 2 ] ) :
+			1.0;
+		else if (linDepth > d2-olap) directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
+			mix(
+				getShadow( directionalShadowMap[ ( i ) * 3 + 1 ],
+									directionalLight.shadowMapSize,
+									directionalLight.shadowBias,
+									directionalLight.shadowRadius,
+									vDirectionalShadowCoord[ ( i ) * 3 + 1 ] ),
+				getShadow( directionalShadowMap[ ( i ) * 3 + 2 ],
+									directionalLight.shadowMapSize,
+									directionalLight.shadowBias,
+									directionalLight.shadowRadius,
+									vDirectionalShadowCoord[ ( i ) * 3 + 2 ] ),
+				clamp((linDepth - (d2-olap))/olap , 0.0, 1.0)) :
+			1.0;
+		else if (linDepth > d1)	directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
+		 	getShadow( directionalShadowMap[ ( i ) * 3 + 1 ],
+								directionalLight.shadowMapSize,
+								directionalLight.shadowBias,
+								directionalLight.shadowRadius,
+								vDirectionalShadowCoord[ ( i ) * 3 + 1 ] ) :
+			1.0;
+			else if (linDepth > d1-olap) directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
+				mix(
+					getShadow( directionalShadowMap[ ( i ) * 3 + 0 ],
+										directionalLight.shadowMapSize,
+										directionalLight.shadowBias,
+										directionalLight.shadowRadius,
+										vDirectionalShadowCoord[ ( i ) * 3 + 0 ] ),
+					getShadow( directionalShadowMap[ ( i ) * 3 + 1 ],
+										directionalLight.shadowMapSize,
+										directionalLight.shadowBias,
+										directionalLight.shadowRadius,
+										vDirectionalShadowCoord[ ( i ) * 3 + 1 ] ),
+					clamp((linDepth - (d1-olap))/olap , 0.0, 1.0)) :
+				1.0;
+		else if (linDepth <= d1-olap) directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
+		 	getShadow( directionalShadowMap[ ( i ) * 3 ],
+								directionalLight.shadowMapSize,
+								directionalLight.shadowBias,
+								directionalLight.shadowRadius,
+								vDirectionalShadowCoord[ ( i ) * 3 ] ) :
+			1.0;
 		#endif
 
 		RE_Direct( directLight, geometry, material, reflectedLight );

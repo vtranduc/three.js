@@ -42,6 +42,8 @@ var ShaderLib = {
 			UniformsLib.fog,
 			UniformsLib.lights,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) }
 			}
 		] ),
@@ -66,6 +68,8 @@ var ShaderLib = {
 			UniformsLib.fog,
 			UniformsLib.lights,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) },
 				specular: { value: new Color( 0x111111 ) },
 				shininess: { value: 30 }
@@ -94,6 +98,8 @@ var ShaderLib = {
 			UniformsLib.lights,
 			UniformsLib.projection,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				emissive: { value: new Color( 0x000000 ) },
 				roughness: { value: 0.5 },
 				metalness: { value: 0.5 },
@@ -283,6 +289,8 @@ var ShaderLib = {
 			UniformsLib.lights,
 			UniformsLib.fog,
 			{
+				zNear: {value: 0.1 },
+				zFar: {value: 10000 },
 				color: { value: new Color( 0x00000 ) },
 				opacity: { value: 1.0 }
 			},
