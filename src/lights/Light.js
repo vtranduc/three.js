@@ -17,6 +17,8 @@ function Light( color, intensity ) {
 
 	this.receiveShadow = undefined;
 
+	this.isDynamicLight = true;
+
 }
 
 Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
@@ -31,6 +33,8 @@ Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 		this.color.copy( source.color );
 		this.intensity = source.intensity;
+
+		this.isDynamicLight = source.isDynamicLight;
 
 		return this;
 
@@ -51,6 +55,8 @@ Light.prototype = Object.assign( Object.create( Object3D.prototype ), {
 		if ( this.penumbra !== undefined ) data.object.penumbra = this.penumbra;
 
 		if ( this.shadow !== undefined ) data.object.shadow = this.shadow.toJSON();
+
+		if ( this.isDynamicLight !== undefined ) data.object.isDynamicLight = this.isDynamicLight;
 
 		return data;
 
