@@ -38,14 +38,20 @@ void main() {
 
 	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
 
-	// accumulation (baked indirect lighting only)
-	#ifdef USE_LIGHTMAP
+	// accumulation (baked indirect and direct lighting only)
+	#ifdef USE_INDIRECT_LIGHTMAP
 
-		reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;
+		reflectedLight.indirectDiffuse += texture2D( indirectLightMap, vUv2 ).xyz * indirectLightMapIntensity;
 
 	#else
 
 		reflectedLight.indirectDiffuse += vec3( 1.0 );
+
+	#endif
+
+	#ifdef USE_DIRECT_LIGHTMAP
+
+		reflectedLight.directDiffuse += PI * texture2D( directLightMap, vUv2 ).xyz * directLightMapIntensity;
 
 	#endif
 
@@ -54,7 +60,7 @@ void main() {
 
 	reflectedLight.indirectDiffuse *= diffuseColor.rgb;
 
-	vec3 outgoingLight = reflectedLight.indirectDiffuse;
+	vec3 outgoingLight = reflectedLight.indirectDiffuse + reflectedLight.directDiffuse;
 
 	#include <envmap_fragment>
 
