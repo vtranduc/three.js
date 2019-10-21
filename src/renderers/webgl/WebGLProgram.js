@@ -239,6 +239,7 @@ function loopReplacer( match, start, end, snippet ) {
 
 		string += snippet
 			.replace( /\[ i \]/g, '[ ' + i + ' ]' )
+			.replace( /\( i \)/g, '(' + i + ')')
 			.replace( /UNROLLED_LOOP_INDEX/g, i );
 
 	}
