@@ -1909,6 +1909,9 @@ function WebGLRenderer( parameters ) {
 
 			} else if ( material.isMeshToonMaterial ) {
 
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
+
 				refreshUniformsCommon( m_uniforms, material );
 				refreshUniformsToon( m_uniforms, material );
 
@@ -1917,9 +1920,17 @@ function WebGLRenderer( parameters ) {
 				refreshUniformsCommon( m_uniforms, material );
 				refreshUniformsPhong( m_uniforms, material );
 
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
+
+				}
+
 			} else if ( material.isMeshStandardMaterial ) {
 
 				refreshUniformsCommon( m_uniforms, material, environment );
+
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 				if ( material.isMeshPhysicalMaterial ) {
 
@@ -1973,6 +1984,9 @@ function WebGLRenderer( parameters ) {
 
 				m_uniforms.color.value.copy( material.color );
 				m_uniforms.opacity.value = material.opacity;
+
+				m_uniforms.zNear.value = camera.near;
+				m_uniforms.zFar.value = camera.far;
 
 			}
 
