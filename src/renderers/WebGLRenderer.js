@@ -1886,8 +1886,6 @@ function WebGLRenderer( parameters ) {
 				m_uniforms.zNear.value = camera.near;
 				m_uniforms.zFar.value = camera.far;
 
-				}
-
 			} else if ( material.isMeshStandardMaterial ) {
 
 				refreshUniformsCommon( m_uniforms, material, environment );
@@ -2052,10 +2050,17 @@ function WebGLRenderer( parameters ) {
 
 		}
 
-		if ( material.lightMap ) {
+		if ( material.directLightMap ) {
 
-			uniforms.lightMap.value = material.lightMap;
-			uniforms.lightMapIntensity.value = material.lightMapIntensity;
+			uniforms.directLightMap.value = material.directLightMap;
+			uniforms.directLightMapIntensity.value = material.directLightMapIntensity;
+
+		}
+
+		if ( material.indirectLightMap ) {
+
+			uniforms.indirectLightMap.value = material.indirectLightMap;
+			uniforms.indirectLightMapIntensity.value = material.indirectLightMapIntensity;
 
 		}
 

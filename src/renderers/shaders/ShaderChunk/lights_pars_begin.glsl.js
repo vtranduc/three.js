@@ -61,6 +61,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	struct DirectionalLight {
 		vec3 direction;
 		vec3 color;
+		bool isDynamicLight;
 
 		int shadow;
 		float shadowBias;
@@ -88,6 +89,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 color;
 		float distance;
 		float decay;
+		bool isDynamicLight;
 
 		int shadow;
 		float shadowBias;
@@ -126,6 +128,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		float decay;
 		float coneCos;
 		float penumbraCos;
+		bool isDynamicLight;
 
 		int shadow;
 		float shadowBias;
@@ -170,6 +173,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 position;
 		vec3 halfWidth;
 		vec3 halfHeight;
+		bool isDynamicLight;
 	};
 
 	// Pre-computed values of LinearTransformedCosine approximation of BRDF
@@ -188,6 +192,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 direction;
 		vec3 skyColor;
 		vec3 groundColor;
+		bool isDynamicLight;
 	};
 
 	uniform HemisphereLight hemisphereLights[ NUM_HEMI_LIGHTS ];
