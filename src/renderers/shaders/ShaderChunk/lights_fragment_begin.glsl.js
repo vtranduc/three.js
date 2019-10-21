@@ -27,6 +27,9 @@ geometry.viewDir = normalize( vViewPosition );
 #endif
 
 IncidentLight directLight;
+#ifdef USE_DIRECT_LIGHTMAP
+	reflectedLight.directDiffuse += texture2D( directLightMap, vUv2 ).xyz * diffuseColor.rgb * directLightMapIntensity;
+#endif
 
 #if ( NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )
 
@@ -43,7 +46,7 @@ IncidentLight directLight;
 		directLight.color *= all( bvec3( pointLight.shadow, directLight.visible, receiveShadow ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( pointLight.isDynamicLight, directLight, geometry, material, reflectedLight );
 
 	}
 
@@ -64,7 +67,7 @@ IncidentLight directLight;
 		directLight.color *= all( bvec3( spotLight.shadow, directLight.visible, receiveShadow ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( spotLight.isDynamicLight, directLight, geometry, material, reflectedLight );
 
 	}
 
@@ -137,7 +140,7 @@ IncidentLight directLight;
 			1.0;
 		#endif
 
-		RE_Direct( directLight, geometry, material, reflectedLight );
+		RE_Direct( directionalLight.isDynamicLight, directLight, geometry, material, reflectedLight );
 
 	}
 

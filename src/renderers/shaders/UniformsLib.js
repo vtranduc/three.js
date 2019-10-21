@@ -43,10 +43,17 @@ var UniformsLib = {
 
 	},
 
-	lightmap: {
+	directLightmap: {
 
-		lightMap: { value: null },
-		lightMapIntensity: { value: 1 }
+		directLightMap: { value: null },
+		directLightMapIntensity: { value: 1 }
+
+	},
+
+	indirectLightmap: {
+
+		indirectLightMap: { value: null },
+		indirectLightMapIntensity: { value: 1 }
 
 	},
 
@@ -114,6 +121,7 @@ var UniformsLib = {
 		directionalLights: { value: [], properties: {
 			direction: {},
 			color: {},
+			isDynamicLight: {},
 
 			shadow: {},
 			shadowBias: {},
@@ -132,6 +140,7 @@ var UniformsLib = {
 			coneCos: {},
 			penumbraCos: {},
 			decay: {},
+			isDynamicLight: {},
 
 			shadow: {},
 			shadowBias: {},
@@ -147,6 +156,7 @@ var UniformsLib = {
 			position: {},
 			decay: {},
 			distance: {},
+			isDynamicLight: {},
 
 			shadow: {},
 			shadowBias: {},
@@ -162,7 +172,8 @@ var UniformsLib = {
 		hemisphereLights: { value: [], properties: {
 			direction: {},
 			skyColor: {},
-			groundColor: {}
+			groundColor: {},
+			isDynamicLight: {}
 		} },
 
 		// TODO (abelnation): RectAreaLight BRDF data needs to be moved from example to main src
@@ -170,7 +181,8 @@ var UniformsLib = {
 			color: {},
 			position: {},
 			width: {},
-			height: {}
+			height: {},
+			isDynamicLight: {}
 		} }
 
 	},
@@ -198,7 +210,7 @@ var UniformsLib = {
 	},
 
 	projection: {
-		
+
 		enableProjection: { value: false },
 		projectionSharpness: { value: 2.0 }
 

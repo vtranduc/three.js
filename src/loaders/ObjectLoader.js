@@ -627,6 +627,7 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 				if ( images[ data.image ] === undefined ) {
 
 					console.warn( 'THREE.ObjectLoader: Undefined image', data.image );
+					continue;
 
 				}
 
