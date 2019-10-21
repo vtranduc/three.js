@@ -42,12 +42,18 @@ void main() {
 	// accumulation (baked indirect lighting only)
 	#ifdef USE_LIGHTMAP
 	
-		vec4 lightMapTexel= texture2D( lightMap, vUv2 );
-		reflectedLight.indirectDiffuse += lightMapTexelToLinear( lightMapTexel ).rgb * lightMapIntensity;
+		vec4 indirectLightMapTexel= texture2D( indirectLightMap, vUv2 );
+		reflectedLight.indirectDiffuse += indirectLightMapTexelToLinear( indirectLightMapTexel ).rgb * indirectLightMapIntensity;
 
 	#else
 
 		reflectedLight.indirectDiffuse += vec3( 1.0 );
+
+	#endif
+
+	#ifdef USE_DIRECT_LIGHTMAP
+		vec4 directLightMapTexel= texture2D( directLightMap, vUv2 );
+		reflectedLight.directDiffuse += PI * directLightMapTexelToLinear( directLightMaptexel ).rgb * directLightMapIntensity;
 
 	#endif
 
@@ -56,7 +62,7 @@ void main() {
 
 	reflectedLight.indirectDiffuse *= diffuseColor.rgb;
 
-	vec3 outgoingLight = reflectedLight.indirectDiffuse;
+	vec3 outgoingLight = reflectedLight.indirectDiffuse + reflectedLight.directDiffuse;
 
 	#include <envmap_fragment>
 

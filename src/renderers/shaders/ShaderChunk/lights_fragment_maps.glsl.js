@@ -1,10 +1,10 @@
 export default /* glsl */`
 #if defined( RE_IndirectDiffuse )
 
-	#ifdef USE_LIGHTMAP
+	#ifdef USE_INDIRECT_LIGHTMAP
 
-		vec4 lightMapTexel= texture2D( lightMap, vUv2 );
-		vec3 lightMapIrradiance = lightMapTexelToLinear( lightMapTexel ).rgb * lightMapIntensity;
+		vec4 lightMapTexel= texture2D( indirectLightMap, vUv2 );
+		vec3 lightMapIrradiance = indirectLightMapTexelToLinear( lightMapTexel ).rgb * indirectLightMapIntensity;
 
 		#ifndef PHYSICALLY_CORRECT_LIGHTS
 

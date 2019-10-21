@@ -80,6 +80,12 @@ void main() {
 
 	reflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();
 
+	#ifdef USE_DIRECT_LIGHTMAP
+
+		reflectedLight.directDiffuse += PI * texture2D( directLightMap, vUv2 ).xyz * directLightMapIntensity;
+
+	#endif
+
 	// modulation
 	#include <aomap_fragment>
 
