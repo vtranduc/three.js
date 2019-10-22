@@ -565,7 +565,7 @@ Object.assign( AnimationAction.prototype, {
 					if ( this.clampWhenFinished ) this.paused = true;
 					else this.enabled = false;
 
-					time = deltaTime > 0 ? duration : 0;
+					time = Math.abs(time - duration) > time ? 0 : duration;
 
 					this.time = time;
 
