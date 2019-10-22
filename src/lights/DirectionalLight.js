@@ -71,11 +71,27 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
  			// We limit our shadow cam to fit the scene or to the calculated frustum, whichever is a tighter bound.
 			transformedBox.applyMatrix4(inv);
-			this.shadowCascade[index].camera.left = Math.max(min.x, transformedBox.min.x);
-			this.shadowCascade[index].camera.bottom = Math.max(min.y, transformedBox.min.y);
-			this.shadowCascade[index].camera.right = Math.min(max.x, transformedBox.max.x);
-			this.shadowCascade[index].camera.top = Math.min(max.y, transformedBox.max.y);
+			min.max(transformedBox.min);
+			max.min(transformedBox.max);
 
+			// Perform rounding to reduce shimmer
+
+ 			var unitsPerTexel = new THREE.Vector2().subVectors(max, min);
+			unitsPerTexel.divideScalar(this.shadowCascade[index].mapSize.width);
+
+ 			min.divide(unitsPerTexel);
+			min.floor();
+			min.multiply(unitsPerTexel);
+
+ 			max.divide(unitsPerTexel);
+			max.floor();
+			max.multiply(unitsPerTexel);
+
+ 			// Update frusta for real
+			this.shadowCascade[index].camera.left = min.x;
+			this.shadowCascade[index].camera.bottom = min.y;
+			this.shadowCascade[index].camera.right = max.x;
+			this.shadowCascade[index].camera.top = max.y;
  			this.shadowCascade[index].camera.far = Math.max(0, -transformedBox.min.z);
 			this.shadowCascade[index].camera.updateProjectionMatrix();
 		}, this));
