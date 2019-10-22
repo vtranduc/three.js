@@ -113,8 +113,16 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 	parse: function ( json, onLoad ) {
 
+		var options = {}
+		if (typeof onLoad !== 'function' && typeof onLoad === 'object') {
+			options = onLoad
+			onLoad = options.onLoad
+		}
+
+ 		var geoMap = options.geometryMap
+
 		var shapes = this.parseShape( json.shapes );
-		var geometries = this.parseGeometries( json.geometries, shapes );
+		var geometries = geoMap || this.parseGeometries( json.geometries, shapes );
 
 		var images = this.parseImages( json.images, function () {
 
@@ -827,23 +835,12 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 				break;
 
 			case 'SkinnedMesh':
-
-				console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh yet.' );
-
 			case 'Mesh':
 
 				var geometry = getGeometry( data.geometry );
 				var material = getMaterial( data.material );
 
-				if ( geometry.bones && geometry.bones.length > 0 ) {
-
-					object = new SkinnedMesh( geometry, material );
-
-				} else {
-
-					object = new Mesh( geometry, material );
-
-				}
+				object = new Mesh( geometry, material );
 
 				if ( data.drawMode !== undefined ) object.setDrawMode( data.drawMode );
 
