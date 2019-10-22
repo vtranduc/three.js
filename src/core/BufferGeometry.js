@@ -1011,69 +1011,6 @@ BufferGeometry.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 		data.data = { attributes: {} };
 
-		var index = this.index;
-
-		if ( index !== null ) {
-
-			data.data.index = {
-				type: index.array.constructor.name,
-				array: Array.prototype.slice.call( index.array )
-			};
-
-		}
-
-		var attributes = this.attributes;
-
-		for ( var key in attributes ) {
-
-			var attribute = attributes[ key ];
-
-			var attributeData = attribute.toJSON();
-
-			if ( attribute.name !== '' ) attributeData.name = attribute.name;
-
-			data.data.attributes[ key ] = attributeData;
-
-		}
-
-		var morphAttributes = {};
-		var hasMorphAttributes = false;
-
-		for ( var key in this.morphAttributes ) {
-
-			var attributeArray = this.morphAttributes[ key ];
-
-			var array = [];
-
-			for ( var i = 0, il = attributeArray.length; i < il; i ++ ) {
-
-				var attribute = attributeArray[ i ];
-
-				var attributeData = attribute.toJSON();
-
-				if ( attribute.name !== '' ) attributeData.name = attribute.name;
-
-				array.push( attributeData );
-
-			}
-
-			if ( array.length > 0 ) {
-
-				morphAttributes[ key ] = array;
-
-				hasMorphAttributes = true;
-
-			}
-
-		}
-
-		if ( hasMorphAttributes ) {
-
-			data.data.morphAttributes = morphAttributes;
-			data.data.morphTargetsRelative = this.morphTargetsRelative;
-
-		}
-
 		var groups = this.groups;
 
 		if ( groups.length > 0 ) {
