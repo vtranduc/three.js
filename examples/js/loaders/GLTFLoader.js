@@ -1776,29 +1776,42 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		var sourceURI = source.uri;
 		var isObjectURL = false;
 
-		if ( source.bufferView !== undefined ) {
+		function getSourceURI () {
 
-			// Load binary image data from bufferView, if provided.
+			return new Promise(function (resolve, reject) {
 
-			sourceURI = parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+			 	if ( source.bufferView === undefined ) return resolve(source.uri)
 
-				isObjectURL = true;
-				var blob = new Blob( [ bufferView ], { type: source.mimeType } );
-				sourceURI = URL.createObjectURL( blob );
-				return sourceURI;
+			 	// Load binary image data from bufferView, if provided.
 
-			} );
+			 	parser.getDependency( 'bufferView', source.bufferView )
+				.then( function ( bufferView ) {
+
+					var blob = new Blob( [ bufferView ], { type: source.mimeType } );
+			    var reader = new FileReader();
+
+			    reader.onload = function (e) {
+
+			       resolve(e.target.result);
+						 
+			    }
+
+			    reader.readAsDataURL(blob);
+
+			 	} );
+
+			} )
 
 		}
 
-		return Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+		return getSourceURI()
+		.then( function ( sourceURI ) {
 
 			// Load Texture resource.
 
-			var loader = options.manager.getHandler( sourceURI );
+			var loader = THREE.Loader.Handlers.get( sourceURI );
 
 			if ( ! loader ) {
 
@@ -1815,14 +1828,6 @@ THREE.GLTFLoader = ( function () {
 			} );
 
 		} ).then( function ( texture ) {
-
-			// Clean up resources and configure Texture.
-
-			if ( isObjectURL === true ) {
-
-				URL.revokeObjectURL( sourceURI );
-
-			}
 
 			texture.flipY = false;
 
