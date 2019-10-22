@@ -1303,7 +1303,7 @@ function WebGLRenderer( parameters ) {
 
 			} else if ( object.isMesh || object.isLine || object.isPoints ) {
 
-				if ( object.isSkinnedMesh ) {
+				if ( object.isSkinnedMesh && object.skeleton ) {
 
 					// update skeleton only once in a frame
 
