@@ -148,7 +148,7 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 					if ( isDirectionalLight ) {
 
 						return;
-						
+
 					} else {
 
 						continue;
@@ -310,12 +310,6 @@ function WebGLShadowMap( _renderer, _objects, maxTextureSize ) {
 					useMorphing = geometry.morphTargets && geometry.morphTargets.length > 0;
 
 				}
-
-			}
-
-			if ( object.isSkinnedMesh && material.skinning === false ) {
-
-				console.warn( 'THREE.WebGLShadowMap: THREE.SkinnedMesh with material.skinning set to false:', object );
 
 			}
 
