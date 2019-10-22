@@ -189,31 +189,9 @@ Texture.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
 
 			if ( ! isRootObject && meta.images[ image.uuid ] === undefined ) {
 
-				var url;
-
-				if ( Array.isArray( image ) ) {
-
-					// process array of images e.g. CubeTexture
-
-					url = [];
-
-					for ( var i = 0, l = image.length; i < l; i ++ ) {
-
-						url.push( ImageUtils.getDataURL( image[ i ] ) );
-
-					}
-
-				} else {
-
-					// process single image
-
-					url = ImageUtils.getDataURL( image );
-
-				}
-
 				meta.images[ image.uuid ] = {
 					uuid: image.uuid,
-					url: url
+					url: ''
 				};
 
 			}
