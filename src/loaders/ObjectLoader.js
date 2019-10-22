@@ -113,8 +113,16 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 	parse: function ( json, onLoad ) {
 
+		var options = {}
+		if (typeof onLoad !== 'function' && typeof onLoad === 'object') {
+			options = onLoad
+			onLoad = options.onLoad
+		}
+
+ 		var geoMap = options.geometryMap
+
 		var shapes = this.parseShape( json.shapes );
-		var geometries = this.parseGeometries( json.geometries, shapes );
+		var geometries = geoMap || this.parseGeometries( json.geometries, shapes );
 
 		var images = this.parseImages( json.images, function () {
 
