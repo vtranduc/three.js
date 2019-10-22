@@ -33,6 +33,7 @@ import { SkinnedMesh } from '../objects/SkinnedMesh.js';
 import { Shape } from '../extras/core/Shape.js';
 import { Fog } from '../scenes/Fog.js';
 import { FogExp2 } from '../scenes/FogExp2.js';
+import { FogGround } from '../scenes/FogGround';
 import { HemisphereLight } from '../lights/HemisphereLight.js';
 import { SpotLight } from '../lights/SpotLight.js';
 import { PointLight } from '../lights/PointLight.js';
@@ -113,8 +114,16 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 	parse: function ( json, onLoad ) {
 
+		var options = {}
+		if (typeof onLoad !== 'function' && typeof onLoad === 'object') {
+			options = onLoad
+			onLoad = options.onLoad
+		}
+
+ 		var geoMap = options.geometryMap
+
 		var shapes = this.parseShape( json.shapes );
-		var geometries = this.parseGeometries( json.geometries, shapes );
+		var geometries = geoMap || this.parseGeometries( json.geometries, shapes );
 
 		var images = this.parseImages( json.images, function () {
 
@@ -763,6 +772,10 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 						object.fog = new FogExp2( data.fog.color, data.fog.density );
 
+					} else if ( data.fog.type === 'FogGround' ) {
+
+						object.fog = new FogGround( data.fog.color, data.fog.opacity, data.fog.distanceEnabled,  data.fog.distanceNear, data.fog.distanceFar, data.fog.heightEnabled, data.fog.heightNear, data.fog.heightFar );
+
 					}
 
 				}
@@ -827,23 +840,12 @@ ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 				break;
 
 			case 'SkinnedMesh':
-
-				console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh yet.' );
-
 			case 'Mesh':
 
 				var geometry = getGeometry( data.geometry );
 				var material = getMaterial( data.material );
 
-				if ( geometry.bones && geometry.bones.length > 0 ) {
-
-					object = new SkinnedMesh( geometry, material );
-
-				} else {
-
-					object = new Mesh( geometry, material );
-
-				}
+				object = new Mesh( geometry, material );
 
 				if ( data.drawMode !== undefined ) object.setDrawMode( data.drawMode );
 
