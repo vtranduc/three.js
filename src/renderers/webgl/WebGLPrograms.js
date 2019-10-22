@@ -130,7 +130,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 		// heuristics to create shader parameters according to lights in the scene
 		// (not to blow over maxLights budget)
 
-		var maxBones = object.isSkinnedMesh ? allocateBones( object ) : 0;
+		var maxBones = object.isSkinnedMesh && object.skeleton ? allocateBones( object ) : 0;
 
 		if ( material.precision !== null ) {
 
