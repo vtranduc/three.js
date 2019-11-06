@@ -1044,11 +1044,15 @@ GLTFExporter.prototype = {
 			if ( material.emissive ) {
 
 				// emissiveFactor
-				var emissive = material.emissive.clone().multiplyScalar( material.emissiveIntensity ).toArray();
+				if ( material.emissive ) {
 
-				if ( ! equalArray( emissive, [ 0, 0, 0 ] ) ) {
+					var emissive = material.emissive.clone().multiplyScalar( material.emissiveIntensity ).toArray();
 
-					gltfMaterial.emissiveFactor = emissive;
+					if ( ! equalArray( emissive, [ 0, 0, 0 ] ) ) {
+
+						gltfMaterial.emissiveFactor = emissive;
+
+					}
 
 				}
 
@@ -1671,6 +1675,9 @@ GLTFExporter.prototype = {
 
 			if ( skeleton === undefined ) return null;
 
+			var rootJoint = object.skeleton.bones[ 0 ];
+
+			var skeleton = object.skeleton;
 			var rootJoint = object.skeleton.bones[ 0 ];
 
 			if ( rootJoint === undefined ) return null;
