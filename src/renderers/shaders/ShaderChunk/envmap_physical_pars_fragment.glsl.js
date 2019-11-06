@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #if defined( USE_ENVMAP )
 
 	#ifdef ENVMAP_MODE_REFRACTION
@@ -31,22 +31,14 @@ export default /* glsl */`
 
 		#elif defined( ENVMAP_TYPE_CUBE_UV )
 
-<<<<<<< HEAD
-			vec4 envMapColor = textureCubeUV( envMap, worldNormal, 1.0 );
-=======
 			vec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );
 
 			#ifdef USE_IRRADIANCE_MAP
-
 				vec4 envMapColor = textureCube( envIrradianceMap, queryVec );
 				envMapColor.rgb = envIrradianceMapTexelToLinear( envMapColor ).rgb;
-
 			#else
-
 				vec4 envMapColor = textureCubeUV( envMap, queryVec, 1.0 );
-
 			#endif
->>>>>>> added an irradiance map property to physical materials.
 
 		#else
 
