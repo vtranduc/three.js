@@ -36,7 +36,7 @@ DataTextureLoader.prototype = Object.assign( Object.create( Loader.prototype ), 
 
  			try {
 
- 				texData = scope._parser( buffer );
+ 				texData = scope.parse( buffer );
 
  			} catch ( e ) {
 
