@@ -5,7 +5,7 @@ float getShadowMask() {
 
 	#ifdef USE_SHADOWMAP
 
-	#if NUM_DIR_LIGHT_SHADOWS > 0
+	#if NUM_DIR_LIGHTS > 0
 
 	DirectionalLight directionalLight;
 	float linDepth = 2.0 * zNear / (zFar + zNear - (2.0 * gl_FragCoord.z - 1.0) * (zFar - zNear));
@@ -14,7 +14,7 @@ float getShadowMask() {
 	float olap = 0.001;
 
 	#pragma unroll_loop
-	for ( int i = 0; i < NUM_DIR_LIGHT_SHADOWS; i ++ ) {
+	for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
 
 		directionalLight = directionalLights[ i ];
 
