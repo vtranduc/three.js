@@ -21521,9 +21521,9 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	var useOffscreenCanvas = false;
 
 	try {
-
-		useOffscreenCanvas = typeof OffscreenCanvas !== 'undefined'
-			&& ( new OffscreenCanvas( 1, 1 ).getContext( "2d" ) ) !== null;
+	  useOffscreenCanvas = typeof document === 'undefined'
+		  && typeof OffscreenCanvas !== 'undefined'
+  		&& ( new OffscreenCanvas( 1, 1 ).getContext( "2d" ) ) !== null;
 
 	} catch ( err ) {
 
