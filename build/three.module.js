@@ -21248,7 +21248,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	// cordova iOS (as of 5.0) still uses UIWebView, which provides OffscreenCanvas,
 	// also OffscreenCanvas.getContext("webgl"), but not OffscreenCanvas.getContext("2d")!
 
-	var useOffscreenCanvas = typeof OffscreenCanvas !== 'undefined'
+	var useOffscreenCanvas = typeof document === 'undefined'
+		&& typeof OffscreenCanvas !== 'undefined'
 		&& ( new OffscreenCanvas( 1, 1 ).getContext( "2d" ) ) !== null;
 
 	function createCanvas( width, height ) {
