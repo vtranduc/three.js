@@ -17934,13 +17934,13 @@
 
 	}
 
-	function generateEnvMapCubeUVTextureSize( parameters ) {
+	function generateEnvMapCubeUVTextureSize( material ) {
 
 		var envMapCubeUVTextureSize = 1024.0;
 
-		if ( parameters.envMap && parameters.envMap.cubeUVTextureSize ) {
+		if ( material.envMap && material.envMap.cubeUVTextureSize ) {
 
-			envMapCubeUVTextureSize = parameters.envMap.cubeUVTextureSize;
+			envMapCubeUVTextureSize = material.envMap.cubeUVTextureSize;
 
 		}
 
@@ -17960,7 +17960,7 @@
 		var envMapTypeDefine = generateEnvMapTypeDefine( parameters );
 		var envMapModeDefine = generateEnvMapModeDefine( parameters );
 		var envMapBlendingDefine = generateEnvMapBlendingDefine( parameters );
-		var envMapCubeUVTextureSize = generateEnvMapCubeUVTextureSize( parameters );
+		var envMapCubeUVTextureSize = generateEnvMapCubeUVTextureSize( material );
 
 
 		var gammaFactorDefine = ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : 1.0;
