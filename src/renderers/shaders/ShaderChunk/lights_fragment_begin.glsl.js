@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 /**
  * This is a template that can be used to light a material, it uses pluggable
  * RenderEquations (RE)for specific lighting scenarios.
@@ -88,7 +88,7 @@ IncidentLight directLight;
 
 		getDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );
 
-		#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS )
+		#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_DIR_LIGHT_SHADOWS / 3 )
     if (linDepth > d2) directLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ?
 		 	getShadow( directionalShadowMap[ ( i ) * 3 + 2 ],
 								directionalLight.shadowMapSize,
