@@ -310,7 +310,7 @@ THREE.LegacyDRACOLoader.prototype = {
 
 		}
 		// Add attribute to THREEJS geometry for rendering.
-		geometry.addAttribute(
+		geometry.setAttribute(
 			attributeName,
 			new TypedBufferAttribute( geometryBuffer[ attributeName ], numComponents )
 		);
