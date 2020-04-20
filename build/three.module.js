@@ -47472,11 +47472,11 @@ PMREMGenerator.prototype = {
 	 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
 	 * is placed at the origin).
 	 */
-	fromScene: function ( scene, sigma = 0, near = 0.1, far = 100 ) {
+	fromScene: function ( scene, sigma = 0, near = 0.1, far = 100, position = new Vector3() ) {
 
 		_oldTarget = _renderer.getRenderTarget();
 		var cubeUVRenderTarget = _allocateTargets();
-		_sceneToCubeUV( scene, near, far, cubeUVRenderTarget );
+		_sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position );
 		if ( sigma > 0 ) {
 
 			_blur( cubeUVRenderTarget, 0, 0, sigma );
@@ -47675,11 +47675,14 @@ function _cleanup( outputTarget ) {
 
 }
 
-function _sceneToCubeUV( scene, near, far, cubeUVRenderTarget ) {
+// BRIO: We've updated this to take a position to make it easier to generate PMREMs for reflection probes
+// The important bits are that this function now takes a position to place the camera.
+function _sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position ) {
 
 	var fov = 90;
 	var aspect = 1;
 	var cubeCamera = new PerspectiveCamera( fov, aspect, near, far );
+	cubeCamera.position.set( position.x, position.y, -position.z );
 	var upSign = [ 1, 1, 1, 1, - 1, 1 ];
 	var forwardSign = [ 1, 1, - 1, - 1, - 1, 1 ];
 
@@ -47714,17 +47717,17 @@ function _sceneToCubeUV( scene, near, far, cubeUVRenderTarget ) {
 		if ( col == 0 ) {
 
 			cubeCamera.up.set( 0, upSign[ i ], 0 );
-			cubeCamera.lookAt( forwardSign[ i ], 0, 0 );
+			cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, -position.z );
 
 		} else if ( col == 1 ) {
 
 			cubeCamera.up.set( 0, 0, upSign[ i ] );
-			cubeCamera.lookAt( 0, forwardSign[ i ], 0 );
+			cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], -position.z );
 
 		} else {
 
 			cubeCamera.up.set( 0, upSign[ i ], 0 );
-			cubeCamera.lookAt( 0, 0, forwardSign[ i ] );
+			cubeCamera.lookAt( position.x, position.y, -position.z + forwardSign[ i ] );
 
 		}
 		_setViewport( cubeUVRenderTarget,
@@ -47976,27 +47979,28 @@ ${_getEncodings()}
 #define ENVMAP_TYPE_CUBE_UV
 #include <cube_uv_reflection_fragment>
 
+vec3 getSample(float theta, vec3 axis) {
+	float cosTheta = cos(theta);
+	// Rodrigues' axis-angle rotation
+	vec3 sampleDirection = vOutputDirection * cosTheta
+		+ cross(axis, vOutputDirection) * sin(theta)
+		+ axis * dot(axis, vOutputDirection) * (1.0 - cosTheta);
+	return bilinearCubeUV(envMap, sampleDirection, mipInt);
+}
+
 void main() {
+	vec3 axis = latitudinal ? poleAxis : cross(poleAxis, vOutputDirection);
+	if (all(equal(axis, vec3(0.0))))
+		axis = vec3(vOutputDirection.z, 0.0, - vOutputDirection.x);
+	axis = normalize(axis);
 	gl_FragColor = vec4(0.0);
-	for (int i = 0; i < n; i++) {
+	gl_FragColor.rgb += weights[0] * getSample(0.0, axis);
+	for (int i = 1; i < n; i++) {
 		if (i >= samples)
 			break;
-		for (int dir = -1; dir < 2; dir += 2) {
-			if (i == 0 && dir == 1)
-				continue;
-			vec3 axis = latitudinal ? poleAxis : cross(poleAxis, vOutputDirection);
-			if (all(equal(axis, vec3(0.0))))
-				axis = cross(vec3(0.0, 1.0, 0.0), vOutputDirection);
-			axis = normalize(axis);
-			float theta = dTheta * float(dir * i);
-			float cosTheta = cos(theta);
-			// Rodrigues' axis-angle rotation
-			vec3 sampleDirection = vOutputDirection * cosTheta
-					+ cross(axis, vOutputDirection) * sin(theta)
-					+ axis * dot(axis, vOutputDirection) * (1.0 - cosTheta);
-			gl_FragColor.rgb +=
-					weights[i] * bilinearCubeUV(envMap, sampleDirection, mipInt);
-		}
+		float theta = dTheta * float(i);
+		gl_FragColor.rgb += weights[i] * getSample(-1.0 * theta, axis);
+		gl_FragColor.rgb += weights[i] * getSample(theta, axis);
 	}
 	gl_FragColor = linearToOutputTexel(gl_FragColor);
 }
