@@ -47039,6 +47039,8 @@
 	var _pingPongRenderTarget = null;
 	var _renderer = null;
 
+	var _oldTarget = null;
+
 	// Golden Ratio
 	var PHI = ( 1 + Math.sqrt( 5 ) ) / 2;
 	var INV_PHI = 1 / PHI;
@@ -47074,22 +47076,23 @@
 		 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
 		 * is placed at the origin).
 		 */
-		fromScene: function ( scene, sigma, near, far ) {
+		fromScene: function ( scene, sigma, near, far, position ) {
 			if ( sigma === void 0 ) sigma = 0;
 			if ( near === void 0 ) near = 0.1;
 			if ( far === void 0 ) far = 100;
+			if ( position === void 0 ) position = new Vector3();
 
 
+			_oldTarget = _renderer.getRenderTarget();
 			var cubeUVRenderTarget = _allocateTargets();
-			_sceneToCubeUV( scene, near, far, cubeUVRenderTarget );
+			_sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position );
 			if ( sigma > 0 ) {
 
 				_blur( cubeUVRenderTarget, 0, 0, sigma );
 
 			}
 			_applyPMREM( cubeUVRenderTarget );
-			_cleanup();
-			cubeUVRenderTarget.scissorTest = false;
+			_cleanup( cubeUVRenderTarget );
 
 			return cubeUVRenderTarget;
 
@@ -47117,11 +47120,11 @@
 		 */
 		fromCubemap: function ( cubemap ) {
 
+			_oldTarget = _renderer.getRenderTarget();
 			var cubeUVRenderTarget = _allocateTargets( cubemap );
 			_textureToCubeUV( cubemap, cubeUVRenderTarget );
 			_applyPMREM( cubeUVRenderTarget );
-			_cleanup();
-			cubeUVRenderTarget.scissorTest = false;
+			_cleanup( cubeUVRenderTarget );
 
 			return cubeUVRenderTarget;
 
@@ -47271,20 +47274,24 @@
 
 	}
 
-	function _cleanup() {
+	function _cleanup( outputTarget ) {
 
 		_pingPongRenderTarget.dispose();
-		_renderer.setRenderTarget( null );
-		var size = _renderer.getSize( new Vector2() );
-		_renderer.setViewport( 0, 0, size.x, size.y );
+		_renderer.setRenderTarget( _oldTarget );
+		outputTarget.scissorTest = false;
+		// reset viewport and scissor
+		outputTarget.setSize( outputTarget.width, outputTarget.height );
 
 	}
 
-	function _sceneToCubeUV( scene, near, far, cubeUVRenderTarget ) {
+	// BRIO: We've updated this to take a position to make it easier to generate PMREMs for reflection probes
+	// The important bits are that this function now takes a position to place the camera.
+	function _sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position ) {
 
 		var fov = 90;
 		var aspect = 1;
 		var cubeCamera = new PerspectiveCamera( fov, aspect, near, far );
+		cubeCamera.position.set( position.x, position.y, -position.z );
 		var upSign = [ 1, 1, 1, 1, - 1, 1 ];
 		var forwardSign = [ 1, 1, - 1, - 1, - 1, 1 ];
 
@@ -47313,28 +47320,28 @@
 
 		}
 
-		_renderer.setRenderTarget( cubeUVRenderTarget );
 		for ( var i = 0; i < 6; i ++ ) {
 
 			var col = i % 3;
 			if ( col == 0 ) {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( forwardSign[ i ], 0, 0 );
+				cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, -position.z );
 
 			} else if ( col == 1 ) {
 
 				cubeCamera.up.set( 0, 0, upSign[ i ] );
-				cubeCamera.lookAt( 0, forwardSign[ i ], 0 );
+				cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], -position.z );
 
 			} else {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( 0, 0, forwardSign[ i ] );
+				cubeCamera.lookAt( position.x, position.y, -position.z + forwardSign[ i ] );
 
 			}
-			_setViewport(
+			_setViewport( cubeUVRenderTarget,
 				col * SIZE_MAX, i > 2 ? SIZE_MAX : 0, SIZE_MAX, SIZE_MAX );
+			_renderer.setRenderTarget( cubeUVRenderTarget );
 			_renderer.render( scene, cubeCamera );
 
 		}
@@ -47380,8 +47387,8 @@
 		uniforms[ 'inputEncoding' ].value = ENCODINGS[ texture.encoding ];
 		uniforms[ 'outputEncoding' ].value = ENCODINGS[ texture.encoding ];
 
+		_setViewport( cubeUVRenderTarget, 0, 0, 3 * SIZE_MAX, 2 * SIZE_MAX );
 		_renderer.setRenderTarget( cubeUVRenderTarget );
-		_setViewport( 0, 0, 3 * SIZE_MAX, 2 * SIZE_MAX );
 		_renderer.render( scene, _flatCamera );
 
 	}
@@ -47404,15 +47411,10 @@
 
 	}
 
-	function _setViewport( x, y, width, height ) {
+	function _setViewport( target, x, y, width, height ) {
 
-		var invDpr = 1.0 / _renderer.getPixelRatio();
-		x *= invDpr;
-		y *= invDpr;
-		width *= invDpr;
-		height *= invDpr;
-		_renderer.setViewport( x, y, width, height );
-		_renderer.setScissor( x, y, width, height );
+		target.viewport.set( x, y, width, height );
+		target.scissor.set( x, y, width, height );
 
 	}
 
@@ -47539,8 +47541,8 @@
 		2 * outputSize *
 			( lodOut > LOD_MAX - LOD_MIN ? lodOut - LOD_MAX + LOD_MIN : 0 );
 
+		_setViewport( targetOut, x, y, 3 * outputSize, 2 * outputSize );
 		_renderer.setRenderTarget( targetOut );
-		_setViewport( x, y, 3 * outputSize, 2 * outputSize );
 		_renderer.render( blurScene, _flatCamera );
 
 	}
@@ -47567,7 +47569,7 @@
 
 			vertexShader: _getCommonVertexShader(),
 
-			fragmentShader: ("\nprecision mediump float;\nprecision mediump int;\nvarying vec3 vOutputDirection;\nuniform sampler2D envMap;\nuniform int samples;\nuniform float weights[n];\nuniform bool latitudinal;\nuniform float dTheta;\nuniform float mipInt;\nuniform vec3 poleAxis;\n\n" + (_getEncodings()) + "\n\n#define ENVMAP_TYPE_CUBE_UV\n#include <cube_uv_reflection_fragment>\n\nvoid main() {\n\tgl_FragColor = vec4(0.0);\n\tfor (int i = 0; i < n; i++) {\n\t\tif (i >= samples)\n\t\t\tbreak;\n\t\tfor (int dir = -1; dir < 2; dir += 2) {\n\t\t\tif (i == 0 && dir == 1)\n\t\t\t\tcontinue;\n\t\t\tvec3 axis = latitudinal ? poleAxis : cross(poleAxis, vOutputDirection);\n\t\t\tif (all(equal(axis, vec3(0.0))))\n\t\t\t\taxis = cross(vec3(0.0, 1.0, 0.0), vOutputDirection);\n\t\t\taxis = normalize(axis);\n\t\t\tfloat theta = dTheta * float(dir * i);\n\t\t\tfloat cosTheta = cos(theta);\n\t\t\t// Rodrigues' axis-angle rotation\n\t\t\tvec3 sampleDirection = vOutputDirection * cosTheta\n\t\t\t\t\t+ cross(axis, vOutputDirection) * sin(theta)\n\t\t\t\t\t+ axis * dot(axis, vOutputDirection) * (1.0 - cosTheta);\n\t\t\tgl_FragColor.rgb +=\n\t\t\t\t\tweights[i] * bilinearCubeUV(envMap, sampleDirection, mipInt);\n\t\t}\n\t}\n\tgl_FragColor = linearToOutputTexel(gl_FragColor);\n}\n\t\t"),
+			fragmentShader: ("\nprecision mediump float;\nprecision mediump int;\nvarying vec3 vOutputDirection;\nuniform sampler2D envMap;\nuniform int samples;\nuniform float weights[n];\nuniform bool latitudinal;\nuniform float dTheta;\nuniform float mipInt;\nuniform vec3 poleAxis;\n\n" + (_getEncodings()) + "\n\n#define ENVMAP_TYPE_CUBE_UV\n#include <cube_uv_reflection_fragment>\n\nvec3 getSample(float theta, vec3 axis) {\n\tfloat cosTheta = cos(theta);\n\t// Rodrigues' axis-angle rotation\n\tvec3 sampleDirection = vOutputDirection * cosTheta\n\t\t+ cross(axis, vOutputDirection) * sin(theta)\n\t\t+ axis * dot(axis, vOutputDirection) * (1.0 - cosTheta);\n\treturn bilinearCubeUV(envMap, sampleDirection, mipInt);\n}\n\nvoid main() {\n\tvec3 axis = latitudinal ? poleAxis : cross(poleAxis, vOutputDirection);\n\tif (all(equal(axis, vec3(0.0))))\n\t\taxis = vec3(vOutputDirection.z, 0.0, - vOutputDirection.x);\n\taxis = normalize(axis);\n\tgl_FragColor = vec4(0.0);\n\tgl_FragColor.rgb += weights[0] * getSample(0.0, axis);\n\tfor (int i = 1; i < n; i++) {\n\t\tif (i >= samples)\n\t\t\tbreak;\n\t\tfloat theta = dTheta * float(i);\n\t\tgl_FragColor.rgb += weights[i] * getSample(-1.0 * theta, axis);\n\t\tgl_FragColor.rgb += weights[i] * getSample(theta, axis);\n\t}\n\tgl_FragColor = linearToOutputTexel(gl_FragColor);\n}\n\t\t"),
 
 			blending: NoBlending,
 			depthTest: false,
