@@ -100,6 +100,8 @@ var FBXLoader = ( function () {
 
 				} catch ( error ) {
 
+					console.error(error);
+
 					setTimeout( function () {
 
 						if ( onError ) onError( error );
@@ -1632,8 +1634,10 @@ var FBXLoader = ( function () {
 			var geo = new BufferGeometry();
 			if ( geoNode.attrName ) geo.name = geoNode.attrName;
 
+			const vertexIndexMapping = {};
+
 			var geoInfo = this.parseGeoNode( geoNode, skeleton );
-			var buffers = this.genBuffers( geoInfo );
+			var buffers = this.genBuffers( geoInfo, vertexIndexMapping );
 
 			var positionAttribute = new Float32BufferAttribute( buffers.vertex, 3 );
 
@@ -1729,7 +1733,7 @@ var FBXLoader = ( function () {
 
 			}
 
-			this.addMorphTargets( geo, geoNode, morphTargets, preTransform );
+			this.addMorphTargets( geo, buffers.vertex.length / 3, morphTargets, preTransform, vertexIndexMapping );
 
 			return geo;
 
@@ -1804,7 +1808,7 @@ var FBXLoader = ( function () {
 
 		},
 
-		genBuffers: function ( geoInfo ) {
+		genBuffers: function ( geoInfo, vertexIndexMapping = {} ) {
 
 			var vertexCount = geoInfo.vertexPositions.length / 3;
 
@@ -1868,6 +1872,8 @@ var FBXLoader = ( function () {
 
 			} );
 
+
+			var self = this;
 			geoInfo.vertexIndices.forEach( function ( inVertexIndex, polygonVertexIndex ) {
 
 				var vertexIndex = inVertexIndex;
@@ -2002,37 +2008,44 @@ var FBXLoader = ( function () {
 
 				}
 
-				var needsUpdate = visited[ vertexIndex ] == 0;
+				var needNewVertex = ! visited[ vertexIndex ];
 
-				// If we've already touched this vertex, check to make sure we don't have any conflicting data
-				if ( ! needsUpdate ) {
+				// If we touched this node before then we have to make sure that this new data doesn't conflict with the old data
+				if ( visited[ vertexIndex ] ) {
 
-					for ( let j = 0; j < presentAttrs.length && ! needsUpdate; j ++ ) {
+					var vertsToCheck = vertexIndexMapping[ vertexIndex ] || [ vertexIndex ];
 
-						var attrName = presentAttrs[ j ];
-						var data = vertexData[ attrName ];
-						for ( let dataIdx = 0; dataIdx < data.length && ! needsUpdate; dataIdx ++ ) {
-
-							if ( data[ dataIdx ] !== buffers[ attrName ][ vertexIndex * data.length + dataIdx ] ) {
-
-								needsUpdate = true;
-
-							}
-
-						}
-
-					}
+					var matchingVertexIndex = self.checkForMatchingVertex( buffers, vertexData, presentAttrs, vertsToCheck );
 
 					// Change the vertex index to be at the end of the vertex buffer(s) if we need to duplicate the vertex
-					if ( needsUpdate ) {
+					// because we haven't found a match.
+					if ( matchingVertexIndex === null ) {
 
-						vertexIndex = vertexCount ++;
+						var newVertexIndex = vertexCount ++;
+						if ( vertexIndexMapping[ vertexIndex ] === undefined ) {
+
+							vertexIndexMapping[ vertexIndex ] = vertsToCheck[ vertexIndex, newVertexIndex ];
+
+						} else {
+
+							vertexIndexMapping[ vertexIndex ].push( newVertexIndex );
+
+						}
+						vertexIndex = newVertexIndex;
+						needNewVertex = true;
+
+					} else {
+
+						// If we have found a match, then we can just use that index for our face and do not need to append any
+						// additional data to our attribute buffers.
+						vertexIndex = matchingVertexIndex;
 
 					}
 
 				}
 
-				if ( needsUpdate ) {
+				// If we need a new vertex, append all the vertex data to the end of our attribute buffers
+				if ( needNewVertex ) {
 
 					if ( vertexIndex < visited.length ) visited[ vertexIndex ] = 1;
 
@@ -2112,121 +2125,44 @@ var FBXLoader = ( function () {
 
 		},
 
-		// Generate data for a single face in a geometry. If the face is a quad then split it into 2 tris
-		genFace: function ( buffers, geoInfo, facePositionIndexes, materialIndex, faceNormals, faceColors, faceUVs, faceWeights, faceWeightIndices, faceLength ) {
+		checkForMatchingVertex: function ( buffers, vertexData, presentAttrs, vertsToCheck ) {
 
-			for ( var i = 2; i < faceLength; i ++ ) {
+			// For each vert that we need to check...
+			for ( var i = 0; i < vertsToCheck.length; ++ i ) {
 
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ 0 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ 1 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ 2 ] ] );
+				// We're looking for matching data amongst the vertices we've generated for this index thus far
+				var match = true;
+				const indexToCheck = vertsToCheck[ i ];
 
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ ( i - 1 ) * 3 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ ( i - 1 ) * 3 + 1 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ ( i - 1 ) * 3 + 2 ] ] );
+				// Loop through the present attributes...
+				// We can exit as soon as we realize that the data does not match
+				for ( let j = 0; j < presentAttrs.length && match; j ++ ) {
 
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ i * 3 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ i * 3 + 1 ] ] );
-				buffers.vertex.push( geoInfo.vertexPositions[ facePositionIndexes[ i * 3 + 2 ] ] );
+					var attrName = presentAttrs[ j ];
+					var data = vertexData[ attrName ];
+					// Check each data point for the attribute
+					for ( let dataIdx = 0; dataIdx < data.length && match; dataIdx ++ ) {
 
-				if ( geoInfo.skeleton ) {
+						match = data[ dataIdx ] === buffers[ attrName ][ indexToCheck * data.length + dataIdx ];
 
-					buffers.vertexWeights.push( faceWeights[ 0 ] );
-					buffers.vertexWeights.push( faceWeights[ 1 ] );
-					buffers.vertexWeights.push( faceWeights[ 2 ] );
-					buffers.vertexWeights.push( faceWeights[ 3 ] );
-
-					buffers.vertexWeights.push( faceWeights[ ( i - 1 ) * 4 ] );
-					buffers.vertexWeights.push( faceWeights[ ( i - 1 ) * 4 + 1 ] );
-					buffers.vertexWeights.push( faceWeights[ ( i - 1 ) * 4 + 2 ] );
-					buffers.vertexWeights.push( faceWeights[ ( i - 1 ) * 4 + 3 ] );
-
-					buffers.vertexWeights.push( faceWeights[ i * 4 ] );
-					buffers.vertexWeights.push( faceWeights[ i * 4 + 1 ] );
-					buffers.vertexWeights.push( faceWeights[ i * 4 + 2 ] );
-					buffers.vertexWeights.push( faceWeights[ i * 4 + 3 ] );
-
-					buffers.weightsIndices.push( faceWeightIndices[ 0 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ 1 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ 2 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ 3 ] );
-
-					buffers.weightsIndices.push( faceWeightIndices[ ( i - 1 ) * 4 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ ( i - 1 ) * 4 + 1 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ ( i - 1 ) * 4 + 2 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ ( i - 1 ) * 4 + 3 ] );
-
-					buffers.weightsIndices.push( faceWeightIndices[ i * 4 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ i * 4 + 1 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ i * 4 + 2 ] );
-					buffers.weightsIndices.push( faceWeightIndices[ i * 4 + 3 ] );
+					}
 
 				}
 
-				if ( geoInfo.color ) {
+				// If we've looped through all the vertex properties and it's still a match, we can re-use this vertex index
+				if ( match ) {
 
-					buffers.colors.push( faceColors[ 0 ] );
-					buffers.colors.push( faceColors[ 1 ] );
-					buffers.colors.push( faceColors[ 2 ] );
-
-					buffers.colors.push( faceColors[ ( i - 1 ) * 3 ] );
-					buffers.colors.push( faceColors[ ( i - 1 ) * 3 + 1 ] );
-					buffers.colors.push( faceColors[ ( i - 1 ) * 3 + 2 ] );
-
-					buffers.colors.push( faceColors[ i * 3 ] );
-					buffers.colors.push( faceColors[ i * 3 + 1 ] );
-					buffers.colors.push( faceColors[ i * 3 + 2 ] );
-
-				}
-
-				if ( geoInfo.material && geoInfo.material.mappingType !== 'AllSame' ) {
-
-					buffers.materialIndex.push( materialIndex );
-					buffers.materialIndex.push( materialIndex );
-					buffers.materialIndex.push( materialIndex );
-
-				}
-
-				if ( geoInfo.normal ) {
-
-					buffers.normal.push( faceNormals[ 0 ] );
-					buffers.normal.push( faceNormals[ 1 ] );
-					buffers.normal.push( faceNormals[ 2 ] );
-
-					buffers.normal.push( faceNormals[ ( i - 1 ) * 3 ] );
-					buffers.normal.push( faceNormals[ ( i - 1 ) * 3 + 1 ] );
-					buffers.normal.push( faceNormals[ ( i - 1 ) * 3 + 2 ] );
-
-					buffers.normal.push( faceNormals[ i * 3 ] );
-					buffers.normal.push( faceNormals[ i * 3 + 1 ] );
-					buffers.normal.push( faceNormals[ i * 3 + 2 ] );
-
-				}
-
-				if ( geoInfo.uv ) {
-
-					geoInfo.uv.forEach( function ( uv, j ) {
-
-						if ( buffers.uvs[ j ] === undefined ) buffers.uvs[ j ] = [];
-
-						buffers.uvs[ j ].push( faceUVs[ j ][ 0 ] );
-						buffers.uvs[ j ].push( faceUVs[ j ][ 1 ] );
-
-						buffers.uvs[ j ].push( faceUVs[ j ][ ( i - 1 ) * 2 ] );
-						buffers.uvs[ j ].push( faceUVs[ j ][ ( i - 1 ) * 2 + 1 ] );
-
-						buffers.uvs[ j ].push( faceUVs[ j ][ i * 2 ] );
-						buffers.uvs[ j ].push( faceUVs[ j ][ i * 2 + 1 ] );
-
-					} );
+					return indexToCheck;
 
 				}
 
 			}
 
+			return null;
+
 		},
 
-		addMorphTargets: function ( parentGeo, parentGeoNode, morphTargets, preTransform ) {
+		addMorphTargets: function ( parentGeo, newNumVertices, morphTargets, preTransform, vertexIndexMapping ) {
 
 			if ( morphTargets.length === 0 ) return;
 
@@ -2244,7 +2180,7 @@ var FBXLoader = ( function () {
 
 					if ( morphGeoNode !== undefined ) {
 
-						self.genMorphGeometry( parentGeo, parentGeoNode, morphGeoNode, preTransform, rawTarget.name );
+						self.genMorphGeometry( parentGeo, newNumVertices, morphGeoNode, preTransform, rawTarget.name, vertexIndexMapping );
 
 					}
 
@@ -2258,41 +2194,32 @@ var FBXLoader = ( function () {
 		// in FBXTree.Objects.Geometry, however it can only have attributes for position, normal
 		// and a special attribute Index defining which vertices of the original geometry are affected
 		// Normal and position attributes only have data for the vertices that are affected by the morph
-		genMorphGeometry: function ( parentGeo, parentGeoNode, morphGeoNode, preTransform, name ) {
-
-			// TODO: I do not believe this will work with our new indexed loading. The morph positions
-			// should also duplicated for all the extra vertices we generate, but since we regenerate
-			// the mesh in the function without supplying the other attributes, this will only populate
-			// morph positions for the original set of vertices and none of the duplicates.
-
-			var vertexIndices = ( parentGeoNode.PolygonVertexIndex !== undefined ) ? parentGeoNode.PolygonVertexIndex.a : [];
+		genMorphGeometry: function ( parentGeo, newNumVertices, morphGeoNode, preTransform, name, vertexIndexMapping ) {
 
 			var morphPositionsSparse = ( morphGeoNode.Vertices !== undefined ) ? morphGeoNode.Vertices.a : [];
 			var indices = ( morphGeoNode.Indexes !== undefined ) ? morphGeoNode.Indexes.a : [];
 
-			var length = parentGeo.attributes.position.count * 3;
-			var morphPositions = new Float32Array( length );
+			var morphPositions = new Float32Array( newNumVertices * 3 );
 
-			for ( var i = 0; i < indices.length; i ++ ) {
+			// We use our vertexIndexMapping to ensure all vertices, even the new ones created earlier in genBuffers,
+			// are assigned the correct morphPositions if they have them.
+			for ( var sparseIndex = 0; sparseIndex < indices.length; ++ sparseIndex ) {
 
-				var morphIndex = indices[ i ] * 3;
+				var inVertexIndex = indices[ sparseIndex ];
+				var indicesToUpdate = vertexIndexMapping[ inVertexIndex ] || [ inVertexIndex ];
 
-				morphPositions[ morphIndex ] = morphPositionsSparse[ i * 3 ];
-				morphPositions[ morphIndex + 1 ] = morphPositionsSparse[ i * 3 + 1 ];
-				morphPositions[ morphIndex + 2 ] = morphPositionsSparse[ i * 3 + 2 ];
+				for ( var j = 0; j < indicesToUpdate.length; ++ j ) {
+
+					var vertexIndex = indicesToUpdate[ j ];
+					morphPositions[ vertexIndex * 3 ] = morphPositionsSparse[ sparseIndex * 3 ];
+					morphPositions[ vertexIndex * 3 + 1 ] = morphPositionsSparse[ sparseIndex * 3 + 1 ];
+					morphPositions[ vertexIndex * 3 + 2 ] = morphPositionsSparse[ sparseIndex * 3 + 2 ];
+
+				}
 
 			}
 
-			// TODO: add morph normal support
-			var morphGeoInfo = {
-				vertexIndices: vertexIndices,
-				vertexPositions: morphPositions,
-
-			};
-
-			var morphBuffers = this.genBuffers( morphGeoInfo );
-
-			var positionAttribute = new Float32BufferAttribute( morphBuffers.vertex, 3 );
+			var positionAttribute = new Float32BufferAttribute( morphPositions, 3 );
 			positionAttribute.name = name || morphGeoNode.attrName;
 
 			positionAttribute.applyMatrix4( preTransform );
