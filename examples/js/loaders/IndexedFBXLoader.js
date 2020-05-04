@@ -1647,15 +1647,17 @@ THREE.FBXLoader = ( function () {
 
 				// Convert the material indices of each vertex into rendering groups on the geometry.
 				var prevMaterialIndex = buffers.materialIndex[ 0 ];
+				var materialIndex = prevMaterialIndex;
 				var startIndex = 0;
 
-				buffers.materialIndex.forEach( function ( currentIndex, i ) {
+				buffers.indices.forEach( function ( currentIndex, i ) {
 
-					if ( currentIndex !== prevMaterialIndex ) {
+					materialIndex = buffers.materialIndex[ currentIndex ];
+					if ( materialIndex !== prevMaterialIndex ) {
 
 						geo.addGroup( startIndex, i - startIndex, prevMaterialIndex );
 
-						prevMaterialIndex = currentIndex;
+						prevMaterialIndex = materialIndex;
 						startIndex = i;
 
 					}
@@ -1668,9 +1670,9 @@ THREE.FBXLoader = ( function () {
 					var lastGroup = geo.groups[ geo.groups.length - 1 ];
 					var lastIndex = lastGroup.start + lastGroup.count;
 
-					if ( lastIndex !== buffers.materialIndex.length ) {
+					if ( lastIndex !== buffers.indices.length ) {
 
-						geo.addGroup( lastIndex, buffers.materialIndex.length - lastIndex, prevMaterialIndex );
+						geo.addGroup( lastIndex, buffers.indices.length - lastIndex, prevMaterialIndex );
 
 					}
 
@@ -1680,7 +1682,7 @@ THREE.FBXLoader = ( function () {
 				// using one of them
 				if ( geo.groups.length === 0 ) {
 
-					geo.addGroup( 0, buffers.materialIndex.length, buffers.materialIndex[ 0 ] );
+					geo.addGroup( 0, buffers.indices.length, buffers.materialIndex[ 0 ] );
 
 				}
 
@@ -1765,8 +1767,9 @@ THREE.FBXLoader = ( function () {
 
 			var vertexCount = geoInfo.vertexPositions.length / 3;
 
+			// Vertex Indices is an array of arrays, indexed by the material index
 			var buffers = {
-				indices: [],
+				indices: [[]],
 				vertex: new Array( vertexCount * 3 ),
 				normal: [],
 				colors: [],
@@ -1829,6 +1832,7 @@ THREE.FBXLoader = ( function () {
 			var self = this;
 			geoInfo.vertexIndices.forEach( function ( inVertexIndex, polygonVertexIndex ) {
 
+				var materialIndex = 0;
 				var vertexIndex = inVertexIndex;
 				var endOfFace = false;
 
@@ -1945,7 +1949,8 @@ THREE.FBXLoader = ( function () {
 
 				if ( geoInfo.material && geoInfo.material.mappingType !== 'AllSame' ) {
 
-					vertexData.materialIndex[ 0 ] = getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ];
+					materialIndex = getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ];
+					vertexData.materialIndex[ 0 ] = materialIndex;
 
 				}
 
@@ -2027,15 +2032,21 @@ THREE.FBXLoader = ( function () {
 
 				if ( endOfFace ) {
 
+					if ( ! buffers.indices[ materialIndex ] ) {
+
+						buffers.indices[ materialIndex ] = [];
+
+					}
+
 					if ( faceIndices.length === 3 ) {
 
 						// Basically do nothing, already a triangle:
-						buffers.indices.push( faceIndices[ 0 ], faceIndices[ 1 ], faceIndices[ 2 ] );
+						buffers.indices[ materialIndex ].push( faceIndices[ 0 ], faceIndices[ 1 ], faceIndices[ 2 ] );
 
 					} else if ( faceIndices.length === 4 ) {
 
 						// Split up quad using CCW winding:
-						buffers.indices.push(
+						buffers.indices[ materialIndex ].push(
 							faceIndices[ 0 ], faceIndices[ 1 ], faceIndices[ 3 ],
 							faceIndices[ 1 ], faceIndices[ 2 ], faceIndices[ 3 ]
 						);
@@ -2066,7 +2077,7 @@ THREE.FBXLoader = ( function () {
 			}
 
 			return {
-				indices: buffers.indices,
+				indices: Array.prototype.concat.apply( [], buffers.indices ),
 				vertex: buffers.vertex,
 				normal: buffers.normal,
 				colors: buffers.colors,
