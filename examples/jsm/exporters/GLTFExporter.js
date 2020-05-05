@@ -1094,8 +1094,7 @@ GLTFExporter.prototype = {
 			if ( material.aoMap ) {
 
 				var occlusionMapDef = {
-					index: processTexture( material.aoMap ),
-					texCoord: 1
+					index: processTexture( material.aoMap )
 				};
 
 				if ( material.aoMapIntensity !== 1.0 ) {
@@ -1671,7 +1670,7 @@ GLTFExporter.prototype = {
 
 			var node = outputJSON.nodes[ nodeMap.get( object ) ];
 
-			if( object.skeleton ) {
+			if(object.skeleton) {
 
 				var skeleton = object.skeleton;
 				var rootJoint = object.skeleton.bones[ 0 ];
