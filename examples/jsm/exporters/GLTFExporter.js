@@ -1094,8 +1094,7 @@ GLTFExporter.prototype = {
 			if ( material.aoMap ) {
 
 				var occlusionMapDef = {
-					index: processTexture( material.aoMap ),
-					texCoord: 1
+					index: processTexture( material.aoMap )
 				};
 
 				if ( material.aoMapIntensity !== 1.0 ) {
@@ -1676,11 +1675,6 @@ GLTFExporter.prototype = {
 			if ( skeleton === undefined ) return null;
 
 			var rootJoint = object.skeleton.bones[ 0 ];
-
-			var skeleton = object.skeleton;
-			var rootJoint = object.skeleton.bones[ 0 ];
-
-			if ( rootJoint === undefined ) return null;
 
 			var joints = [];
 			var inverseBindMatrices = new Float32Array( skeleton.bones.length * 16 );
