@@ -2085,22 +2085,23 @@ var FBXLoader = ( function () {
 
 					}
 
-					if ( faceIndices.length === 3 ) {
+					if ( faceIndices.length > 2 ) {
 
 						// Basically do nothing, already a triangle:
 						buffers.indices[ materialIndex ].push( faceIndices[ 0 ], faceIndices[ 1 ], faceIndices[ 2 ] );
 
-					} else if ( faceIndices.length === 4 ) {
+						// Turn the rest of the indices into a triangle fan
+						for ( var index = 2; index < faceIndices.length - 1; index ++ ) {
 
-						// Split up quad using CCW winding:
-						buffers.indices[ materialIndex ].push(
-							faceIndices[ 0 ], faceIndices[ 1 ], faceIndices[ 3 ],
-							faceIndices[ 1 ], faceIndices[ 2 ], faceIndices[ 3 ]
-						);
+							buffers.indices[ materialIndex ].push(
+								faceIndices[ 0 ], faceIndices[ index ], faceIndices[ index + 1 ]
+							);
+
+						}
 
 					} else {
 
-						console.warn( "Cannot handle vertices that have less than 3 or more than 4 vertices. These vertices will be ignored." );
+						console.warn( "Cannot handle faces that have less than 3 vertices. These faces will be ignored." );
 
 					}
 
