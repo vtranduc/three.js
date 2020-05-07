@@ -1692,46 +1692,11 @@ var FBXLoader = ( function () {
 
 			if ( geoInfo.material && geoInfo.material.mappingType !== 'AllSame' ) {
 
-				// Convert the material indices of each vertex into rendering groups on the geometry.
-				var prevMaterialIndex = buffers.materialIndex[ 0 ];
-				var materialIndex = prevMaterialIndex;
-				var startIndex = 0;
+				buffers.materialGroups.forEach( function ( materialGroup, materialIndex ) {
 
-				buffers.indices.forEach( function ( currentIndex, i ) {
-
-					materialIndex = buffers.materialIndex[ currentIndex ];
-					if ( materialIndex !== prevMaterialIndex ) {
-
-						geo.addGroup( startIndex, i - startIndex, prevMaterialIndex );
-
-						prevMaterialIndex = materialIndex;
-						startIndex = i;
-
-					}
+					geo.addGroup( materialGroup.start, materialGroup.count, materialIndex );
 
 				} );
-
-				// the loop above doesn't add the last group, do that here.
-				if ( geo.groups.length > 0 ) {
-
-					var lastGroup = geo.groups[ geo.groups.length - 1 ];
-					var lastIndex = lastGroup.start + lastGroup.count;
-
-					if ( lastIndex !== buffers.indices.length ) {
-
-						geo.addGroup( lastIndex, buffers.indices.length - lastIndex, prevMaterialIndex );
-
-					}
-
-				}
-
-				// case where there are multiple materials but the whole geometry is only
-				// using one of them
-				if ( geo.groups.length === 0 ) {
-
-					geo.addGroup( 0, buffers.indices.length, buffers.materialIndex[ 0 ] );
-
-				}
 
 			}
 
@@ -2124,6 +2089,20 @@ var FBXLoader = ( function () {
 
 			}
 
+			// We're going to flatten the indices array, so flag our vertexGroups (used if we have more than one material
+			// index on this mesh)
+			var groupIndexStart = 0;
+			var materialGroups = [];
+			buffers.indices.forEach( function ( indexList ) {
+
+				materialGroups.push( {
+					start: groupIndexStart,
+					count: indexList.length,
+				} );
+				groupIndexStart += indexList.length;
+
+			} );
+
 			return {
 				indices: Array.prototype.concat.apply( [], buffers.indices ),
 				vertex: buffers.vertex,
@@ -2133,6 +2112,7 @@ var FBXLoader = ( function () {
 				materialIndex: buffers.materialIndex,
 				vertexWeights: buffers.vertexWeights,
 				weightsIndices: buffers.weightsIndices,
+				materialGroups: materialGroups
 			};
 
 		},
