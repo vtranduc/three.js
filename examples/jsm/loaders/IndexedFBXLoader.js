@@ -1961,7 +1961,7 @@ var FBXLoader = ( function () {
 
 				if ( geoInfo.material && geoInfo.material.mappingType !== 'AllSame' ) {
 
-					materialIndex = getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ];
+					materialIndex = Math.max( 0, getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ] );
 					vertexData.materialIndex[ 0 ] = materialIndex;
 
 				}
