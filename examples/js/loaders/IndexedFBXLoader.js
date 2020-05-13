@@ -1914,7 +1914,8 @@ THREE.FBXLoader = ( function () {
 
 				if ( geoInfo.material && geoInfo.material.mappingType !== 'AllSame' ) {
 
-					materialIndex = getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ];
+					// Ignore negative values that are exported by older, broken versions of the FBX SDK
+					materialIndex = Math.max( 0, getData( polygonVertexIndex, polygonIndex, vertexIndex, geoInfo.material )[ 0 ] );
 					vertexData.materialIndex[ 0 ] = materialIndex;
 
 				}
