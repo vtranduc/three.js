@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js PMREM directional light test</title>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+		/>
+		<link type="text/css" rel="stylesheet" href="main.css" />
+	</head>
+	<body>
+		<button id="capture_pmrem">Capture PMREM</button>
+		<button id="update_pmrem">Update PMREM</button>
+		<button id="update_and_save_pmrem">Update and Save PMREM</button>
+
+		<script type="module">
+			import * as THREE from "../build/three.module.js";
+
+			import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+			import { RGBELoader } from "./jsm/loaders/RGBELoader.js";
+
+			import { CopyShader } from "./jsm/shaders/CopyShader.js";
+			import { ShaderPass } from "./jsm/postprocessing/ShaderPass.js";
+
+			var camera, scene, renderer;
+			var sphere2, sphere, torus, materials;
+
+			var count = 0,
+				cubeCamera1,
+				cubeCamera2;
+
+			var onPointerDownPointerX,
+				onPointerDownPointerY,
+				onPointerDownLon,
+				onPointerDownLat;
+
+			var lon = 0,
+				lat = 0;
+			var phi = 0,
+				theta = 0;
+
+			let copyPass;
+			let pmremGenerator;
+			let rt;
+			var textureLoader = new THREE.TextureLoader();
+
+			new RGBELoader()
+				.setDataType(THREE.UnsignedByteType)
+				.setPath("https://threejs.org/examples/textures/equirectangular/")
+				.load("venice_sunset_1k.hdr", function (hdrEquirect) {
+					init(hdrEquirect);
+					hdrEquirect.dispose();
+					animate();
+				});
+
+			function init(texture) {
+				renderer = new THREE.WebGLRenderer({
+					antialias: true,
+					alpha: true,
+					premultipliedAlpha: false,
+				});
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				renderer.toneMapping = THREE.LinearToneMapping;
+				renderer.toneMappingExposure = 1;
+
+				copyPass = new ShaderPass(CopyShader);
+				copyPass.renderToScreen = true;
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera(
+					60,
+					window.innerWidth / window.innerHeight,
+					1,
+					1000
+				);
+
+				// background
+
+				var options = {
+					generateMipmaps: true,
+					minFilter: THREE.LinearMipmapLinearFilter,
+					magFilter: THREE.LinearFilter,
+				};
+
+				pmremGenerator = new THREE.PMREMGenerator(renderer);
+				scene.background = pmremGenerator.fromEquirectangular(texture).texture;
+
+				//
+
+				document.body.appendChild(renderer.domElement);
+
+				//
+				materials = new Array(3);
+				for (let i = 0; i < materials.length; i++) {
+					materials[i] = new THREE.MeshStandardMaterial({
+						envMap: scene.background,
+						roughness: 0.15 * i,
+						metalness: 1.0,
+					});
+				}
+
+				sphere = new THREE.Mesh(
+					new THREE.IcosahedronBufferGeometry(20, 3),
+					materials[0]
+				);
+				scene.add(sphere);
+
+				sphere2 = new THREE.Mesh(
+					new THREE.IcosahedronBufferGeometry(10, 3),
+					materials[1]
+				);
+				scene.add(sphere2);
+
+				torus = new THREE.Mesh(
+					new THREE.TorusKnotBufferGeometry(10, 5, 100, 25),
+					materials[2]
+				);
+				scene.add(torus);
+
+				//
+
+				document.addEventListener("mousedown", onDocumentMouseDown, false);
+
+				window.addEventListener("resize", onWindowResized, false);
+
+				document
+					.getElementById("update_pmrem")
+					.addEventListener("click", updatePMREM);
+
+				document
+					.getElementById("update_and_save_pmrem")
+					.addEventListener("click", function () {
+						updatePMREM();
+						const oldSize = new THREE.Vector2();
+						renderer.getSize(oldSize);
+						renderer.setSize(rt.width, rt.height);
+						renderer.outputEncoding = THREE.LinearEncoding;
+						copyPass.render(renderer, null, rt);
+						renderer.outputEncoding = THREE.sRGBEncoding;
+						const imgData = renderer.domElement.toDataURL("image/png", 1.0);
+						textureLoader.load(
+							imgData,
+							(texture) => {
+								texture.name = "PMREM.cubeUv";
+								texture.generateMipmaps = false;
+								texture.premultiplyAlpha = false;
+								texture.magFilter = THREE.NearestFilter;
+								texture.minFilter = THREE.NearestFilter;
+								texture.mapping = THREE.CubeUVReflectionMapping;
+								texture.encoding = THREE.RGBEEncoding;
+								texture.format = THREE.RGBAFormat;
+								sphere.material.envMap = texture;
+								sphere.material.needsUpdate = true;
+							},
+							null,
+							() => console.error("WHAT")
+						);
+						var img = new Image();
+						img.src = imgData;
+						document.body.appendChild(img);
+
+						renderer.setSize(oldSize.x, oldSize.y);
+					});
+			}
+
+			function updatePMREM() {
+				rt = pmremGenerator.fromScene(scene);
+				sphere.material.envMap = rt.texture;
+				sphere.material.needsUpdate = true;
+				sphere2.material.envMap = rt.texture;
+				sphere2.material.needsUpdate = true;
+				torus.material.envMap = rt.texture;
+				torus.material.needsUpdate = true;
+			}
+
+			function onWindowResized() {
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+			}
+
+			function onDocumentMouseDown(event) {
+				event.preventDefault();
+
+				onPointerDownPointerX = event.clientX;
+				onPointerDownPointerY = event.clientY;
+
+				onPointerDownLon = lon;
+				onPointerDownLat = lat;
+
+				document.addEventListener("mousemove", onDocumentMouseMove, false);
+				document.addEventListener("mouseup", onDocumentMouseUp, false);
+			}
+
+			function onDocumentMouseMove(event) {
+				lon = (event.clientX - onPointerDownPointerX) * 0.1 + onPointerDownLon;
+				lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
+			}
+
+			function onDocumentMouseUp() {
+				document.removeEventListener("mousemove", onDocumentMouseMove, false);
+				document.removeEventListener("mouseup", onDocumentMouseUp, false);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				render();
+			}
+
+			function render() {
+				var time = Date.now();
+
+				lon += 0.15;
+
+				lat = Math.max(-85, Math.min(85, lat));
+				phi = THREE.Math.degToRad(90 - lat);
+				theta = THREE.Math.degToRad(lon);
+
+				sphere2.position.x = Math.cos(time * 0.001) * 30;
+				sphere2.position.y = Math.sin(time * 0.001) * 30;
+				sphere2.position.z = Math.sin(time * 0.001) * 30;
+
+				torus.position.x = Math.cos(time * 0.001 + 10) * 30;
+				torus.position.y = Math.sin(time * 0.001 + 10) * 30;
+				torus.position.z = Math.sin(time * 0.001 + 10) * 30;
+
+				torus.rotation.x += 0.02;
+				torus.rotation.y += 0.03;
+
+				camera.position.x = 100 * Math.sin(phi) * Math.cos(theta);
+				camera.position.y = 100 * Math.cos(phi);
+				camera.position.z = 100 * Math.sin(phi) * Math.sin(theta);
+
+				camera.lookAt(scene.position);
+
+				// pingpong
+
+				count++;
+
+				renderer.render(scene, camera);
+			}
+		</script>
+	</body>
+</html>
