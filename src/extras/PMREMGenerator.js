@@ -37,6 +37,7 @@ import { RawShaderMaterial } from "../materials/RawShaderMaterial.js";
 import { Scene } from "../scenes/Scene.js";
 import { Vector2 } from "../math/Vector2.js";
 import { Vector3 } from "../math/Vector3.js";
+import { Vector4 } from "../math/Vector4.js";
 import { WebGLRenderTarget } from "../renderers/WebGLRenderTarget.js";
 
 var LOD_MIN = 4;
@@ -111,12 +112,12 @@ PMREMGenerator.prototype = {
 	 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
 	 * is placed at the origin).
 	 */
-	fromScene: function ( scene, sigma = 0, near = 0.1, far = 100, position = new Vector3() ) {
+	fromScene: function ( scene, sigma = 0, near = 0.1, far = 100, position = new Vector3(), renderCallback = undefined ) {
 
 		_oldTarget = this._renderer.getRenderTarget();
 		var cubeUVRenderTarget = this._allocateTargets();
 
-		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position );
+		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position, renderCallback );
 		if ( sigma > 0 ) {
 
 			this._blur( cubeUVRenderTarget, 0, 0, sigma );
@@ -252,12 +253,12 @@ PMREMGenerator.prototype = {
 
 	},
 
-	_sceneToCubeUV: function ( scene, near, far, cubeUVRenderTarget, position ) {
+	_sceneToCubeUV: function ( scene, near, far, cubeUVRenderTarget, position, renderCallback ) {
 
 		var fov = 90;
 		var aspect = 1;
 		var cubeCamera = new PerspectiveCamera( fov, aspect, near, far );
-		cubeCamera.position.set( position.x, position.y, -position.z );
+		cubeCamera.position.set( position.x, position.y, - position.z );
 		var upSign = [ 1, 1, 1, 1, - 1, 1 ];
 		var forwardSign = [ 1, 1, - 1, - 1, - 1, 1 ];
 		var renderer = this._renderer;
@@ -293,24 +294,38 @@ PMREMGenerator.prototype = {
 			if ( col == 0 ) {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, -position.z );
+				cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, - position.z );
 
 			} else if ( col == 1 ) {
 
 				cubeCamera.up.set( 0, 0, upSign[ i ] );
-				cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], -position.z );
+				cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], - position.z );
 
 			} else {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( position.x, position.y, -position.z + forwardSign[ i ] );
+				cubeCamera.lookAt( position.x, position.y, - position.z + forwardSign[ i ] );
 
 			}
 
-			_setViewport( cubeUVRenderTarget,
-				col * SIZE_MAX, i > 2 ? SIZE_MAX : 0, SIZE_MAX, SIZE_MAX );
-			renderer.setRenderTarget( cubeUVRenderTarget );
-			renderer.render( scene, cubeCamera );
+			if ( renderCallback !== undefined ) {
+
+				// _setViewport( cubeUVRenderTarget, col * SIZE_MAX, i > 2 ? SIZE_MAX : 0, SIZE_MAX, SIZE_MAX );
+				renderCallback(
+					scene,
+					cubeCamera,
+					// new Vector4( 0, 0, 3 * SIZE_MAX, 3 * SIZE_MAX ),
+					new Vector4( col * SIZE_MAX, i > 2 ? SIZE_MAX : 0, SIZE_MAX, SIZE_MAX ),
+					cubeUVRenderTarget
+				);
+
+			} else {
+
+				_setViewport( cubeUVRenderTarget, col * SIZE_MAX, i > 2 ? SIZE_MAX : 0, SIZE_MAX, SIZE_MAX );
+				renderer.setRenderTarget( cubeUVRenderTarget );
+				renderer.render( scene, cubeCamera );
+
+			}
 
 		}
 
