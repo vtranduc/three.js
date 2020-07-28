@@ -1624,6 +1624,7 @@ function WebGLRenderer( parameters ) {
 
 		var fog = scene.fog;
 		var environment = material.isMeshStandardMaterial ? scene.environment : null;
+		var envMapIntensity = scene.envMapIntensity || material.envMapIntensity;
 
 		var materialProperties = properties.get( material );
 		var lights = currentRenderState.state.lights;
@@ -1912,7 +1913,7 @@ function WebGLRenderer( parameters ) {
 
 			} else if ( material.isMeshStandardMaterial ) {
 
-				refreshUniformsCommon( m_uniforms, material, environment );
+				refreshUniformsCommon( m_uniforms, material, environment, envMapIntensity );
 
 				m_uniforms.zNear.value = camera.near;
 				m_uniforms.zFar.value = camera.far;
@@ -2025,7 +2026,7 @@ function WebGLRenderer( parameters ) {
 
 	// Uniforms (refresh uniforms objects)
 
-	function refreshUniformsCommon( uniforms, material, environment ) {
+	function refreshUniformsCommon( uniforms, material, environment, envMapIntensity ) {
 
 		uniforms.opacity.value = material.opacity;
 
@@ -2064,6 +2065,7 @@ function WebGLRenderer( parameters ) {
 		if ( envMap ) {
 
 			uniforms.envMap.value = envMap;
+			uniforms.envMapIntensity.value = envMapIntensity;
 
 			// don't flip CubeTexture envMaps, flip everything else:
 			//  WebGLRenderTargetCube will be flipped for backwards compatibility
@@ -2482,7 +2484,7 @@ function WebGLRenderer( parameters ) {
 		if ( material.envMap || environment ) {
 
 			//uniforms.envMap.value = material.envMap; // part of uniforms common
-			uniforms.envMapIntensity.value = material.envMapIntensity;
+			// uniforms.envMapIntensity.value = material.envMapIntensity; // part of uniforms common
 
 		}
 

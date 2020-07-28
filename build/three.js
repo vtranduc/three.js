@@ -6026,6 +6026,7 @@
 
 		this.background = null;
 		this.environment = null;
+		this.envMapIntensity = null;
 		this.fog = null;
 
 		this.overrideMaterial = null;
@@ -6052,6 +6053,7 @@
 
 			if ( source.background !== null ) { this.background = source.background.clone(); }
 			if ( source.environment !== null ) { this.environment = source.environment.clone(); }
+			if ( source.envMapIntensity !== null ) { this.envMapIntensity = source.envMapIntensity; }
 			if ( source.fog !== null ) { this.fog = source.fog.clone(); }
 
 			if ( source.overrideMaterial !== null ) { this.overrideMaterial = source.overrideMaterial.clone(); }
@@ -6069,6 +6071,7 @@
 
 			if ( this.background !== null ) { data.object.background = this.background.toJSON( meta ); }
 			if ( this.environment !== null ) { data.object.environment = this.environment.toJSON( meta ); }
+			if ( this.envMapIntensity !== null ) { data.object.envMapIntensity = this.envMapIntensity; }
 			if ( this.fog !== null ) { data.object.fog = this.fog.toJSON(); }
 
 			return data;
@@ -24657,6 +24660,7 @@
 
 			var fog = scene.fog;
 			var environment = material.isMeshStandardMaterial ? scene.environment : null;
+			var envMapIntensity = scene.envMapIntensity || material.envMapIntensity;
 
 			var materialProperties = properties.get( material );
 			var lights = currentRenderState.state.lights;
@@ -24945,7 +24949,7 @@
 
 				} else if ( material.isMeshStandardMaterial ) {
 
-					refreshUniformsCommon( m_uniforms, material, environment );
+					refreshUniformsCommon( m_uniforms, material, environment, envMapIntensity );
 
 					m_uniforms.zNear.value = camera.near;
 					m_uniforms.zFar.value = camera.far;
@@ -25058,7 +25062,7 @@
 
 		// Uniforms (refresh uniforms objects)
 
-		function refreshUniformsCommon( uniforms, material, environment ) {
+		function refreshUniformsCommon( uniforms, material, environment, envMapIntensity ) {
 
 			uniforms.opacity.value = material.opacity;
 
@@ -25097,6 +25101,7 @@
 			if ( envMap ) {
 
 				uniforms.envMap.value = envMap;
+				uniforms.envMapIntensity.value = envMapIntensity;
 
 				// don't flip CubeTexture envMaps, flip everything else:
 				//  WebGLRenderTargetCube will be flipped for backwards compatibility
@@ -25512,12 +25517,7 @@
 
 			}
 
-			if ( material.envMap || environment ) {
-
-				//uniforms.envMap.value = material.envMap; // part of uniforms common
-				uniforms.envMapIntensity.value = material.envMapIntensity;
-
-			}
+			if ( material.envMap || environment ) ;
 
 			uniforms.enableProjection.value = material.enableProjection;
 

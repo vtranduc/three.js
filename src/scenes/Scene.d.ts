@@ -26,6 +26,7 @@ export class Scene extends Object3D {
 	autoUpdate: boolean;
 	background: null | Color | Texture;
 	environment: null | Texture;
+	envMapIntensity: null | number;
 
 	toJSON( meta?: any ): any;
 	dispose(): void;
