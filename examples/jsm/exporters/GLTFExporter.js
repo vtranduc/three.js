@@ -91,8 +91,9 @@ GLTFExporter.prototype = {
 	 * @param  {Scene or [THREE.Scenes]} input   Scene or Array of THREE.Scenes
 	 * @param  {Function} onDone  Callback on completed
 	 * @param  {Object} options options
+	 * @param  {Object} extensions preconstructed extensions
 	 */
-	parse: function ( input, onDone, options ) {
+	parse: function ( input, onDone, options, extensions ) {
 
 		var DEFAULT_OPTIONS = {
 			binary: false,
@@ -133,6 +134,19 @@ GLTFExporter.prototype = {
 		var nodeMap = new Map();
 		var skins = [];
 		var extensionsUsed = {};
+
+		if ( options.includeCustomExtensions && extensions ) {
+
+			outputJSON.extensions = JSON.parse( JSON.stringify( extensions ) );
+
+			for ( var extensionName in outputJSON.extensions ) {
+
+				extensionsUsed[ extensionName ] = true;
+
+			}
+
+		}
+
 		var cachedData = {
 
 			meshes: new Map(),
