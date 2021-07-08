@@ -13699,9 +13699,9 @@
 		getWorldSpaceSubFrusta: function () {
 
 			// Calculate height and width of near and far clipping planes
-			var heightPerDistanceUnit = 2 * Math.tan( this.fov * THREE.Math.DEG2RAD / 2 );
+			var heightPerDistanceUnit = 2 * Math.tan( this.fov * MathUtils.DEG2RAD / 2 );
 			var planeDims = [
-				new THREE.Vector3( heightPerDistanceUnit * this.near * this.aspect,
+				new Vector3( heightPerDistanceUnit * this.near * this.aspect,
 					heightPerDistanceUnit * this.near, this.near )
 			];
 
@@ -13709,7 +13709,7 @@
 
 				var hFar = heightPerDistanceUnit * ( this.far * 0.01 * Math.pow( 10, i ) );
 				var wFar = hFar * this.aspect;
-				planeDims.push( new THREE.Vector3( wFar / 2, hFar / 2, this.far * 0.01 * Math.pow( 10, i ) ) );
+				planeDims.push( new Vector3( wFar / 2, hFar / 2, this.far * 0.01 * Math.pow( 10, i ) ) );
 
 			}
 
@@ -13717,14 +13717,14 @@
 			for ( var i = 0; i <= 2; i ++ ) {
 
 				cameraFrusta[ i ] = [
-					new THREE.Vector3( planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-					new THREE.Vector3( - planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-					new THREE.Vector3( - planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-					new THREE.Vector3( planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-					new THREE.Vector3( planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-					new THREE.Vector3( - planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-					new THREE.Vector3( - planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-					new THREE.Vector3( planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z )];
+					new Vector3( planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+					new Vector3( - planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+					new Vector3( - planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+					new Vector3( planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+					new Vector3( planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+					new Vector3( - planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+					new Vector3( - planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+					new Vector3( planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z )];
 
 			}
 
@@ -38959,7 +38959,7 @@
 				var min = null;
 				var max = null;
 				this.shadowCascade[ index ].camera.updateMatrixWorld();
-				var inv = new THREE.Matrix4().getInverse( this.shadowCascade[ index ].camera.matrixWorld );
+				var inv = new Matrix4().getInverse( this.shadowCascade[ index ].camera.matrixWorld );
 				cameraFrustumVerts.map( function ( frustumVert ) {
 
 					frustumVert.applyMatrix4( inv );
@@ -38972,8 +38972,8 @@
 
 					} else {
 
-						min = new THREE.Vector2( frustumVert.x, frustumVert.y );
-						max = new THREE.Vector2( frustumVert.x, frustumVert.y );
+						min = new Vector2( frustumVert.x, frustumVert.y );
+						max = new Vector2( frustumVert.x, frustumVert.y );
 
 					}
 
@@ -38986,7 +38986,7 @@
 
 				// Perform rounding to reduce shimmer
 
-	 			var unitsPerTexel = new THREE.Vector2().subVectors( max, min );
+	 			var unitsPerTexel = new Vector2().subVectors( max, min );
 				unitsPerTexel.divideScalar( this.shadowCascade[ index ].mapSize.width );
 
 	 			min.divide( unitsPerTexel );

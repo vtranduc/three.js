@@ -1,6 +1,7 @@
 import { Camera } from './Camera.js';
 import { Object3D } from '../core/Object3D.js';
 import { MathUtils } from '../math/MathUtils.js';
+import { Vector3 } from '../math/Vector3.js';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -241,9 +242,9 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 	getWorldSpaceSubFrusta: function () {
 
 		// Calculate height and width of near and far clipping planes
-		var heightPerDistanceUnit = 2 * Math.tan( this.fov * THREE.Math.DEG2RAD / 2 );
+		var heightPerDistanceUnit = 2 * Math.tan( this.fov * MathUtils.DEG2RAD / 2 );
 		var planeDims = [
-			new THREE.Vector3( heightPerDistanceUnit * this.near * this.aspect,
+			new Vector3( heightPerDistanceUnit * this.near * this.aspect,
 				heightPerDistanceUnit * this.near, this.near )
 		];
 
@@ -251,7 +252,7 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 
 			var hFar = heightPerDistanceUnit * ( this.far * 0.01 * Math.pow( 10, i ) );
 			var wFar = hFar * this.aspect;
-			planeDims.push( new THREE.Vector3( wFar / 2, hFar / 2, this.far * 0.01 * Math.pow( 10, i ) ) );
+			planeDims.push( new Vector3( wFar / 2, hFar / 2, this.far * 0.01 * Math.pow( 10, i ) ) );
 
 		}
 
@@ -259,14 +260,14 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 		for ( var i = 0; i <= 2; i ++ ) {
 
 			cameraFrusta[ i ] = [
-				new THREE.Vector3( planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-				new THREE.Vector3( - planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-				new THREE.Vector3( - planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-				new THREE.Vector3( planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
-				new THREE.Vector3( planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-				new THREE.Vector3( - planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-				new THREE.Vector3( - planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
-				new THREE.Vector3( planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z )];
+				new Vector3( planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+				new Vector3( - planeDims[ 0 ].x, planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+				new Vector3( - planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+				new Vector3( planeDims[ 0 ].x, - planeDims[ 0 ].y, - planeDims[ 0 ].z ),
+				new Vector3( planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+				new Vector3( - planeDims[ i + 1 ].x, planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+				new Vector3( - planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z ),
+				new Vector3( planeDims[ i + 1 ].x, - planeDims[ i + 1 ].y, - planeDims[ i + 1 ].z )];
 
 		}
 
