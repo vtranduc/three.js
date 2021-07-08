@@ -1,6 +1,8 @@
 import { Light } from './Light.js';
 import { DirectionalLightShadow } from './DirectionalLightShadow.js';
 import { Object3D } from '../core/Object3D.js';
+import { Vector2 } from '../math/Vector2.js';
+import { Matrix4 } from '../math/Matrix4.js';
 
 /**
  * @author mrdoob / http://mrdoob.com/
@@ -55,7 +57,7 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 			var min = null;
 			var max = null;
 			this.shadowCascade[index].camera.updateMatrixWorld()
-			var inv = new THREE.Matrix4().getInverse(this.shadowCascade[index].camera.matrixWorld);
+			var inv = new Matrix4().getInverse(this.shadowCascade[index].camera.matrixWorld);
 			cameraFrustumVerts.map( function ( frustumVert ) {
 				frustumVert.applyMatrix4(inv);
 				if (min) {
@@ -64,8 +66,8 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 					max.x = Math.max(frustumVert.x, max.x);
 					max.y = Math.max(frustumVert.y, max.y);
 				} else {
-					min = new THREE.Vector2(frustumVert.x, frustumVert.y);
-					max = new THREE.Vector2(frustumVert.x, frustumVert.y);
+					min = new Vector2(frustumVert.x, frustumVert.y);
+					max = new Vector2(frustumVert.x, frustumVert.y);
 				}
 			});
 
@@ -76,7 +78,7 @@ DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 			// Perform rounding to reduce shimmer
 
- 			var unitsPerTexel = new THREE.Vector2().subVectors(max, min);
+ 			var unitsPerTexel = new Vector2().subVectors(max, min);
 			unitsPerTexel.divideScalar(this.shadowCascade[index].mapSize.width);
 
  			min.divide(unitsPerTexel);

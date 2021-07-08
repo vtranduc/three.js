@@ -9,6 +9,7 @@ export * from './renderers/shaders/UniformsUtils';
 export * from './renderers/shaders/ShaderChunk';
 export * from './scenes/FogExp2';
 export * from './scenes/Fog';
+export * from './scenes/FogGround';
 export * from './scenes/Scene';
 export * from './objects/Sprite';
 export * from './objects/LOD';
